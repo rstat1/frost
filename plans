@@ -1,0 +1,38 @@
+https://auth.m.rdro.us/authrequest
+
+https://api.m.rdro.us/trinity/
+    |
+    -> http://localhost:37847/api/trinity/authrequest
+
+https://api.m.rdro.us/ember/twitch/live
+    |
+    -> http://localhost:1997/api/ember/twitch/live
+
+
+"Ok so plan" part 1:
+    1. Single API URL.
+        |
+        -> Which means: "https://api.m.rdro.us/{api-name}/method?params"
+            |
+            -> Which will get proxied to: "http://localhost:port/api/{api-name}/method?params"
+
+    2. Single service for hosting UI -> because it makes zero sense to duplicate the same 3 or 4 lines of code N times
+       (one for each service)
+
+    3. https://api.m.rdro.us/volt/ -> watchdog base api URL.
+
+"Ok so plan" part 2:
+    1. Single Auth service -> because it makes zero sense to have N different auth services (one for each service)
+        |
+        -> http://auth.m.rdro.us --- APIName: trinity
+        |
+        -> Permission controls: Which account can access which service.
+    2. Service Instances
+        |
+        -> Which means production and development versions.
+            |
+            -> So: "https://api-dev.m.rdro.us/{api-name}/method?params
+                |
+                -> Which proxies to a secondary instance of the named service
+            |
+            -> Or: "https://auth-dev.m.rdro.us/whatever
