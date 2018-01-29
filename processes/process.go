@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.m/watchdog/common"
+	"git.m/svcmanager/common"
 )
 
 type ManagedProcess struct {
@@ -18,19 +18,22 @@ type ManagedProcess struct {
 	restartCount int
 }
 
+//NewManagedProcess ...
 func NewManagedProcess(name string, args []string) *ManagedProcess {
 	return &ManagedProcess{
 		Name: name,
 		Args: args,
+		Stop: make(chan bool, 1),
 	}
 }
 
+//Run ...
 func (mp *ManagedProcess) Run() {
 	var err error
 	var ws syscall.WaitStatus
 
 	childProcessSignal := make(chan os.Signal, 1)
-	signal.Notify(childProcessSignal, syscall.SIGCHLD)
+	//signal.Notify(childProcessSignal, syscall.SIGCHLD)
 	mp.restart = true
 
 	procAttr := new(os.ProcAttr)
@@ -61,7 +64,9 @@ func (mp *ManagedProcess) Run() {
 			}
 			select {
 			case <-childProcessSignal:
+				common.Logger.Debugln("cps")
 				pid, err := syscall.Wait4(mp.process.Pid, &ws, syscall.WNOHANG, nil)
+				common.Logger.Debugln("cps2")
 				if err != nil {
 					common.Logger.Errorln(err)
 				}
@@ -71,6 +76,7 @@ func (mp *ManagedProcess) Run() {
 				continue procloop
 			case <-mp.Stop:
 				mp.process.Kill()
+				mp.restart = false
 				return
 			}
 		}

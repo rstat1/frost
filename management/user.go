@@ -12,14 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"git.m/watchdog/common"
-	"git.m/watchdog/data"
+	"git.m/svcmanager/common"
+	"git.m/svcmanager/data"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 var (
-	issuerName string = "https://watchdog.m.rdro.us"
+	issuerName string = "https://svcmanager.m.rdro.us"
 )
 
 type AuthRequest struct {

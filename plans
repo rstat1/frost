@@ -19,7 +19,7 @@ https://api.m.rdro.us/ember/twitch/live
     2. Single service for hosting UI -> because it makes zero sense to duplicate the same 3 or 4 lines of code N times
        (one for each service)
 
-    3. https://api.m.rdro.us/volt/ -> watchdog base api URL.
+    3. https://api.m.rdro.us/volt/ -> svcmanager base api URL.
 
 "Ok so plan" part 2:
     1. Single Auth service -> because it makes zero sense to have N different auth services (one for each service)
