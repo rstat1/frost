@@ -4,25 +4,30 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"git.m/watchdog/common"
-	"git.m/watchdog/data"
-	"github.com/husobee/vestigo"
 	"io/ioutil"
 	"net/http"
+
+	"git.m/svcmanager/common"
+	"git.m/svcmanager/data"
+	"git.m/svcmanager/proxy"
+	"github.com/husobee/vestigo"
 )
 
 //APIRouter ...
 type APIRouter struct {
 	user           *User
+	proxy          *proxy.Proxy
 	router         *vestigo.Router
 	serviceManager *ServiceManager
 }
 
-func NewAPIRouter(store *data.DataStore) *APIRouter {
+//NewAPIRouter ...
+func NewAPIRouter(store *data.DataStore, p *proxy.Proxy, services *ServiceManager) *APIRouter {
 	user := NewUserService(store)
 	return &APIRouter{
 		user:           user,
-		serviceManager: NewServiceManager(store),
+		proxy:          p,
+		serviceManager: services,
 	}
 }
 
@@ -32,7 +37,7 @@ func (api *APIRouter) StartManagementAPIListener() {
 	api.router.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
 		AllowHeaders: []string{"Authorization", "Cache-Control", "X-Requested-With", "Content-Type"},
-		AllowOrigin:  []string{"https://watchdog.m.rdro.us", "http://192.168.1.12:4200"},
+		AllowOrigin:  []string{"https://svcmanager.m.rdro.us", "http://192.168.1.12:4200"},
 	})
 	vestigo.CustomNotFoundHandlerFunc(api.NotFound)
 	api.SetupRoutes()
@@ -48,20 +53,20 @@ func (api *APIRouter) NotFound(resp http.ResponseWriter, r *http.Request) {
 	common.WriteFailureResponse(errors.New("route "+r.URL.String()+" not found."), resp, "NotFound", 404)
 }
 
-//InitAPIRouter ...
+//SetupRoutes ...
 func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/ws/log", common.RequestWrapper(common.Nothing, "GET", api.ws))
-	api.router.Handle("/api/frost/wsauth", common.RequestWrapper(api.user.AuthTokenProvided, "POST", api.wsauth))
+	api.router.Handle("/api/frost/wsauth", common.RequestWrapper(api.user.IsRoot, "POST", api.wsauth))
 
 	api.router.Handle("/api/frost/user/login", common.RequestWrapper(common.Nothing, "POST", api.login))
 	api.router.Handle("/api/frost/user/register", common.RequestWrapper(common.Nothing, "POST", api.register))
 
-	api.router.Handle("/api/frost/service/new", common.RequestWrapper(api.user.AuthTokenProvided, "POST", api.newService))
-	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.AuthTokenProvided, "DELETE", api.deleteService))
-	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.AuthTokenProvided, "PUT", api.updateService))
+	api.router.Handle("/api/frost/service/new", common.RequestWrapper(api.user.IsRoot, "POST", api.newService))
+	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
+	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
+	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.IsRoot, "GET", api.services))
 
-	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.AuthTokenProvided, "GET", api.services))
-
+	api.router.Handle("/api/frost/process", common.RequestWrapper(api.user.IsRoot, "GET", api.process))
 }
 func (api *APIRouter) login(resp http.ResponseWriter, r *http.Request) {
 	var response common.APIResponse
@@ -79,23 +84,51 @@ func (api *APIRouter) register(resp http.ResponseWriter, r *http.Request) {
 	}
 }
 func (api *APIRouter) newService(resp http.ResponseWriter, r *http.Request) {
-	var newService data.KnownRoute
-	body, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(body, &newService)
-	common.WriteAPIResponseStruct(resp, api.serviceManager.AddService(newService))
+	common.WriteAPIResponseStruct(resp, api.serviceManager.NewService(r))
 }
 func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
-	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
-}
-func (api *APIRouter) updateService(resp http.ResponseWriter, r *http.Request) {
-	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
+	var name = r.URL.Query().Get("name")
+	common.WriteAPIResponseStruct(resp, api.serviceManager.DeleteService(name))
 }
 func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {
-	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
+	var response common.APIResponse
+
+	routes := api.serviceManager.GetAllServices()
+	if routeList, err := json.Marshal(routes); err == nil {
+		response = common.CreateAPIResponse(string(routeList), nil, 500)
+	} else {
+		response = common.CreateAPIResponse("failed", err, 500)
+	}
+	common.WriteAPIResponseStruct(resp, response)
+}
+func (api *APIRouter) process(resp http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+	action := r.URL.Query().Get("action")
+	switch action {
+	case "start":
+		if api.serviceManager.StartManagedService(name) {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 400))
+		} else {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("", errors.New("not found"), 400))
+		}
+	case "stop":
+		api.serviceManager.StopManagedService(name)
+	}
 }
 func (api *APIRouter) ws(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
 }
 func (api *APIRouter) wsauth(resp http.ResponseWriter, r *http.Request) {
+	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
+}
+func (api *APIRouter) updateService(resp http.ResponseWriter, r *http.Request) {
+	updateType := r.URL.Query().Get("type")
+	switch updateType {
+	case "ui":
+		break
+	case "service":
+
+		break
+	}
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
 }

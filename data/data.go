@@ -6,10 +6,11 @@ import (
 	"errors"
 	"time"
 
-	"git.m/watchdog/common"
+	"git.m/svcmanager/common"
 	"github.com/asdine/storm"
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-uuid"
+	"github.com/sirupsen/logrus"
 )
 
 //DataStore ...
@@ -86,28 +87,6 @@ func (data *DataStore) NewUser(name, password string) (error, User) {
 	return nil, user
 }
 
-//SaveClientDetails ...
-func (data *DataStore) SaveClientDetails(keys ClientDetails) error {
-	c := data.queryEngine.From("System")
-	if err := c.Set("System", "client", &keys); err != nil {
-		common.CreateFailureResponse(err, "SaveClientDetails", 500)
-		return err
-	}
-	return nil
-}
-
-//GetClientDetails ...
-func (data *DataStore) GetClientDetails() (ClientDetails, error) {
-	var clientDetails ClientDetails
-	c := data.queryEngine.From("System")
-	if err := c.Get("System", "client", &clientDetails); err == nil {
-		return clientDetails, nil
-	} else {
-		common.CreateFailureResponse(err, "GetClientDetails", 500)
-		return ClientDetails{}, err
-	}
-}
-
 //GetUser ...
 func (data *DataStore) GetUser(username string) User {
 	var userInfo User
@@ -132,20 +111,6 @@ func (data *DataStore) GetUserByID(id string) User {
 	}
 }
 
-//GetSystemConfig ...
-func (data *DataStore) GetSystemConfig() Config {
-	var config Config
-	c := data.queryEngine.From("System")
-	if err := c.One("ID", "system", &config); err == nil {
-		return config
-	} else {
-		return Config{
-			ID:                 "null",
-			ActivationRequired: true,
-		}
-	}
-}
-
 //GetKnownRoutes ...
 func (data *DataStore) GetKnownRoutes() ([]KnownRoute, error) {
 	var err error
@@ -162,8 +127,12 @@ func (data *DataStore) GetKnownRoutes() ([]KnownRoute, error) {
 
 //AddNewRoute ...
 func (data *DataStore) AddNewRoute(service KnownRoute) error {
+	common.Logger.Debugln(service)
+	if service.AppName == "" {
+		return errors.New("no AppName set")
+	}
 	routes := data.queryEngine.From("Routes")
-	if err := routes.Save(service); err != nil {
+	if err := routes.Save(&service); err != nil {
 		common.Logger.WithField("func", "AddNewRoute").Errorln(err)
 		return err
 	} else {
@@ -174,11 +143,26 @@ func (data *DataStore) AddNewRoute(service KnownRoute) error {
 //DeleteRoute ...
 func (data *DataStore) DeleteRoute(route string) error {
 	var foundRoute KnownRoute
-	images := data.queryEngine.From("Routes")
-	if err := images.One("URL", route, &foundRoute); err == nil {
-		return images.DeleteStruct(&foundRoute)
+	routes := data.queryEngine.From("Routes")
+	if err := routes.One("AppName", route, &foundRoute); err == nil {
+		return routes.DeleteStruct(&foundRoute)
 	} else {
 		return err
 	}
 	return nil
+}
+
+//GetRoute ...
+func (data *DataStore) GetRoute(name string) KnownRoute {
+	var foundRoute KnownRoute
+	routes := data.queryEngine.From("Routes")
+	if err := routes.One("AppName", name, &foundRoute); err == nil {
+		return foundRoute
+	} else {
+		common.CreateFailureResponseWithFields(err, 500, logrus.Fields{
+			"func":  "GetRoute",
+			"route": name,
+		})
+		return KnownRoute{}
+	}
 }
