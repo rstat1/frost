@@ -3,15 +3,15 @@ package main
 import (
 	"os"
 
-	"git.m/svcmanager/common"
-	"git.m/svcmanager/data"
-	"git.m/svcmanager/management"
-	"git.m/svcmanager/proxy"
+	"git.m/svcman/common"
+	"git.m/svcman/data"
+	"git.m/svcman/management"
+	"git.m/svcman/proxy"
 )
 
 func main() {
 	common.CommonProcessInit()
-	common.Logger.Debugln("starting svcmanager...")
+	common.Logger.Debugln("starting svcman...")
 	common.Logger.Debugln(os.Getuid())
 
 	data := data.NewDataStoreInstance("routes")

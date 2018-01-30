@@ -1,10 +1,14 @@
 package common
 
 import (
+	"archive/zip"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/evalphobia/logrus_sentry"
 	"github.com/getsentry/raven-go"
@@ -17,6 +21,7 @@ import (
 	"time"
 )
 
+//APIResponse ...
 type APIResponse struct {
 	Status         string `json:"status"`
 	Response       string `json:"response"`
@@ -32,6 +37,7 @@ var (
 	}
 )
 
+//CreateAPIResponse ...
 func CreateAPIResponse(response string, err error, failureCode int) APIResponse {
 	if err == nil {
 		return APIResponse{
@@ -47,18 +53,24 @@ func CreateAPIResponse(response string, err error, failureCode int) APIResponse 
 		}
 	}
 }
+
+//WritePlainStringResponse ...
 func WritePlainStringResponse(writer http.ResponseWriter, resp string, failCode int) {
 	writeCommonHeaders(writer)
 	writer.WriteHeader(failCode)
 	apiResp, _ := json.Marshal(resp)
 	writer.Write([]byte(apiResp))
 }
+
+//WriteAPIResponseStruct ...
 func WriteAPIResponseStruct(writer http.ResponseWriter, resp APIResponse) {
 	writeCommonHeaders(writer)
 	writer.WriteHeader(resp.HttpStatusCode)
 	apiResp, _ := json.Marshal(resp)
 	writer.Write([]byte(apiResp))
 }
+
+//ValidateRequest ...
 func ValidateRequest(validator func(*http.Request) APIResponse, handler func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(raven.RecoveryHandler(func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" && request.Header.Get("Content-Length") == "" {
@@ -72,9 +84,11 @@ func ValidateRequest(validator func(*http.Request) APIResponse, handler func(htt
 		}
 	}))
 }
+
+//RequestWrapper ...
 func RequestWrapper(validator func(*http.Request) APIResponse, validMethod string, handler func(http.ResponseWriter, *http.Request)) http.Handler {
-	return http.HandlerFunc(raven.RecoveryHandler(func(writer http.ResponseWriter, request *http.Request) {
-		if request.Method != validMethod {
+	return http.HandlerFunc(httpErrorHandler(func(writer http.ResponseWriter, request *http.Request) {
+		if validMethod != "" && request.Method != validMethod {
 			WriteAPIResponseStruct(writer, APIResponse{
 				Status:         "failed",
 				Response:       "method not allowed",
@@ -89,32 +103,29 @@ func RequestWrapper(validator func(*http.Request) APIResponse, validMethod strin
 		}
 	}))
 }
+func httpErrorHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err, _ := SentryClient.CapturePanic(func() {
+			handler(w, r)
+		}, nil)
+		if err != nil {
+			WriteAPIResponseStruct(w, CreateAPIResponse("failed", errors.New("something serious happened."), 500))
+		}
+	}
+}
+
 func writeCommonHeaders(writer http.ResponseWriter) {
 	writer.Header().Add("Content-Type", "application/json")
 	//writer.Header().Add("Access-Control-Allow-Origin", "http://192.168.1.12:4200")
 	//writer.Header().Add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 }
+
+//Nothing ...
 func Nothing(r *http.Request) APIResponse {
 	return CreateAPIResponse("success", nil, 200)
 }
-func LogDebug(functionName, extra string, details interface{}) {
-	Logger.WithFields(logrus.Fields{
-		"func":  functionName,
-		"extra": extra,
-	}).Debugln(details)
-}
-func LogWarn(functionName, extra string, details interface{}) {
-	Logger.WithFields(logrus.Fields{
-		"func":  functionName,
-		"extra": extra,
-	}).Warnln(details)
-}
-func LogError(functionName, extra string, details interface{}) {
-	Logger.WithFields(logrus.Fields{
-		"func":  functionName,
-		"extra": extra,
-	}).Errorln(details)
-}
+
+//SetupHTTPSListener ...
 func SetupHTTPSListener(handler http.Handler, port int) {
 	m := autocert.Manager{
 		Prompt:      autocert.AcceptTOS,
@@ -145,6 +156,8 @@ func SetupHTTPSListener(handler http.Handler, port int) {
 		Logger.WithField("func", "main").Errorln(err)
 	}
 }
+
+//InitLogrus ...
 func InitLogrus() {
 	Logger = logrus.New()
 	Logger.Out = os.Stdout
@@ -168,6 +181,8 @@ func InitLogrus() {
 		Logger.Hooks.Add(hook)
 	}
 }
+
+//CommonProcessInit ...
 func CommonProcessInit() {
 	InitLogrus()
 	if os.Getenv("PWD") == "" {
@@ -175,21 +190,26 @@ func CommonProcessInit() {
 		os.Chdir("/gemini")
 	}
 }
+
+//CreateFailureResponse ...
 func CreateFailureResponse(err error, functionName string, status int) APIResponse {
 	Logger.WithField("func", functionName).Errorln(err)
 	return CreateAPIResponse("failed", err, status)
 }
+
+//CreateFailureResponseWithFields ...
 func CreateFailureResponseWithFields(err error, status int, fields logrus.Fields) APIResponse {
 	Logger.WithFields(fields).Errorln(err)
 	return CreateAPIResponse("failed", err, status)
 }
+
+//WriteFailureResponse ..
 func WriteFailureResponse(err error, resp http.ResponseWriter, functionName string, status int) {
 	Logger.WithField("func", functionName).Errorln(err)
 	WriteAPIResponseStruct(resp, CreateAPIResponse("failed", err, status))
 }
 
-//https://stackoverflow.com/questions/12771930
-
+//RandomID https://stackoverflow.com/questions/12771930
 func RandomID(n int) string {
 	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	var bytes = make([]byte, n)
@@ -198,4 +218,46 @@ func RandomID(n int) string {
 		bytes[i] = alphanum[b%byte(len(alphanum))]
 	}
 	return string(bytes)
+}
+
+//Unzip https://golangcode.com/unzip-files-in-go/
+func Unzip(src, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	for _, f := range r.File {
+		rc, err := f.Open()
+		if err != nil {
+			Logger.Errorln(err)
+			return err
+		}
+		defer rc.Close()
+		fpath := filepath.Join(dest, f.Name)
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(fpath, os.ModePerm)
+		} else {
+			var fdir string
+			if lastIndex := strings.LastIndex(fpath, string(os.PathSeparator)); lastIndex > -1 {
+				fdir = fpath[:lastIndex]
+			}
+			err = os.MkdirAll(fdir, os.ModePerm)
+			if err != nil {
+				Logger.Errorln(err)
+				return err
+			}
+			f, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				Logger.Errorln(err)
+				return err
+			}
+			defer f.Close()
+			_, err = io.Copy(f, rc)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

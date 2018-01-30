@@ -4,18 +4,18 @@ import (
 	"os"
 	"strconv"
 
-	"git.m/svcmanager/common"
+	"git.m/svcman/common"
 )
 
 //ProcessManager ...
 type ProcessManager struct {
-	managedProcesses map[string]ManagedProcess
+	managedProcesses map[string]*ManagedProcess
 }
 
 //NewProcessManager ...
 func NewProcessManager() *ProcessManager {
 	return &ProcessManager{
-		managedProcesses: make(map[string]ManagedProcess),
+		managedProcesses: make(map[string]*ManagedProcess),
 	}
 }
 
@@ -29,7 +29,7 @@ func (pm *ProcessManager) StartProcess(name, dirName string) bool {
 		return false
 	} else {
 		process := NewManagedProcess(path, []string{name, "-ppid", strconv.Itoa(os.Getpid())})
-		pm.managedProcesses["name"] = *process
+		pm.managedProcesses[name] = process
 		process.Run()
 		return true
 	}
@@ -37,12 +37,13 @@ func (pm *ProcessManager) StartProcess(name, dirName string) bool {
 
 //StopAllProcesses ...
 func (pm *ProcessManager) StopAllProcesses() {
-	for k := range pm.managedProcesses {
-		pm.managedProcesses[k].Stop <- true
+	for _, v := range pm.managedProcesses {
+		v.Stop <- true
 	}
 }
 
 //StopAProcess ...
 func (pm *ProcessManager) StopAProcess(name string) {
-	pm.managedProcesses[name].Stop <- true
+	process := pm.managedProcesses[name]
+	process.Stop <- true
 }

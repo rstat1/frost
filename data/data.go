@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"git.m/svcmanager/common"
+	"git.m/svcman/common"
 	"github.com/asdine/storm"
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-uuid"

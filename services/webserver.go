@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"git.m/svcmanager/data"
+	"git.m/svcman/data"
 )
 
 //WebServer ...
@@ -32,7 +32,8 @@ func (web *WebServer) isFilePath(path string) bool {
 	if strings.Contains(path, ".css") ||
 		strings.Contains(path, ".js") ||
 		strings.Contains(path, ".png") ||
-		strings.Contains(path, ".jpg") {
+		strings.Contains(path, ".jpg") ||
+		strings.Contains(path, ".svg") {
 		return true
 	}
 	return false
