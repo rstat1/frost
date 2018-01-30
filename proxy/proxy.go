@@ -7,9 +7,9 @@ import (
 	//"strings"
 	"time"
 
-	"git.m/svcmanager/common"
-	"git.m/svcmanager/data"
-	"git.m/svcmanager/services"
+	"git.m/svcman/common"
+	"git.m/svcman/data"
+	"git.m/svcman/services"
 	//"github.com/vulcand/oxy/utils"
 	"context"
 	"net/url"
@@ -132,7 +132,7 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 	}
 }
 func (p *Proxy) isWatchdogURL(url string) bool {
-	if strings.HasPrefix(url, "svcmanager") || strings.Contains(url, watchdogAPIName) {
+	if strings.HasPrefix(url, "svcman") || strings.Contains(url, watchdogAPIName) {
 		return true
 	}
 	return false

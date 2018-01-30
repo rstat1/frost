@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"git.m/svcmanager/common"
-	"git.m/svcmanager/data"
-	"git.m/svcmanager/proxy"
+	"git.m/svcman/common"
+	"git.m/svcman/data"
+	"git.m/svcman/proxy"
 	"github.com/husobee/vestigo"
 )
 
@@ -37,7 +37,7 @@ func (api *APIRouter) StartManagementAPIListener() {
 	api.router.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
 		AllowHeaders: []string{"Authorization", "Cache-Control", "X-Requested-With", "Content-Type"},
-		AllowOrigin:  []string{"https://svcmanager.m.rdro.us", "http://192.168.1.12:4200"},
+		AllowOrigin:  []string{"https://svcman.m.rdro.us", "http://192.168.1.12:4200"},
 	})
 	vestigo.CustomNotFoundHandlerFunc(api.NotFound)
 	api.SetupRoutes()
@@ -122,13 +122,5 @@ func (api *APIRouter) wsauth(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
 }
 func (api *APIRouter) updateService(resp http.ResponseWriter, r *http.Request) {
-	updateType := r.URL.Query().Get("type")
-	switch updateType {
-	case "ui":
-		break
-	case "service":
-
-		break
-	}
-	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
+	common.WriteAPIResponseStruct(resp, api.serviceManager.UpdateService(r))
 }
