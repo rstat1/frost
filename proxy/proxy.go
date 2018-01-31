@@ -4,16 +4,15 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	//"strings"
 	"time"
+
+	"context"
+	"net/url"
+	"strings"
 
 	"git.m/svcman/common"
 	"git.m/svcman/data"
 	"git.m/svcman/services"
-	//"github.com/vulcand/oxy/utils"
-	"context"
-	"net/url"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/vulcand/oxy/forward"
@@ -42,7 +41,7 @@ const (
 	baseURL              = ".dev-m.rdro.us"
 	apiBaseURL           = "api" + baseURL
 	watchdogURL          = "watchdog" + baseURL
-	apiBaseURLWithScheme = "https://api" + baseURL
+	apiBaseURLWithScheme = "http://api" + baseURL
 
 	watchdogAPIName = "frost"
 	listenerPort    = ":80"
@@ -91,9 +90,15 @@ func (p *Proxy) StartProxyListener() {
 }
 
 //AddRoute ...
-func (p *Proxy) AddRoute(apiName, appName, serviceAddress string) {
-	p.apiRoutes[apiName] = serviceAddress
-	p.knownRoutes[appName+baseURL] = true
+func (p *Proxy) AddRoute(newRoute data.KnownRoute) {
+	p.apiRoutes[newRoute.APIName] = newRoute.ServiceAddress
+	p.knownRoutes[newRoute.AppName+baseURL] = true
+}
+
+//DeleteRoute ...
+func (p *Proxy) DeleteRoute(apiName, appName string) {
+	delete(p.apiRoutes, apiName)
+	delete(p.knownRoutes, appName+baseURL)
 }
 
 //ServeHTTP ...
@@ -107,8 +112,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			var name = strings.Replace(req.Host, baseURL, "", -1)
 			p.webuiserver.ServeWebRequest(w, req, name)
 		} else {
-			//TOOD: Proper 404 page.
-			w.WriteHeader(404)
+			p.invalidRoute(w)
 		}
 	} else {
 		common.WriteFailureResponse(errors.New("not found"), w, "ServeHTTP", 404)
@@ -119,16 +123,20 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 		var urlWithoutHost = strings.Replace(req.URL.String(), apiBaseURLWithScheme, "", -1)
 		var urlBits = strings.Split(urlWithoutHost, "/")
 		var apiName = urlBits[1]
-		req.URL = &url.URL{
-			Host:     p.apiRoutes[apiName],
-			Path:     "/api" + req.URL.Path,
-			Scheme:   "http",
-			RawQuery: req.URL.Query().Encode(),
+		if p.apiRoutes[apiName] != "" {
+			req.URL = &url.URL{
+				Host:     p.apiRoutes[apiName],
+				Path:     "/api" + req.URL.Path,
+				Scheme:   "http",
+				RawQuery: req.URL.Query().Encode(),
+			}
+			req.RequestURI = req.URL.String()
+			common.Logger.Debugln(req.URL.String())
+			req.Header.Add("Access-Control-Allow-Origin", p.data.Cache.GetString("watchdog", apiName))
+			p.fwd.ServeHTTP(w, req)
+		} else {
+			p.invalidRoute(w)
 		}
-		req.RequestURI = req.URL.String()
-		common.Logger.Debugln(req.URL.String())
-		req.Header.Add("Access-Control-Allow-Origin", p.data.Cache.GetString("watchdog", apiName))
-		p.fwd.ServeHTTP(w, req)
 	}
 }
 func (p *Proxy) isWatchdogURL(url string) bool {
@@ -159,4 +167,8 @@ func (p *Proxy) setRoutes() {
 			p.data.Cache.PutString("watchdog", v.APIName, v.AppName+baseURL)
 		}
 	}
+}
+func (p *Proxy) invalidRoute(resp http.ResponseWriter) {
+	//TOOD: Proper 404 page.
+	resp.WriteHeader(404)
 }

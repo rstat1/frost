@@ -88,6 +88,7 @@ func (api *APIRouter) newService(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 	var name = r.URL.Query().Get("name")
+	api.serviceManager.StopManagedService(name)
 	common.WriteAPIResponseStruct(resp, api.serviceManager.DeleteService(name))
 }
 func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {

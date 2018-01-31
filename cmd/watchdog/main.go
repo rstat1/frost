@@ -16,7 +16,7 @@ func main() {
 
 	data := data.NewDataStoreInstance("routes")
 	proxy := proxy.NewProxy(data)
-	services := management.NewServiceManager(data)
+	services := management.NewServiceManager(data, proxy)
 	manager := management.NewAPIRouter(data, proxy, services)
 
 	services.StartManagedServices()
