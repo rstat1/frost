@@ -7,22 +7,24 @@ import (
 )
 
 type ManagedProcess struct {
+	restartCount int
+	WorkDir      string
 	Name         string
 	Args         []string
 	restart      bool
 	process      *os.Process
-	restartCount int
 	Stop         chan bool
 	Died         chan bool
 }
 
 //NewManagedProcess ...
-func NewManagedProcess(name string, args []string) *ManagedProcess {
+func NewManagedProcess(name, workDir string, args []string) *ManagedProcess {
 	return &ManagedProcess{
-		Name: name,
-		Args: args,
-		Stop: make(chan bool),
-		Died: make(chan bool),
+		Name:    name,
+		Args:    args,
+		WorkDir: workDir,
+		Stop:    make(chan bool),
+		Died:    make(chan bool),
 	}
 }
 
@@ -31,8 +33,8 @@ func (mp *ManagedProcess) Run() {
 	var err error
 	mp.restart = true
 	procAttr := new(os.ProcAttr)
+	procAttr.Dir = mp.WorkDir
 	procAttr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
-
 	go func() {
 	procloop:
 		mp.process, err = os.StartProcess(mp.Name, mp.Args, procAttr)

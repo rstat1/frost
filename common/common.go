@@ -187,7 +187,7 @@ func CommonProcessInit() {
 	InitLogrus()
 	if os.Getenv("PWD") == "" {
 		Logger.Warnln("pwd not set")
-		os.Chdir("/gemini")
+		os.Chdir("/webservices")
 	}
 }
 

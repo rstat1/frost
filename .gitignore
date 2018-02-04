@@ -1,3 +1,5 @@
 tmp/
 test/
 player3/
+datastore
+routes
