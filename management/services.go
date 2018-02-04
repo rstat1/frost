@@ -114,7 +114,7 @@ func (s *ServiceManager) handleFileUpload(request *http.Request, info data.Known
 			service = info
 		}
 		if _, err := os.Stat(service.AppName); os.IsNotExist(err) {
-			if err := os.Mkdir(service.AppName, 0644); err != nil {
+			if err := os.Mkdir(service.AppName, 0770); err != nil {
 				return common.CreateFailureResponse(err, "NewService(mkdir)", 500), data.KnownRoute{}
 			}
 		}
@@ -146,7 +146,7 @@ func (s *ServiceManager) handleServiceBinUpload(fileContent multipart.File, file
 			common.CreateFailureResponse(err, "handleServiceBinUpload", 500)
 			return err
 		}
-		file.Chmod(0744)
+		file.Chmod(0760)
 		file.Close()
 	} else {
 		common.CreateFailureResponse(err, "handleServiceBinUpload", 500)

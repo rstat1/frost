@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	"git.m/svcman/common"
@@ -11,6 +12,10 @@ import (
 
 func main() {
 	common.CommonProcessInit()
+
+	devMode := flag.Bool("devmode", false, "switches ports/URLs to dev mode, and also disables TLS support")
+	flag.Parse()
+
 	common.Logger.Debugln("starting svcman...")
 	common.Logger.Debugln(os.Getuid())
 
@@ -21,5 +26,5 @@ func main() {
 
 	services.StartManagedServices()
 	manager.StartManagementAPIListener()
-	proxy.StartProxyListener()
+	proxy.StartProxyListener(*devMode)
 }

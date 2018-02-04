@@ -23,27 +23,34 @@ func NewProcessManager() *ProcessManager {
 func (pm *ProcessManager) StartProcess(name, dirName string) bool {
 	dir, _ := os.Getwd()
 	path := dir + "/" + dirName + "/" + name
-	common.Logger.Debugln(path)
-	if _, err := os.Stat(dir + "/" + dirName + "/" + name); os.IsNotExist(err) {
-		common.Logger.Debugln("not starting process...")
-		return false
+	if pm.managedProcesses[name] == nil {
+		if _, err := os.Stat(dir + "/" + dirName + "/" + name); os.IsNotExist(err) {
+			common.Logger.Debugln("not starting process...")
+			return false
+		} else {
+			process := NewManagedProcess(path, dirName, []string{name, "-ppid", strconv.Itoa(os.Getpid())})
+			pm.managedProcesses[name] = process
+			process.Run()
+			return true
+		}
 	} else {
-		process := NewManagedProcess(path, []string{name, "-ppid", strconv.Itoa(os.Getpid())})
-		pm.managedProcesses[name] = process
-		process.Run()
-		return true
+		return false
 	}
 }
 
 //StopAllProcesses ...
 func (pm *ProcessManager) StopAllProcesses() {
-	for _, v := range pm.managedProcesses {
+	for k, v := range pm.managedProcesses {
 		v.Stop <- true
+		delete(pm.managedProcesses, k)
 	}
 }
 
 //StopAProcess ...
 func (pm *ProcessManager) StopAProcess(name string) {
 	process := pm.managedProcesses[name]
-	process.Stop <- true
+	if process != nil {
+		process.Stop <- true
+		delete(pm.managedProcesses, name)
+	}
 }

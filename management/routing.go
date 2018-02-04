@@ -110,7 +110,7 @@ func (api *APIRouter) process(resp http.ResponseWriter, r *http.Request) {
 		if api.serviceManager.StartManagedService(name) {
 			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 400))
 		} else {
-			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("", errors.New("not found"), 400))
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("", errors.New("not found or already running"), 400))
 		}
 	case "stop":
 		api.serviceManager.StopManagedService(name)
