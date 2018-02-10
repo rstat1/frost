@@ -20,7 +20,7 @@ func NewProcessManager() *ProcessManager {
 }
 
 //StartProcess ...
-func (pm *ProcessManager) StartProcess(name, dirName string) bool {
+func (pm *ProcessManager) StartProcess(name, dirName string, devmode bool) bool {
 	dir, _ := os.Getwd()
 	path := dir + "/" + dirName + "/" + name
 	if pm.managedProcesses[name] == nil {
@@ -28,7 +28,9 @@ func (pm *ProcessManager) StartProcess(name, dirName string) bool {
 			common.Logger.Debugln("not starting process...")
 			return false
 		} else {
-			process := NewManagedProcess(path, dirName, []string{name, "-ppid", strconv.Itoa(os.Getpid())})
+			process := NewManagedProcess(path, dirName, []string{
+				name, "-ppid", strconv.Itoa(os.Getpid()), "-devmode", strconv.FormatBool(devmode),
+			})
 			pm.managedProcesses[name] = process
 			process.Run()
 			return true

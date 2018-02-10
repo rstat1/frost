@@ -21,14 +21,16 @@ import (
 type ServiceManager struct {
 	data      *data.DataStore
 	proxy     *proxy.Proxy
+	inDevMode bool
 	processes *processes.ProcessManager
 }
 
 //NewServiceManager ...
-func NewServiceManager(store *data.DataStore, p *proxy.Proxy) *ServiceManager {
+func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool) *ServiceManager {
 	return &ServiceManager{
 		proxy:     p,
 		data:      store,
+		inDevMode: devmode,
 		processes: processes.NewProcessManager(),
 	}
 }
@@ -55,7 +57,7 @@ func (s *ServiceManager) GetAllServices() []data.KnownRoute {
 func (s *ServiceManager) StartManagedServices() {
 	for _, v := range s.GetAllServices() {
 		if v.IsManagedService {
-			s.processes.StartProcess(v.BinName, v.AppName)
+			s.processes.StartProcess(v.BinName, v.AppName, s.inDevMode)
 		}
 	}
 }
@@ -63,7 +65,7 @@ func (s *ServiceManager) StartManagedServices() {
 //StartManagedService ...
 func (s *ServiceManager) StartManagedService(name string) bool {
 	var routeInfo data.KnownRoute = s.data.GetRoute(name)
-	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName)
+	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, s.inDevMode)
 }
 
 //StopManagedService ...
