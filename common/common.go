@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/evalphobia/logrus_sentry"
+	// "github.com/evalphobia/logrus_sentry"
 	"github.com/getsentry/raven-go"
 	"github.com/kavu/go_reuseport"
 	"github.com/sirupsen/logrus"
@@ -105,12 +105,12 @@ func RequestWrapper(validator func(*http.Request) APIResponse, validMethod strin
 }
 func httpErrorHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err, _ := SentryClient.CapturePanic(func() {
-			handler(w, r)
-		}, nil)
-		if err != nil {
-			WriteAPIResponseStruct(w, CreateAPIResponse("failed", errors.New("something serious happened."), 500))
-		}
+		handler(w, r)
+		// err, _ := SentryClient.CapturePanic(func() {
+		// }, nil)
+		// if err != nil {
+		// 	WriteAPIResponseStruct(w, CreateAPIResponse("failed", errors.New("something serious happened."), 500))
+		// }
 	}
 }
 
@@ -163,23 +163,23 @@ func InitLogrus() {
 	Logger.Out = os.Stdout
 	Logger.SetLevel(logrus.DebugLevel)
 
-	client, err := raven.New("http://57ad78f1ed984ff2bcb5a6d40760431d:33389d1773c049c1abc69dd246b6ae2a@sentry.m/8")
+	// client, err := raven.New("https://15fc5a91799b4492b243f13ff6eb1ea6:84b02369b6634846a82151083a3cc38a@sentry.io/220596") //"http://57ad78f1ed984ff2bcb5a6d40760431d:33389d1773c049c1abc69dd246b6ae2a@sentry.m/8")
 
-	if err != nil {
-		Logger.Fatal(err)
-	} else {
-		SentryClient = client
-	}
+	// if err != nil {
+	// 	Logger.Error(err)
+	// } else {
+	// 	SentryClient = client
+	// }
 
-	hook, err := logrus_sentry.NewWithClientSentryHook(client, []logrus.Level{
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-	})
+	// hook, err := logrus_sentry.NewWithClientSentryHook(client, []logrus.Level{
+	// 	logrus.PanicLevel,
+	// 	logrus.FatalLevel,
+	// 	logrus.ErrorLevel,
+	// })
 
-	if err == nil {
-		Logger.Hooks.Add(hook)
-	}
+	// if err == nil {
+	// 	Logger.Hooks.Add(hook)
+	// }
 }
 
 //CommonProcessInit ...

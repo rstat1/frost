@@ -1,0 +1,106 @@
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+	font-family: 'system';
+    height: 100vh;
+    display: flex;
+    background-color: #515151;
+	color: #98959a;
+	font-family: Roboto;
+	font-size: 14px;
+	width: 100%;
+}
+app-projects-root {
+	width: 100%;
+	min-width: 646px;
+	/* max-width: 655px; */
+}
+components-home {
+	width: 100%;
+}
+components-list-item {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+components-login, components-register, components-list, app-project-page {
+	width: 100%;
+}
+#root {
+	display: flex;
+	width: 100%;
+}
+#button-text-style {
+	text-transform: uppercase;
+	font-weight:700;
+	width:197px;
+	margin-top:15px;
+}
+#left-column {
+	width:45%;
+	height:75%;
+	float:left;
+	border-right:1px solid #7e7e7e;
+	margin:32px 0 0 0;
+}
+#right-column {
+	width:54%;
+	height:100%;
+	float:right;
+}
+#nav-module-header {
+	color: #bfbfbf
+}
+#page-block-title {
+	color: #afafaf
+}
+#logo-block-bg-color {
+	background-color: #558B2F
+}
+#register-logo-block-color {
+	background-color: #689F38
+}
+.error {
+	font-size: 10pt;
+	height: 15px;
+	margin-right: 25px;
+	color: #F44336;
+	text-transform: capitalize;
+}
+.logo-block {
+	width:90px;
+	height:76px;
+	color:white;
+	font-size:43pt;
+	text-align: center;
+	margin:25px auto;
+	padding-top:14px;
+}
+.logo-block::before {
+	content: "DA"
+}
+.not-header-text-color {
+	color:#95989a;
+	font-size:12pt;
+	font-weight:300;
+	text-decoration-line: none
+}
+.login-register-form-container {
+	margin: 68px 0px 0px 20px;
+	color:white
+}
+.login-register-text-box {
+	margin-right:8px;
+}
+.path {
+	color:#558b2f;
+	text-align:left;
+	font-size:9pt;
+	display:block;
+	font-weight: bolder;
+	text-transform: uppercase;
+}
