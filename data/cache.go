@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"git.m/player3-ui/common"
+	"git.m/svcman/common"
 	"github.com/mediocregopher/radix.v2/pool"
 )
 
@@ -14,7 +14,7 @@ type CacheService struct {
 }
 
 func NewCacheService() *CacheService {
-	client, err := pool.New("tcp", "192.168.1.15:6379", 3)
+	client, err := pool.New("tcp", "127.0.0.1:6379", 3)
 	if err != nil {
 		common.CreateFailureResponse(err, "NewCacheService", 500)
 	}

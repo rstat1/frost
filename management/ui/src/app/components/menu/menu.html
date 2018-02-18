@@ -1,0 +1,12 @@
+<div class="menu-container">
+	<div class="menu-block">
+		<div *ngFor="let c of categories" class="menu-category-block">
+			<div class="menu-item" id="{{item.ActionName}}" *ngFor="let item of getCategoryItems(c)" (click)="doSomethingWithClick(item.ActionName)">
+				<img src="/assets/{{item.Icon}}.png" width="32" height="32" class="menu-item-icon" />
+				<span style="margin-bottom:15px;" class="menu-item-details">
+					<span class="menu-item-title">{{item.ItemTitle}}</span>
+				</span>
+			</div>
+		</div>
+	</div>
+</div>
