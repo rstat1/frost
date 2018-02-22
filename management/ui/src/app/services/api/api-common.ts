@@ -9,3 +9,8 @@ export interface Service {
 	address: string;
 	managed: boolean;
 }
+export interface ServicePermission {
+	name: string;
+	hasRoot: boolean;
+	hasAccess: boolean
+}

@@ -1,0 +1,81 @@
+@import '~@angular/material/theming';
+
+$devapp-green: (
+	50: #194A6D,
+	100: #194A6D,
+	200: #194A6D,
+	300: #194A6D,
+	400: #194A6D,
+	500: #194A6D,
+	600: #194A6D,
+	700: #194A6D,
+	800: #194A6D,
+	900: #194A6D,
+	A100: #194A6D,
+	A200: #194A6D,
+	A400: #194A6D,
+	A700: #194A6D,
+	contrast: (
+	  50: #194A6D,
+	  100: black,
+	  200: $black-87-opacity,
+	  300: $black-87-opacity,
+	  400: $black-87-opacity,
+	  500: white,
+	  600: white,
+	  700: black,
+	  800: black,
+	  900: black,
+	  A100: $black-87-opacity,
+	  A200: white,
+	  A400: white,
+	  A700: white,
+	)
+);
+
+$playerthree-red: (
+  50: #194A6D,
+  100: #194A6D,
+  200: #194A6D,
+  300: #194A6D,
+  400: #194A6D,
+  500: #194A6D,
+  600: #194A6D,
+  700: #194A6D,
+  800: #194A6D,
+  900: #194A6D,
+  A100: #194A6D,
+  A200: #194A6D,
+  A400: #194A6D,
+  A700: #194A6D,
+  contrast: (
+    50: #194A6D,
+    100: white,
+    200: $black-87-opacity,
+    300: $black-87-opacity,
+    400: $black-87-opacity,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: $black-87-opacity,
+    A200: black,
+    A400: black,
+    A700: black,
+  )
+);
+// Define the dark theme.
+$primary: mat-palette($playerthree-red, 500, 500, 500);
+$accent:  mat-palette($mat-grey, 50, 50, 50);
+
+$theme: mat-dark-theme($primary, $accent);
+@include angular-material-theme($theme);
+
+$primary: 			mat-palette($mat-light-green, 500, 500, 500);
+$accent:			mat-palette($mat-grey, 50, 50, 50);
+$register-theme: 	mat-dark-theme($primary, $accent);
+
+.registration-page {
+	@include angular-material-theme($register-theme)
+}

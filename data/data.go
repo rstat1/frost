@@ -153,16 +153,16 @@ func (data *DataStore) DeleteRoute(route string) error {
 }
 
 //GetRoute ...
-func (data *DataStore) GetRoute(name string) KnownRoute {
+func (data *DataStore) GetRoute(name string) (KnownRoute, error) {
 	var foundRoute KnownRoute
 	routes := data.queryEngine.From("Routes")
 	if err := routes.One("AppName", name, &foundRoute); err == nil {
-		return foundRoute
+		return foundRoute, nil
 	} else {
 		common.CreateFailureResponseWithFields(err, 500, logrus.Fields{
 			"func":  "GetRoute",
 			"route": name,
 		})
-		return KnownRoute{}
+		return KnownRoute{}, err
 	}
 }

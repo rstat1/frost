@@ -37,7 +37,7 @@ func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool) *Ser
 
 //DeleteService ...
 func (s *ServiceManager) DeleteService(name string) common.APIResponse {
-	route := s.data.GetRoute(name)
+	route, _ := s.data.GetRoute(name)
 	s.proxy.DeleteRoute(route.APIName, route.AppName)
 	s.data.DeleteRoute(name)
 	return common.CreateAPIResponse("success", os.RemoveAll(route.AppName), 500)
@@ -64,13 +64,13 @@ func (s *ServiceManager) StartManagedServices() {
 
 //StartManagedService ...
 func (s *ServiceManager) StartManagedService(name string) bool {
-	var routeInfo data.KnownRoute = s.data.GetRoute(name)
+	routeInfo, _ := s.data.GetRoute(name)
 	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, s.inDevMode)
 }
 
 //StopManagedService ...
 func (s *ServiceManager) StopManagedService(name string) {
-	var routeInfo data.KnownRoute = s.data.GetRoute(name)
+	routeInfo, _ := s.data.GetRoute(name)
 	s.processes.StopAProcess(routeInfo.BinName)
 }
 
@@ -90,9 +90,17 @@ func (s *ServiceManager) UpdateService(request *http.Request) common.APIResponse
 		return common.CreateFailureResponse(errors.New("service name not specified"), "UpdateService", 500)
 	} else {
 		s.StopManagedService(serviceName)
-		resp, _ := s.handleFileUpload(request, s.data.GetRoute(serviceName))
+		service, _ := s.data.GetRoute(serviceName)
+		resp, _ := s.handleFileUpload(request, service)
 		s.StartManagedService(serviceName)
 		return resp
+	}
+}
+func (s *ServiceManager) GetService(name string) (data.KnownRoute, error) {
+	if service, err := s.data.GetRoute(name); err == nil {
+		return service, nil
+	} else {
+		return data.KnownRoute{}, err
 	}
 }
 func (s *ServiceManager) handleFileUpload(request *http.Request, info data.KnownRoute) (common.APIResponse, data.KnownRoute) {
