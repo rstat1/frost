@@ -97,10 +97,13 @@ components-login, components-register, components-list, app-project-page {
 	margin-right:8px;
 }
 .path {
-	color:#558b2f;
+	color:#0D47A1;
 	text-align:left;
 	font-size:9pt;
 	display:block;
 	font-weight: bolder;
 	text-transform: uppercase;
+}
+mat-cell, .mat-header-cell{
+	overflow: visible;
 }

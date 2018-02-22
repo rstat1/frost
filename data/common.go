@@ -17,9 +17,9 @@ type Config struct {
 	ActivationRequired bool `json:"ActivationRequired"`
 }
 type KnownRoute struct {
-	AppName          string `storm:"id" json:"name"`
-	BinName          string `json:"filename"`
-	APIName          string `json:"api_prefix"`
-	ServiceAddress   string `json:"address"`
-	IsManagedService bool   `json:"managed"`
+	AppName          string `storm:"id" json:"name" graph:"name"`
+	BinName          string `json:"filename" graph:"serviceFilename"`
+	APIName          string `json:"api_prefix" graph:"apiName"`
+	ServiceAddress   string `json:"address" graph:"serviceAddress"`
+	IsManagedService bool   `json:"managed" graph:"isManaged"`
 }

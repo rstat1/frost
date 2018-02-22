@@ -96,7 +96,8 @@
 	padding-top: 20px;
     padding-bottom: 16px;
 	font-size: 12pt;
-    border-bottom: 1px #545454 solid;
+	border-bottom: 1px #545454 solid;
+	background-color: #1d1d1d;
 }
 .hide-element {
 	display: none;

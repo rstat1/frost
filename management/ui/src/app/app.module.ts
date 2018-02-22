@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from "@angular/router";
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule, HttpClient, HttpHandler } from '@angular/common/http';
 
 import { AppComponent } from './app.component';
@@ -21,18 +22,20 @@ const routes: Routes = [
 ];
 const menuItems = { Items: [
 	{ ItemTitle: "Logs", ItemSubtext: "Return to Home page", Icon:"logs", ActionName: "logs", Category: "Config" },
+	{ ItemTitle: "Users", ItemSubtext: "Return to Home page", Icon:"services", ActionName: "users", Category: "Config" },
 	{ ItemTitle: "Updates", ItemSubtext: "Return to Home page", Icon:"update", ActionName: "update", Category: "Config" },
 	{ ItemTitle: "Services", ItemSubtext: "Return to Home page", Icon:"services", ActionName: "services", Category: "Config" },
 ] };
 
 @NgModule({
 	declarations: [
-		AppComponent
+		AppComponent,
 	],
 	imports: [
 		BrowserModule,
 		ManagerModule,
 		HttpClientModule,
+		BrowserAnimationsModule,
 		MenuModule.forRoot(menuItems),
 		RouterModule.forRoot(routes, {enableTracing: false}),
 	],

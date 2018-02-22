@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
-import { MatInputModule, MatButtonModule, MatCheckboxModule } from '@angular/material';
+import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule } from '@angular/material';
 import { FormsModule, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import { MenuModule } from 'app/menu/menu.module';
@@ -10,6 +10,7 @@ import { MenuComponent } from 'app/components/menu/menu.component';
 import { AuthGuard, RootGuard } from 'app/services/auth/auth.guard';
 import { ManagerRootComponent } from './manager-root/manager-root.component';
 import { LogViewerComponent } from './log-viewer/log-viewer.component';
+import { NewUserComponent } from './new-user/new-user.component';
 
 const projectRoutes: Routes = [
 	{
@@ -18,7 +19,8 @@ const projectRoutes: Routes = [
 		// canActivate: [AuthGuard],
 		// canActivateChild: [AuthGuard],
 		children: [
-			{ path: 'logs', component: LogViewerComponent}
+			{ path: 'logs', component: LogViewerComponent},
+			{ path: 'newuser', component: NewUserComponent}
 		]
 	}
 ]
@@ -26,7 +28,7 @@ const projectRoutes: Routes = [
 	imports: [
 		FormsModule,
 		CommonModule,
-		// TreeViewModule,
+		MatTableModule,
 		MatInputModule,
 		MatButtonModule,
 		MatStepperModule,
@@ -37,6 +39,7 @@ const projectRoutes: Routes = [
 		RouterModule.forChild(projectRoutes)
   	],
   	declarations: [
+		NewUserComponent,
 		LogViewerComponent,
 		ManagerRootComponent,
 	],

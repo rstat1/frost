@@ -1,0 +1,53 @@
+<div class="block-container">
+	<div class="content proper-width">
+		<div class="page-header">
+			<span class="page-title">
+				<span class="path">/frost</span>
+				New User
+			</span>
+		</div>
+		<div class="project-page-root">
+			<div class="group-header">
+				<span style="margin-left:15px;">Details</span>
+			</div>
+			<form #loginForm="ngForm" (ngSubmit)="save()">
+				<mat-form-field class="login-register-text-box">
+					<input [(ngModel)]="m.Username" matInput placeholder="Username" name="Username" required>
+				</mat-form-field>
+				<mat-form-field class="login-register-text-box">
+					<input [(ngModel)]="m.Password" type="password" matInput placeholder="Password" name="password" required>
+				</mat-form-field>
+			</form>
+			<div class="group-header" style="margin-bottom:15px;">
+				<span style="margin-left:15px;">Permissions</span>
+			</div>
+			<mat-table #table [dataSource]="dataSource" style="margin-left:20px;margin-right:40px;">
+				<ng-container matColumnDef="name">
+					<mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+					<mat-cell *matCellDef="let element">
+						<span class="service-icon">
+							<img src="/assets/{{element.name}}.png" width="24" height="24" />
+						</span>
+						<div class="service-name">
+							{{element.name}}
+						</div>
+					</mat-cell>
+				</ng-container>
+			    <ng-container matColumnDef="CanAccess">
+      				<mat-header-cell *matHeaderCellDef>Can Access</mat-header-cell>
+      				<mat-cell *matCellDef="let element">
+						<mat-checkbox (click)="$event.stopPropagation()"></mat-checkbox>
+					</mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="HasRoot">
+      				<mat-header-cell *matHeaderCellDef>Has Root Access</mat-header-cell>
+      				<mat-cell *matCellDef="let element">
+						<mat-checkbox (click)="$event.stopPropagation()"></mat-checkbox>
+					</mat-cell>
+				</ng-container>
+				<mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+				<mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+			</mat-table>
+		</div>
+	</div>
+</div>

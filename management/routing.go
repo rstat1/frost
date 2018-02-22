@@ -16,17 +16,20 @@ import (
 //APIRouter ...
 type APIRouter struct {
 	user           *User
+	data           *data.DataStore
 	proxy          *proxy.Proxy
 	router         *vestigo.Router
 	serviceManager *ServiceManager
 }
 
 //NewAPIRouter ...
-func NewAPIRouter(store *data.DataStore, p *proxy.Proxy, services *ServiceManager) *APIRouter {
+func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, services *ServiceManager) *APIRouter {
 	user := NewUserService(store)
+
 	return &APIRouter{
 		user:           user,
-		proxy:          p,
+		data:           store,
+		proxy:          proxy,
 		serviceManager: services,
 	}
 }
@@ -61,6 +64,7 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/user/login", common.RequestWrapper(common.Nothing, "POST", api.login))
 	api.router.Handle("/api/frost/user/register", common.RequestWrapper(common.Nothing, "POST", api.register))
 
+	api.router.Handle("/api/frost/service/get", common.RequestWrapper(api.user.IsRoot, "GET", api.getService))
 	api.router.Handle("/api/frost/service/new", common.RequestWrapper(api.user.IsRoot, "POST", api.newService))
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
@@ -124,4 +128,13 @@ func (api *APIRouter) wsauth(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) updateService(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, api.serviceManager.UpdateService(r))
+}
+func (api *APIRouter) getService(resp http.ResponseWriter, r *http.Request) {
+	serviceName := r.URL.Query().Get("name")
+	if service, err := api.data.GetRoute(serviceName); err == nil {
+		resBytes, _ := json.Marshal(service)
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(resBytes), nil, 404))
+	} else {
+		common.WriteFailureResponse(err, resp, "getService", 404)
+	}
 }
