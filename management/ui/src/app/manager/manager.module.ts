@@ -2,7 +2,8 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
-import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule } from '@angular/material';
+import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule,
+	 	 MatToolbarModule, MatIconModule } from '@angular/material';
 import { FormsModule, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import { MenuModule } from 'app/menu/menu.module';
@@ -20,7 +21,7 @@ const projectRoutes: Routes = [
 		// canActivateChild: [AuthGuard],
 		children: [
 			{ path: 'logs', component: LogViewerComponent},
-			{ path: 'newuser', component: NewUserComponent}
+			{ path: 'users/new', component: NewUserComponent}
 		]
 	}
 ]
@@ -28,9 +29,11 @@ const projectRoutes: Routes = [
 	imports: [
 		FormsModule,
 		CommonModule,
+		MatIconModule,
 		MatTableModule,
 		MatInputModule,
 		MatButtonModule,
+		MatToolbarModule,
 		MatStepperModule,
 		MatCheckboxModule,
 		ReactiveFormsModule,

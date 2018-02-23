@@ -6,6 +6,7 @@ import "jquery";
 import { Service } from 'app/services/api/api-common';
 import { MenuService } from 'app/services/menu.service';
 import { APIService } from 'app/services/api/api.service';
+import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
   selector: 'app-manager-root',
@@ -29,33 +30,38 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 	private getServicesSub: Subscription
 
 	ngOnInit() {
+
 	}
 	ngOnDestroy() {
 		this.getServicesSub.unsubscribe();
 		this.menuClickedSub.unsubscribe();
 	}
 	constructor(private menu: MenuService, private router: Router, private route: ActivatedRoute,
-		private api: APIService) {
+		private api: APIService, private auth: AuthService) {
 		this.setHighlightsFromURL();
-
+		this.auth.doAuthRequest("", "", "", false);
 		this.menuClickedSub = this.menu.MenuItemClicked.subscribe(action => {
 			this.showServiceList = true;
 			this.setActionBackgroundColor(action);
 			this.clearServiceBGColor();
 			this.showActionButtons();
+			$("#newuser").css("background-color", "#1d1d1d");
+			$("#newservice").css("background-color", "#1d1d1d");
+			if (this.currentAction == "services" || this.currentAction == "logs") {
+				this.getServicesSub = this.api.GetServices().subscribe(resp => {
+					if (resp.status == "success") {
+						this.services = JSON.parse(resp.response);
+					}
+				});
+			}
 			this.router.navigate(["manage"])
 		})
-		this.getServicesSub = this.api.GetServices().subscribe(resp => {
-			if (resp.status == "success") {
-				this.services = JSON.parse(resp.response);
-			}
-		});
 	}
 	private setActionBackgroundColor(action: string) {
 		this.currentAction = action;
-		console.log(action)
 		$("#"+action).css("background-color", "#272727");
 		if (this.lastAction != "" && this.lastAction != action) {
+			console.log(this.lastAction)
 			$("#"+this.lastAction).css("background-color", "#1d1d1d");
 		}
 		this.lastAction = action;
@@ -80,14 +86,13 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 		if (urlBits.length > 2) { this.showServiceList = true; }
 
 		$("#"+urlBits[2]).ready(function() {
-			if (urlBits[2] == "newuser") {
-				$("#users").css("background-color", "#272727");
+			console.log(urlBits[2])
+			if (urlBits.length >= 3 && urlBits[3] == "new") {
+				// $("#users").css("background-color", "#272727");
 				$("#newuser").css("background-color", "#272727");
 			}
-			else {
-				$("#"+urlBits[2]).css("background-color", "#272727");
-				this.showServiceList = true;
-			}
+			$("#"+urlBits[2]).css("background-color", "#272727");
+			this.showServiceList = true;
 			// if (urlBits.length >= 3) {
 			// 	$("#"+specifiedService).css("background-color", "#272727");
 			// 	this.currentService = this.lastService = specifiedService;
@@ -118,7 +123,7 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 	}
 	public newUser() {
 		$("#newuser").css("background-color", "#272727");
-		this.router.navigate(["newuser"], {
+		this.router.navigate(["users/new"], {
 			relativeTo: this.route
 		});
 	}

@@ -1,15 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import {MatTableDataSource} from '@angular/material';
-import {SelectionModel} from '@angular/cdk/collections';
+import { MatTableDataSource } from '@angular/material';
+import { SelectionModel } from '@angular/cdk/collections';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 
-import { AuthRequest } from 'app/services/api/api.service';
-import { ServicePermission } from 'app/services/api/api-common';
+import { APIService } from 'app/services/api/api.service';
+import { AuthRequest, NewUser, ServiceAccess } from 'app/services/api/api-common';
 
-const DATA: ServicePermission[] = [
-	{name: "gemini", hasRoot: false, hasAccess: false},
-	{name: "player3", hasRoot: false, hasAccess: false},
-	{name: "watchdog", hasRoot: false, hasAccess: false},
-]
+const DATA: string[] = ["player3", "gemini", "watchdog"]
 
 @Component({
 	selector: 'app-new-user',
@@ -18,10 +14,28 @@ const DATA: ServicePermission[] = [
 })
 export class NewUserComponent implements OnInit {
 	private m: AuthRequest = new AuthRequest("","");
-	private dataSource = new MatTableDataSource<ServicePermission>(DATA);
+	private dataSource = new MatTableDataSource<string>(DATA);
 	private displayedColumns = ['name', 'CanAccess', 'HasRoot'];
+	private selection = new SelectionModel<string>(true, []);
+	private permissions: ServiceAccess[] = new Array();
 
-	constructor() { }
 	ngOnInit() { }
-	public save() {}
+	constructor(private api: APIService) { }
+	public save() {
+		let user: NewUser = new NewUser(this.m.Username, this.m.Password, this.permissions)
+		console.log(JSON.stringify(user));
+		this.api.SaveUser(user).subscribe();
+	}
+	private checkChanged(row: any, type: string, checkEvent: any) {
+		let service = this.permissions.find(s => s.service == row);
+		if (service == undefined) {
+			this.permissions.push({service: row, permissions: [{name: type, value: true}]})
+		}
+		else {
+			let permission = service.permissions.find(p => p.name == type)
+			if (permission == undefined) { service.permissions.push({name: type, value: true}); }
+			else { permission.value = !permission.value; }
+		}
+		console.log(this.permissions)
+	}
 }

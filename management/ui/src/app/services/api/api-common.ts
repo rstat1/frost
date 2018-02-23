@@ -9,8 +9,30 @@ export interface Service {
 	address: string;
 	managed: boolean;
 }
-export interface ServicePermission {
+export interface ServiceAccess {
+	service: string;
+	permissions: Permission[];
+}
+export interface Permission {
 	name: string;
-	hasRoot: boolean;
-	hasAccess: boolean
+	value: boolean;
+}
+export class NewUser {
+	username: string;
+	password: string;
+	permissions: ServiceAccess[];
+	constructor(name: string, password: string, permissions: ServiceAccess[])
+	{
+		this.username = name;
+		this.password = password;
+		this.permissions = permissions;
+	}
+}
+export class AuthRequest {
+	public Username: string;
+	public Password: string;
+	constructor(username: string, password: string) {
+		this.Username = username;
+		this.Password = password;
+	}
 }

@@ -12,7 +12,7 @@ export class ConfigService {
 
 	private static ACCESS_TOKEN: string = "";
 	private static API_ENDPOINT: string = environment.APIBaseURL;
-//	private static WATCHDOG_API_ENDPOINT: string = environment.WatchdogAPIBaseURL;
+	private static AUTH_ENDPOINT: string = environment.APIBaseURL + "/trinity/";
 
 	private instanceName : string;
 	private instanceDescription : string;
@@ -23,6 +23,12 @@ export class ConfigService {
 	public static GetAPIURLFor(api: string, queryVars: string = ""): string {
 		if (api == "ws") { return environment.WebsocketEndpoint + queryVars; }
 		else { return this.API_ENDPOINT + "/" + this.API_VERSION_TAG + "/" + api; }
+	}
+	public static GetAuthURLFor(api: string) {
+		return this.AUTH_ENDPOINT + api;
+	}
+	public static GetAuthorizeEndpoint(): string {
+		return this.AUTH_ENDPOINT + "/authroize?sid=" + environment.ServiceID;
 	}
 	public static SetAPIEndpoint(endpoint: string) {
 		this.API_ENDPOINT = endpoint;
