@@ -29,9 +29,10 @@
 }
 .menu-item {
 	display:flex;
+	background-color: #1d1d1d;
 }
 .menu-item:hover {
-	background-color:#272727;
+	background-color:#272727 !important;
 	cursor: pointer;
 }
 .menu-button {

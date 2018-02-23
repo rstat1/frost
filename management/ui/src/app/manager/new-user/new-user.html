@@ -7,7 +7,16 @@
 			</span>
 		</div>
 		<div class="project-page-root">
-			<div class="group-header">
+			<mat-toolbar class="toolbar">
+				<button mat-button color="primary" class="toolbar-button" (click)="save()">
+					<mat-icon>save</mat-icon>
+					save
+				</button>
+				<button mat-button color="primary" class="toolbar-button">
+					create registration link
+				</button>
+			</mat-toolbar>
+			<div class="group-header" style="margin-top:10px;margin-bottom:10px;">
 				<span style="margin-left:15px;">Details</span>
 			</div>
 			<form #loginForm="ngForm" (ngSubmit)="save()">
@@ -18,34 +27,39 @@
 					<input [(ngModel)]="m.Password" type="password" matInput placeholder="Password" name="password" required>
 				</mat-form-field>
 			</form>
-			<div class="group-header" style="margin-bottom:15px;">
+			<div class="group-header" style="margin-bottom:15px;margin-top:10px;">
 				<span style="margin-left:15px;">Permissions</span>
 			</div>
-			<mat-table #table [dataSource]="dataSource" style="margin-left:20px;margin-right:40px;">
+			<mat-table #table [dataSource]="dataSource" style="margin-left:30px;margin-right:42px;">
 				<ng-container matColumnDef="name">
 					<mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
 					<mat-cell *matCellDef="let element">
 						<span class="service-icon">
-							<img src="/assets/{{element.name}}.png" width="24" height="24" />
+							<img src="/assets/{{element}}.png" width="24" height="24" />
 						</span>
 						<div class="service-name">
-							{{element.name}}
+							{{element}}
 						</div>
 					</mat-cell>
 				</ng-container>
 			    <ng-container matColumnDef="CanAccess">
       				<mat-header-cell *matHeaderCellDef>Can Access</mat-header-cell>
-      				<mat-cell *matCellDef="let element">
-						<mat-checkbox (click)="$event.stopPropagation()"></mat-checkbox>
+      				<mat-cell *matCellDef="let e">
+						<mat-checkbox id="hasAccess-{{e}}" color="primary" (click)="$event.stopPropagation()"
+							(change)="checkChanged(e, 'hasAccess')"></mat-checkbox>
 					</mat-cell>
 				</ng-container>
+				<!-- (change)="$event ? selection.toggle(e) : null" -->
 				<ng-container matColumnDef="HasRoot">
-      				<mat-header-cell *matHeaderCellDef>Has Root Access</mat-header-cell>
-      				<mat-cell *matCellDef="let element">
-						<mat-checkbox (click)="$event.stopPropagation()"></mat-checkbox>
+					<mat-header-cell *matHeaderCellDef>Has Root Access</mat-header-cell>
+					<mat-cell *matCellDef="let e">
+						<mat-checkbox id="hasRoot{{e}}" color="primary" (click)="$event.stopPropagation()"
+							(change)="checkChanged(e, 'hasRoot', $event)">
+						</mat-checkbox>
 					</mat-cell>
 				</ng-container>
 				<mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+				<!-- <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row> -->
 				<mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
 			</mat-table>
 		</div>

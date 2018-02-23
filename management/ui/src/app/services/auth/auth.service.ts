@@ -12,6 +12,7 @@ import { APIService } from 'app/services/api/api.service';
 import { APIResponse } from 'app/services/api/api-common';
 
 import 'rxjs/add/operator/toPromise'
+import { HttpClient } from '@angular/common/http';
 
 class SavedAuthDetails {
 	public username: string;
@@ -36,7 +37,8 @@ export class AuthService {
 	private tokenValidate: Subject<boolean>;
 	private savedAuthDetails: SavedAuthDetails;
 
-	constructor(private api: APIService, private router: Router, private config: ConfigService) {
+	constructor(private api: APIService, private router: Router,
+		private config: ConfigService, private http: HttpClient) {
 		this.authSuccess = new Subject<boolean>();
 		this.tokenValidate = new Subject<boolean>();
 
@@ -72,10 +74,16 @@ export class AuthService {
 		}
 	}
 	public doAuthRequest(username: string, password: string, redirect: string, isNewUser: boolean) {
+		//window.location.replace(ConfigService.GetAuthEndpoint());
+		if (ConfigService.GetAccessToken() == "") {
+			this.api.TEMP_GetToken().subscribe(
+				resp => this.handleAPIResponse(false, "", resp),
+				error => this.handleAPIError(error)
+			);
+		}
 		// if (!isNewUser)	{
 		// 	this.api.ValidateLoginCredentials(username, password).subscribe(
 		// 		resp => this.handleAPIResponse(isNewUser, redirect, resp),
-		// 		error => this.handleAPIError(error)
 		// 	)
 		// } else {
 		// 	this.api.CreateUser(username, password).subscribe(
@@ -111,7 +119,7 @@ export class AuthService {
 		this.FailureReason = "";
 		this.IsLoggedIn = true;
 		this.AuthRequestInvalid = false;
-		this.router.navigate([redirectTo], navigationExtras);
+		if (redirectTo != "") { this.router.navigate([redirectTo], navigationExtras); }
 	}
 	private handleAPIError(err: any) {
 		this.AuthRequestInvalid = true;
