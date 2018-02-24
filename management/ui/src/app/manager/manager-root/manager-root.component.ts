@@ -48,12 +48,13 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 			$("#newuser").css("background-color", "#1d1d1d");
 			$("#newservice").css("background-color", "#1d1d1d");
 			if (this.currentAction == "services" || this.currentAction == "logs") {
-				this.getServicesSub = this.api.GetServices().subscribe(resp => {
+				console.log(this.currentAction)
+				this.getServicesSub = this.api.GetServices(false).subscribe(resp => {
 					if (resp.status == "success") {
 						this.services = JSON.parse(resp.response);
 					}
 				});
-			}
+			} else { this.services = null; }
 			this.router.navigate(["manage"])
 		})
 	}

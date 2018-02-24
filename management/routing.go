@@ -96,10 +96,19 @@ func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, api.serviceManager.DeleteService(name))
 }
 func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {
+	var err error
+	var routeList []byte
 	var response common.APIResponse
 
-	routes := api.serviceManager.GetAllServices()
-	if routeList, err := json.Marshal(routes); err == nil {
+	respType := r.URL.Query().Get("type")
+	if respType == "full" || respType == "" {
+		routes := api.serviceManager.GetAllServices()
+		routeList, err = json.Marshal(routes)
+	} else if respType == "minimal" {
+		routes := api.serviceManager.GetServiceNames()
+		routeList, err = json.Marshal(routes)
+	}
+	if err == nil {
 		response = common.CreateAPIResponse(string(routeList), nil, 500)
 	} else {
 		response = common.CreateAPIResponse("failed", err, 500)

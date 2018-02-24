@@ -18,14 +18,6 @@
 	min-height: 75px;
 	flex-direction: column;
 }
-.path {
-	color:#194A6D;
-	text-align:left;
-	font-size:9pt;
-	display:block;
-	font-weight: bolder;
-	text-transform: uppercase;
-}
 .page-title {
 	display:block;
 	/* border-bottom:1px #95989A solid; */
