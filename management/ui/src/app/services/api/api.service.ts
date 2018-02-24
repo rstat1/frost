@@ -9,8 +9,9 @@ import { APIResponse, NewUser } from "app/services/api/api-common";
 @Injectable()
 export class APIService {
 	constructor(private http: HttpClient) {}
-	public GetServices(): Observable<APIResponse> {
-		return this.GetRequest("services")
+	public GetServices(minimal: boolean): Observable<APIResponse> {
+		if (minimal) { return this.GetRequest("services?type=minimal"); }
+		else { return this.GetRequest("services"); }
 	}
 	public TEMP_GetToken(): Observable<APIResponse> {
 		return this.TrinityGetRequest("generatetoken");

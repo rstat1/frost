@@ -5,8 +5,6 @@ import { Component, OnInit, Renderer2 } from '@angular/core';
 import { APIService } from 'app/services/api/api.service';
 import { AuthRequest, NewUser, ServiceAccess } from 'app/services/api/api-common';
 
-const DATA: string[] = ["player3", "gemini", "watchdog"]
-
 @Component({
 	selector: 'app-new-user',
 	templateUrl: './new-user.html',
@@ -14,13 +12,17 @@ const DATA: string[] = ["player3", "gemini", "watchdog"]
 })
 export class NewUserComponent implements OnInit {
 	private m: AuthRequest = new AuthRequest("","");
-	private dataSource = new MatTableDataSource<string>(DATA);
+	private dataSource = new MatTableDataSource<string>();
 	private displayedColumns = ['name', 'CanAccess', 'HasRoot'];
 	private selection = new SelectionModel<string>(true, []);
 	private permissions: ServiceAccess[] = new Array();
 
 	ngOnInit() { }
-	constructor(private api: APIService) { }
+	constructor(private api: APIService) {
+		this.api.GetServices(true).subscribe(resp => {
+			this.dataSource.data = JSON.parse(resp.response)
+		});
+	}
 	public save() {
 		let user: NewUser = new NewUser(this.m.Username, this.m.Password, this.permissions)
 		console.log(JSON.stringify(user));

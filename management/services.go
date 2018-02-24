@@ -53,6 +53,20 @@ func (s *ServiceManager) GetAllServices() []data.KnownRoute {
 	}
 }
 
+//GetServiceNames ...
+func (s *ServiceManager) GetServiceNames() []string {
+	var names []string
+	if routes, err := s.data.GetKnownRoutes(); err == nil {
+		for _, v := range routes {
+			names = append(names, v.AppName)
+		}
+		return names
+	} else {
+		common.CreateFailureResponse(err, "GetAllServices", 500)
+		return nil
+	}
+}
+
 //StartManagedServices ...
 func (s *ServiceManager) StartManagedServices() {
 	for _, v := range s.GetAllServices() {
