@@ -16,6 +16,15 @@ export class APIService {
 	public TEMP_GetToken(): Observable<APIResponse> {
 		return this.TrinityGetRequest("generatetoken");
 	}
+	public GetAppState(): Observable<APIResponse> {
+		return this.GetRequest("status");
+	}
+	public GetServiceID(): Observable<APIResponse> {
+		return this.GetRequest("serviceid");
+	}
+	public InitWatchdog(): Observable<APIResponse> {
+		return this.GetRequest("init");
+	}
 	public SaveUser(details: NewUser): Observable<APIResponse> {
 		return this.TrinityPostRequest("user/new", JSON.stringify(details))
 	}

@@ -40,51 +40,62 @@ func NewDataStoreInstance(filename string) *DataStore {
 		if _, err := tx.CreateBucketIfNotExists([]byte("System")); err != nil {
 			panic(err)
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte("Routes")); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte("Services")); err != nil {
 			panic(err)
 		}
-		tx.CreateBucketIfNotExists([]byte("Users"))
+		if _, err := tx.CreateBucketIfNotExists([]byte("Users")); err != nil {
+			panic(err)
+		}
 		return nil
 	})
+	ds.FrostInit()
 	return ds
 }
 
+//FrostInit ...
+func (data *DataStore) FrostInit() {
+	if data.GetFirstRunState() {
+		system := data.queryEngine.From("System")
+		if err := system.Set("System", "id", common.RandomID(32)); err != nil {
+			panic(err)
+		}
+		if err := system.Set("System", "key", common.RandomID(48)); err != nil {
+			panic(err)
+		}
+	}
+}
+
 //NewUser ...
-func (data *DataStore) NewUser(name, password string) (error, User) {
-	var groupType string = ""
+func (data *DataStore) NewUser(request AuthRequest, p []ServiceAccess) (User, error) {
 	var user User
 	UUID, _ := uuid.GenerateUUID()
-	if user = data.GetUser(name); user.Id != "" {
-		return errors.New("user already exists"), user
+	if user = data.GetUser(request.Username); user.Id != "" {
+		return user, errors.New("user already exists")
 	} else {
 		usersBucket := data.queryEngine.From("Users")
-		count, err := usersBucket.Count(&User{})
-		if err != nil {
-			return err, User{}
-		}
-		if count == 0 {
-			groupType = "root"
-		} else if name == "client" {
-			groupType = "client"
-		} else {
-			groupType = "user"
-		}
 		passHasher := sha512.New512_256()
-		hash := passHasher.Sum([]byte(password))
+		hash := passHasher.Sum([]byte(request.Password))
 		user = User{
 			Id:       UUID,
 			PassHash: hex.EncodeToString(hash),
-			Group:    groupType,
-			Username: name,
+			Username: request.Username,
 		}
 		usersBucket.Save(&user)
-
-		data.DB.Update(func(tx *bolt.Tx) error {
-			_, err := tx.CreateBucketIfNotExists([]byte(user.Id))
-			return err
-		})
+		data.makeUserPermissionMap(request.Username, p)
 	}
-	return nil, user
+	return user, nil
+}
+
+//GetInstanceDetails ...
+func (data *DataStore) GetInstanceDetails() (string, string) {
+	var id string
+	var key string
+
+	system := data.queryEngine.From("System")
+	system.Get("System", "id", &id)
+	system.Get("System", "key", &key)
+
+	return id, key
 }
 
 //GetUser ...
@@ -94,7 +105,6 @@ func (data *DataStore) GetUser(username string) User {
 	if err := usersBucket.One("Username", username, &userInfo); err == nil {
 		return userInfo
 	} else {
-		common.Logger.WithField("username", username).Errorln("couldn't find user with that name")
 		return User{}
 	}
 }
@@ -111,27 +121,49 @@ func (data *DataStore) GetUserByID(id string) User {
 	}
 }
 
-//GetKnownRoutes ...
-func (data *DataStore) GetKnownRoutes() ([]KnownRoute, error) {
+//GetServiceDetailss ...
+func (data *DataStore) GetServiceDetailss() ([]ServiceDetails, error) {
 	var err error
-	var knownRoutes []KnownRoute
-	routeList := data.queryEngine.From("Routes")
-	err = routeList.All(&knownRoutes)
+	var knownServices []ServiceDetails
+	routeList := data.queryEngine.From("Services")
+	err = routeList.All(&knownServices)
 
 	if err == nil {
-		return knownRoutes, nil
+		return knownServices, nil
 	} else {
 		return nil, err
 	}
 }
 
+//GetFirstRunState ...
+func (data *DataStore) GetFirstRunState() bool {
+	var firstRunState bool
+	firstRun := data.queryEngine.From("System")
+	if err := firstRun.Get("System", "firstrun", &firstRunState); err == nil {
+		common.Logger.Debugln(err)
+		return firstRunState
+	} else {
+		return true
+	}
+}
+
+//SetFirstRunState ...
+func (data *DataStore) SetFirstRunState() {
+	firstRun := data.queryEngine.From("System")
+	firstRun.Set("System", "firstrun", false)
+}
+
 //AddNewRoute ...
-func (data *DataStore) AddNewRoute(service KnownRoute) error {
+func (data *DataStore) AddNewRoute(service ServiceDetails) error {
 	common.Logger.Debugln(service)
+	if service.ServiceID == "" {
+		service.ServiceID = common.RandomID(32)
+		service.ServiceKey = common.RandomID(48)
+	}
 	if service.AppName == "" {
 		return errors.New("no AppName set")
 	}
-	routes := data.queryEngine.From("Routes")
+	routes := data.queryEngine.From("Services")
 	if err := routes.Save(&service); err != nil {
 		common.Logger.WithField("func", "AddNewRoute").Errorln(err)
 		return err
@@ -142,8 +174,8 @@ func (data *DataStore) AddNewRoute(service KnownRoute) error {
 
 //DeleteRoute ...
 func (data *DataStore) DeleteRoute(route string) error {
-	var foundRoute KnownRoute
-	routes := data.queryEngine.From("Routes")
+	var foundRoute ServiceDetails
+	routes := data.queryEngine.From("Services")
 	if err := routes.One("AppName", route, &foundRoute); err == nil {
 		return routes.DeleteStruct(&foundRoute)
 	} else {
@@ -153,9 +185,9 @@ func (data *DataStore) DeleteRoute(route string) error {
 }
 
 //GetRoute ...
-func (data *DataStore) GetRoute(name string) (KnownRoute, error) {
-	var foundRoute KnownRoute
-	routes := data.queryEngine.From("Routes")
+func (data *DataStore) GetRoute(name string) (ServiceDetails, error) {
+	var foundRoute ServiceDetails
+	routes := data.queryEngine.From("Services")
 	if err := routes.One("AppName", name, &foundRoute); err == nil {
 		return foundRoute, nil
 	} else {
@@ -163,6 +195,57 @@ func (data *DataStore) GetRoute(name string) (KnownRoute, error) {
 			"func":  "GetRoute",
 			"route": name,
 		})
-		return KnownRoute{}, err
+		return ServiceDetails{}, err
 	}
+}
+
+//DoesUserHavePermission ...
+func (data *DataStore) DoesUserHavePermission(username, service, permission string) bool {
+	var serviceAccess map[string]map[string]bool
+	permMap := data.queryEngine.From("SitePermissionMappings")
+	if err := permMap.Get("SitePermissionMappings", username, &serviceAccess); err == nil {
+		return serviceAccess[service][permission]
+	} else {
+		return false
+	}
+}
+
+//GetServiceDetails ...
+func (data *DataStore) GetServiceDetails(name string) (ServiceDetails, error) {
+	var serviceDetails ServiceDetails
+	c := data.queryEngine.From("Services")
+	if err := c.One("ServiceName", name, &serviceDetails); err == nil {
+		return serviceDetails, nil
+	} else {
+		common.CreateFailureResponse(err, "GetServiceDetails", 500)
+		return ServiceDetails{}, err
+	}
+}
+
+//GetServiceByID ...
+func (data *DataStore) GetServiceByID(id string) (ServiceDetails, error) {
+	var serviceDetails ServiceDetails
+	c := data.queryEngine.From("Services")
+	err := c.One("ServiceID", id, &serviceDetails)
+	if err == nil {
+		common.Logger.Debugln(serviceDetails.ServiceID)
+
+		return serviceDetails, nil
+	} else {
+		common.CreateFailureResponse(err, "GetServiceByID", 500)
+		return ServiceDetails{}, err
+	}
+}
+func (data *DataStore) makeUserPermissionMap(username string, p []ServiceAccess) {
+	var serviceAccess map[string]map[string]bool
+	serviceAccess = make(map[string]map[string]bool)
+	for _, v := range p {
+		permMap := make(map[string]bool)
+		for _, v2 := range v.Permission {
+			permMap[v2.Name] = v2.Value
+		}
+		serviceAccess[v.Service] = permMap
+	}
+	permMap := data.queryEngine.From("SitePermissionMappings")
+	permMap.Set("SitePermissionMappings", username, serviceAccess)
 }

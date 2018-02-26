@@ -1,7 +1,11 @@
 tmp/
 test/
 player3/
+trinity/
 datastore
 routes
 
 *.rdb
+boltbrowser.linux64
+
+\.directory

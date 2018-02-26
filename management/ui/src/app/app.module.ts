@@ -15,8 +15,10 @@ import { MenuComponent } from "app/components/menu/menu.component";
 import { AuthTokenInjector } from './services/api/AuthTokenInjector';
 import { ConfigService } from './services/config.service';
 import { ManagerModule } from './manager/manager.module';
+import { FirstRunComponent } from './manager/first-run/first-run';
 
 const routes: Routes = [
+	{path: 'first-run', component: FirstRunComponent, pathMatch: "full"}
 	{path: 'manage',  loadChildren: "app/manager/manager.module#ManagerModule", pathMatch: "full"},//, canLoad: [AuthGuard]},
 	{path: '', redirectTo: "/manage", pathMatch: 'full'}
 ];
@@ -30,6 +32,7 @@ const menuItems = { Items: [
 @NgModule({
 	declarations: [
 		AppComponent,
+		FirstRunComponent,
 	],
 	imports: [
 		BrowserModule,
@@ -44,4 +47,6 @@ const menuItems = { Items: [
 			   ],
 	bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+	constructor(private config: ConfigService) {}
+}

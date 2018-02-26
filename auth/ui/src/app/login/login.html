@@ -1,0 +1,35 @@
+<div class="block-container">
+	<div id="background-color" class="login-block" style="">
+		<div id="left-column">
+			<div class="app-name">
+				<img src="/assets/trinity.png" />
+				<p style="text-transform:capitalize">{{serviceName}}</p>
+				<p class="app-description">Sign-in with your TrinityID</p>
+			</div>
+			<div class="app-list" >
+				<span *ngFor="let s of knownApps" id="{{s}}" [class.app-list-selected]="s == serviceName">
+					<img class="app-img" src="/assets/{{s}}.png" />
+				</span>
+			</div>
+		</div>
+		<div id="right-column">
+			<div class="login-register-form-container">
+				<form #loginForm="ngForm" (ngSubmit)="login()">
+					<mat-form-field class="login-register-text-box">
+						<input [(ngModel)]="m.Username" matInput placeholder="Username" name="Username" required>
+					</mat-form-field>
+					<mat-form-field class="login-register-text-box">
+						<input [(ngModel)]="m.Password" type="password" matInput placeholder="Password" name="password" required>
+					</mat-form-field>
+					<div class="error">
+						<!-- <span *ngIf="authService.AuthRequestInvalid">{{authService.FailureReason}}.</span> -->
+					</div>
+					<button type="submit" id="button-text-style" mat-raised-button color="primary">login</button>
+					<div class="register-link">
+						<!-- <a *ngIf="authService.AllowRegister" routerLink="/user/register">Register</a> -->
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

@@ -11,6 +11,7 @@ export class ConfigService {
 	private static API_VERSION_TAG: string = "frost";
 
 	private static ACCESS_TOKEN: string = "";
+	private static SERVICE_ID: string = "";
 	private static API_ENDPOINT: string = environment.APIBaseURL;
 	private static AUTH_ENDPOINT: string = environment.APIBaseURL + "/trinity/";
 
@@ -18,7 +19,11 @@ export class ConfigService {
 	private instanceDescription : string;
 	private registrationAllowed: boolean = null;
 
-	constructor(private http: HttpClient) {}
+	constructor(private http: HttpClient) {
+		this.http.get<APIResponse>(ConfigService.GetAPIURLFor("serviceid")).subscribe(resp => {
+			ConfigService.SERVICE_ID = resp.response
+		});
+	}
 
 	public static GetAPIURLFor(api: string, queryVars: string = ""): string {
 		if (api == "ws") { return environment.WebsocketEndpoint + queryVars; }
@@ -28,7 +33,7 @@ export class ConfigService {
 		return this.AUTH_ENDPOINT + api;
 	}
 	public static GetAuthorizeEndpoint(): string {
-		return this.AUTH_ENDPOINT + "/authroize?sid=" + environment.ServiceID;
+		return this.AUTH_ENDPOINT + "authorize?sid=" + ConfigService.SERVICE_ID;
 	}
 	public static SetAPIEndpoint(endpoint: string) {
 		this.API_ENDPOINT = endpoint;
@@ -42,7 +47,6 @@ export class ConfigService {
 	}
 	public static SetAccessToken(token: string) { this.ACCESS_TOKEN = token; }
 	public get RegistrationAllowed(): boolean {
-		console.log("hello")
 		return this.registrationAllowed;
 	}
 	private GetConfigValue(valueName: string): Observable<APIResponse> {

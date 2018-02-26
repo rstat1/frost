@@ -30,6 +30,8 @@ type Proxy struct {
 	isInLocalMode        bool
 	apiBaseURL           string
 	baseURL              string
+	baseAuthURL          string
+	baseWDURL            string
 	apiBaseURLWithScheme string
 	listenerPort         string
 }
@@ -43,7 +45,8 @@ var (
 )
 
 const (
-	watchdogAPIName = "frost"
+	watchdogAPIName    = "frost"
+	authServiceAPIName = "trinity"
 
 	prodBaseURL          = ".m.rdro.us"
 	prodBaseAPIURL       = "api" + prodBaseURL
@@ -80,7 +83,8 @@ func (p *Proxy) StartProxyListener(localMode bool) {
 		p.apiBaseURL = prodBaseAPIURL
 		p.listenerPort = productionPort
 		p.apiBaseURLWithScheme = baseAPIURLWithScheme
-
+		p.baseAuthURL = "trinity" + prodBaseURL
+		p.baseWDURL = watchdogURL
 		common.Logger.Infoln("running in production mode...")
 
 		p.setRoutes()
@@ -90,7 +94,8 @@ func (p *Proxy) StartProxyListener(localMode bool) {
 		p.apiBaseURL = devAPIBaseURL
 		p.listenerPort = devPort
 		p.apiBaseURLWithScheme = devAPIBaseURLWithScheme
-
+		p.baseAuthURL = "trinity" + devBaseURL
+		p.baseWDURL = devWatchdogURL
 		common.Logger.Infoln("running in dev mode...")
 
 		p.setRoutes()
@@ -99,7 +104,7 @@ func (p *Proxy) StartProxyListener(localMode bool) {
 }
 
 //AddRoute ...
-func (p *Proxy) AddRoute(newRoute data.KnownRoute) {
+func (p *Proxy) AddRoute(newRoute data.ServiceDetails) {
 	p.apiRoutes[newRoute.APIName] = newRoute.ServiceAddress
 	p.knownRoutes[newRoute.AppName+p.baseURL] = true
 }
@@ -168,9 +173,11 @@ func (p *Proxy) urlWhiteList() autocert.HostPolicy {
 }
 func (p *Proxy) setRoutes() {
 	p.knownRoutes[p.apiBaseURL] = true
-	p.knownRoutes[watchdogURL] = true
+	p.knownRoutes[p.baseWDURL] = true
+	p.knownRoutes[p.baseAuthURL] = true
 	p.apiRoutes[watchdogAPIName] = "localhost:1000"
-	if routes, err := p.data.GetKnownRoutes(); err == nil {
+	p.apiRoutes[authServiceAPIName] = "localhost:1003"
+	if routes, err := p.data.GetServiceDetailss(); err == nil {
 		for _, v := range routes {
 			p.apiRoutes[v.APIName] = v.ServiceAddress
 			p.knownRoutes[v.AppName+p.baseURL] = true

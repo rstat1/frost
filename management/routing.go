@@ -3,44 +3,74 @@ package management
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 
+	"git.m/svcman/auth"
 	"git.m/svcman/common"
 	"git.m/svcman/data"
 	"git.m/svcman/proxy"
+	"git.m/svcman/services"
 	"github.com/husobee/vestigo"
 )
 
+const (
+	prodBaseURL = ".m.rdro.us"
+
+	devBaseURL = ".dev-m.rdro.us"
+)
+
+//InstanceInfo ...
+type InstanceInfo struct {
+	ServiceID, ServiceKey, Password string
+}
+
 //APIRouter ...
 type APIRouter struct {
-	user           *User
+	dev            bool
+	user           *auth.User
 	data           *data.DataStore
 	proxy          *proxy.Proxy
 	router         *vestigo.Router
-	serviceManager *ServiceManager
+	servMan        *ServiceManager
+	bingBGService  *services.BingBGFetcher
+	authServiceURL string
+	baseAPIURL     string
+	serviceKey     string
+	serviceID      string
+	watchdog       string
 }
 
 //NewAPIRouter ...
-func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, services *ServiceManager) *APIRouter {
-	user := NewUserService(store)
+func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *ServiceManager, user *auth.User, devMode bool) *APIRouter {
 
 	return &APIRouter{
-		user:           user,
-		data:           store,
-		proxy:          proxy,
-		serviceManager: services,
+		dev:           devMode,
+		user:          user,
+		data:          store,
+		proxy:         proxy,
+		servMan:       serviceMan,
+		bingBGService: services.NewBingBGFetcher(store),
 	}
 }
 
 //StartManagementAPIListener ...
 func (api *APIRouter) StartManagementAPIListener() {
+	api.serviceID, api.serviceKey = api.data.GetInstanceDetails()
+	if api.dev {
+		api.watchdog = "http://192.168.1.12:4200" //"http://watchdog" + devBaseURL
+		api.baseAPIURL = "http://api" + devBaseURL
+		api.authServiceURL = "http://trinity" + devBaseURL
+	} else {
+		api.watchdog = "https://watchdog" + prodBaseURL
+		api.baseAPIURL = "https://api" + prodBaseURL
+		api.authServiceURL = "https://trinity" + prodBaseURL
+	}
 	api.router = vestigo.NewRouter()
 	api.router.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
 		AllowHeaders: []string{"Authorization", "Cache-Control", "X-Requested-With", "Content-Type"},
-		AllowOrigin:  []string{"https://svcman.m.rdro.us", "http://192.168.1.12:4200"},
+		AllowOrigin: []string{"https://watchdog.m.rdro.us", "http://trinity.dev-m.rdro.us", "https://trinity.m.rdro.us",
+			"http://192.168.1.12:4200"},
 	})
 	vestigo.CustomNotFoundHandlerFunc(api.NotFound)
 	api.SetupRoutes()
@@ -61,39 +91,47 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/ws/log", common.RequestWrapper(common.Nothing, "GET", api.ws))
 	api.router.Handle("/api/frost/wsauth", common.RequestWrapper(api.user.IsRoot, "POST", api.wsauth))
 
-	api.router.Handle("/api/frost/user/login", common.RequestWrapper(common.Nothing, "POST", api.login))
-	api.router.Handle("/api/frost/user/register", common.RequestWrapper(common.Nothing, "POST", api.register))
+	api.router.Handle("/api/frost/user/auth", common.RequestWrapper(common.Nothing, "GET", api.auth))
 
 	api.router.Handle("/api/frost/service/get", common.RequestWrapper(api.user.IsRoot, "GET", api.getService))
 	api.router.Handle("/api/frost/service/new", common.RequestWrapper(api.user.IsRoot, "POST", api.newService))
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
-	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
+	api.router.Handle("/api/frost/service/update", common.RequestWrapper(common.Nothing, "POST", api.updateService))
+
 	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.IsRoot, "GET", api.services))
 
 	api.router.Handle("/api/frost/process", common.RequestWrapper(api.user.IsRoot, "GET", api.process))
-}
-func (api *APIRouter) login(resp http.ResponseWriter, r *http.Request) {
-	var response common.APIResponse
-	response = api.user.ValidateLoginRequest(r)
-	common.WriteAPIResponseStruct(resp, response)
-}
-func (api *APIRouter) register(resp http.ResponseWriter, r *http.Request) {
-	var request AuthRequest
-	body, _ := ioutil.ReadAll(r.Body)
+	api.router.Handle("/api/frost/bg", common.RequestWrapper(common.Nothing, "GET", api.bingBGService.GetBGImage))
 
-	if err := json.Unmarshal(body, &request); err == nil {
-		common.WriteAPIResponseStruct(resp, api.user.NewUser(request.Username, request.Password))
-	} else {
-		common.WriteFailureResponse(fmt.Errorf("failed deserializing request body %s", err), resp, "register", 500)
+	api.router.Handle("/api/frost/status", common.RequestWrapper(common.Nothing, "GET", api.firstRunStatus))
+	api.router.Handle("/api/frost/init", common.RequestWrapper(common.Nothing, "GET", api.initFrost))
+	api.router.Handle("/api/frost/serviceid", common.RequestWrapper(common.Nothing, "GET", api.getServiceID))
+}
+func (api *APIRouter) auth(resp http.ResponseWriter, r *http.Request) {
+	// var response common.APIResponse
+	var authType = r.URL.Query().Get("type")
+
+	if authType == "authcode" {
+		code := r.URL.Query().Get("code")
+		req, _ := http.NewRequest("GET", api.authServiceURL+"/token", nil)
+		q := req.URL.Query()
+		q.Set("sid", api.serviceID)
+		q.Set("skey", api.serviceKey)
+		q.Set("code", code)
+
+	} else if authType == "token" {
+
 	}
+	// response = api.user.ValidateLoginRequest(r)
+	// common.WriteAPIResponseStruct(resp, response)
 }
 func (api *APIRouter) newService(resp http.ResponseWriter, r *http.Request) {
-	common.WriteAPIResponseStruct(resp, api.serviceManager.NewService(r))
+	common.WriteAPIResponseStruct(resp, api.servMan.NewService(r))
 }
 func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 	var name = r.URL.Query().Get("name")
-	api.serviceManager.StopManagedService(name)
-	common.WriteAPIResponseStruct(resp, api.serviceManager.DeleteService(name))
+	api.servMan.StopManagedService(name)
+	common.WriteAPIResponseStruct(resp, api.servMan.DeleteService(name))
 }
 func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {
 	var err error
@@ -102,10 +140,10 @@ func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {
 
 	respType := r.URL.Query().Get("type")
 	if respType == "full" || respType == "" {
-		routes := api.serviceManager.GetAllServices()
+		routes := api.servMan.GetAllServices()
 		routeList, err = json.Marshal(routes)
 	} else if respType == "minimal" {
-		routes := api.serviceManager.GetServiceNames()
+		routes := api.servMan.GetServiceNames()
 		routeList, err = json.Marshal(routes)
 	}
 	if err == nil {
@@ -120,13 +158,13 @@ func (api *APIRouter) process(resp http.ResponseWriter, r *http.Request) {
 	action := r.URL.Query().Get("action")
 	switch action {
 	case "start":
-		if api.serviceManager.StartManagedService(name) {
+		if api.servMan.StartManagedService(name) {
 			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 400))
 		} else {
 			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("", errors.New("not found or already running"), 400))
 		}
 	case "stop":
-		api.serviceManager.StopManagedService(name)
+		api.servMan.StopManagedService(name)
 	}
 }
 func (api *APIRouter) ws(resp http.ResponseWriter, r *http.Request) {
@@ -136,7 +174,7 @@ func (api *APIRouter) wsauth(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("not implemented", nil, 501))
 }
 func (api *APIRouter) updateService(resp http.ResponseWriter, r *http.Request) {
-	common.WriteAPIResponseStruct(resp, api.serviceManager.UpdateService(r))
+	common.WriteAPIResponseStruct(resp, api.servMan.UpdateService(r))
 }
 func (api *APIRouter) getService(resp http.ResponseWriter, r *http.Request) {
 	serviceName := r.URL.Query().Get("name")
@@ -146,4 +184,54 @@ func (api *APIRouter) getService(resp http.ResponseWriter, r *http.Request) {
 	} else {
 		common.WriteFailureResponse(err, resp, "getService", 404)
 	}
+}
+func (api *APIRouter) firstRunStatus(resp http.ResponseWriter, r *http.Request) {
+	if !api.data.GetFirstRunState() {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("initialized", nil, 200))
+	} else {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(api.watchdog+"/first-run", nil, 200))
+	}
+}
+func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
+	var perms []data.ServiceAccess
+	if api.data.GetFirstRunState() == true {
+		sid, skey := api.data.GetInstanceDetails()
+		password := common.RandomID(48)
+		newUser := data.AuthRequest{
+			Username: "root",
+			Password: password,
+		}
+		service := data.ServiceDetails{
+			AppName:          "watchdog",
+			BinName:          "watchdog",
+			APIName:          "frost",
+			IsManagedService: false,
+			ServiceID:        sid,
+			ServiceKey:       skey,
+			RedirectURL:      api.baseAPIURL + "/frost/user/auth",
+			ServiceAddress:   "localhost:1000",
+		}
+		p := data.ServiceAccess{
+			Service: "watchdog",
+			Permission: []struct {
+				Name  string `json:"name"`
+				Value bool   `json:"value"`
+			}{
+				{"hasAccess", true},
+				{"hasRoot", true},
+			},
+		}
+		perms := append(perms, p)
+		if err := api.data.AddNewRoute(service); err != nil {
+			common.Logger.WithField("func", "initFrost").Debugln(err)
+		}
+		api.user.NewUser(newUser, perms)
+		api.data.SetFirstRunState()
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(password, nil, 200))
+	} else {
+		common.WriteFailureResponse(errors.New("already initialized"), resp, "initFrost", 400)
+	}
+}
+func (api *APIRouter) getServiceID(resp http.ResponseWriter, r *http.Request) {
+	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(api.serviceID, nil, 400))
 }

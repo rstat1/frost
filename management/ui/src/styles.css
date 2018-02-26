@@ -19,6 +19,9 @@ app-projects-root {
 	min-width: 646px;
 	/* max-width: 655px; */
 }
+app-root {
+	width: 100%;
+}
 components-home {
 	width: 100%;
 }
@@ -63,6 +66,18 @@ components-login, components-register, components-list, app-project-page {
 }
 #register-logo-block-color {
 	background-color: #689F38
+}
+.background {
+	background-image: url("");
+	background-repeat: no-repeat;
+	background-size: cover;
+	position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+	z-index: 0;
+	filter: opacity(.5);
 }
 .error {
 	font-size: 10pt;
