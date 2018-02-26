@@ -44,8 +44,8 @@ func (s *ServiceManager) DeleteService(name string) common.APIResponse {
 }
 
 //GetAllServices ...
-func (s *ServiceManager) GetAllServices() []data.KnownRoute {
-	if routes, err := s.data.GetKnownRoutes(); err == nil {
+func (s *ServiceManager) GetAllServices() []data.ServiceDetails {
+	if routes, err := s.data.GetServiceDetailss(); err == nil {
 		return routes
 	} else {
 		common.CreateFailureResponse(err, "GetAllServices", 500)
@@ -56,7 +56,7 @@ func (s *ServiceManager) GetAllServices() []data.KnownRoute {
 //GetServiceNames ...
 func (s *ServiceManager) GetServiceNames() []string {
 	var names []string
-	if routes, err := s.data.GetKnownRoutes(); err == nil {
+	if routes, err := s.data.GetServiceDetailss(); err == nil {
 		for _, v := range routes {
 			names = append(names, v.AppName)
 		}
@@ -90,7 +90,7 @@ func (s *ServiceManager) StopManagedService(name string) {
 
 //NewService ...
 func (s *ServiceManager) NewService(request *http.Request) common.APIResponse {
-	resp, service := s.handleFileUpload(request, data.KnownRoute{})
+	resp, service := s.handleFileUpload(request, data.ServiceDetails{})
 	if service.APIName != "" {
 		s.StartManagedService(service.AppName)
 	}
@@ -110,17 +110,17 @@ func (s *ServiceManager) UpdateService(request *http.Request) common.APIResponse
 		return resp
 	}
 }
-func (s *ServiceManager) GetService(name string) (data.KnownRoute, error) {
+func (s *ServiceManager) GetService(name string) (data.ServiceDetails, error) {
 	if service, err := s.data.GetRoute(name); err == nil {
 		return service, nil
 	} else {
-		return data.KnownRoute{}, err
+		return data.ServiceDetails{}, err
 	}
 }
-func (s *ServiceManager) handleFileUpload(request *http.Request, info data.KnownRoute) (common.APIResponse, data.KnownRoute) {
+func (s *ServiceManager) handleFileUpload(request *http.Request, info data.ServiceDetails) (common.APIResponse, data.ServiceDetails) {
 	var err error
 	var resp common.APIResponse = common.CreateAPIResponse("success", nil, 500)
-	var service data.KnownRoute
+	var service data.ServiceDetails
 
 	if err = request.ParseMultipartForm(75 * 1024 * 1024); err == nil {
 		uiFiles, handler, noUIBlob := request.FormFile("uiblob")
@@ -139,7 +139,7 @@ func (s *ServiceManager) handleFileUpload(request *http.Request, info data.Known
 		}
 		if _, err := os.Stat(service.AppName); os.IsNotExist(err) {
 			if err := os.Mkdir(service.AppName, 0770); err != nil {
-				return common.CreateFailureResponse(err, "NewService(mkdir)", 500), data.KnownRoute{}
+				return common.CreateFailureResponse(err, "NewService(mkdir)", 500), data.ServiceDetails{}
 			}
 		}
 		if notServiceBlob == nil {

@@ -74,7 +74,7 @@ export class AuthService {
 		}
 	}
 	public doAuthRequest(username: string, password: string, redirect: string, isNewUser: boolean) {
-		//window.location.replace(ConfigService.GetAuthEndpoint());
+		window.location.replace(ConfigService.GetAuthorizeEndpoint());
 		if (ConfigService.GetAccessToken() == "") {
 			this.api.TEMP_GetToken().subscribe(
 				resp => this.handleAPIResponse(false, "", resp),

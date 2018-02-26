@@ -1,4 +1,4 @@
-package management
+package auth
 
 import (
 	"crypto/rand"
@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -19,23 +18,16 @@ import (
 )
 
 var (
-	issuerName string = "https://auth.m.rdro.us"
+	issuerName string = "https://trinity.m.rdro.us"
 )
 
-type AuthRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
+//User ..
 type User struct {
 	datastore *data.DataStore
 	hmacKey   []byte
 }
 
-type AuthResult struct {
-	Result string `json:"result"`
-}
-type TokenValidationResult struct {
-}
+//AuthToken ...
 type AuthToken struct {
 	Issuer  string `json:"iss"`
 	Subject string `json:"sub"`
@@ -44,6 +36,7 @@ type AuthToken struct {
 	UserID  string `json:"uid"`
 }
 
+//NewUserService ...
 func NewUserService(db *data.DataStore) *User {
 	return &User{
 		datastore: db,
@@ -52,22 +45,19 @@ func NewUserService(db *data.DataStore) *User {
 }
 
 //NewUser Creates a new user and returns an auth token.
-func (u *User) NewUser(name, password string) common.APIResponse {
+func (u *User) NewUser(request data.AuthRequest, p []data.ServiceAccess) common.APIResponse {
 	var apiResp common.APIResponse
 
-	err, user := u.datastore.NewUser(name, password)
-	if err == nil {
-		resp := u.GenerateAuthToken(AuthRequest{name, password}, user)
-		if resp.Status == "success" {
-			apiResp = common.CreateAPIResponse(resp.Response, nil, 500)
-		} else {
-			apiResp = common.CreateFailureResponse(errors.New(resp.Response), "NewUser", resp.HttpStatusCode)
-		}
+	if _, err := u.datastore.NewUser(request, p); err == nil {
+		apiResp = common.CreateAPIResponse("success", nil, 400)
 	} else {
-		apiResp = common.CreateFailureResponse(err, "NewUser", 500)
+		apiResp = common.CreateFailureResponse(err, "NewUser", 400)
 	}
+
 	return apiResp
 }
+
+//GetUserFromToken ...
 func (u *User) GetUserFromToken(r *http.Request) data.User {
 	var user data.User
 	success, response := u.GetUserHeader(r)
@@ -95,23 +85,17 @@ func (u *User) GetUserByID(id string) data.User {
 	return u.datastore.GetUserByID(id)
 }
 
-//ValidateLoginRequest Checks that the provided username and password are known and returns a signed JWT.
-func (u *User) ValidateLoginRequest(request *http.Request) common.APIResponse {
+//ValidateLoginRequest Checks that the provided username and password are known and returns a signed JWT. Also checks for site access
+//permission.
+func (u *User) ValidateLoginRequest(request data.AuthRequest) common.APIResponse {
 	var userInfo data.User
 	var response common.APIResponse
-	var authRequest AuthRequest
-	body, _ := ioutil.ReadAll(request.Body)
-	json.Unmarshal(body, &authRequest)
-
-	if authRequest.Username == "client" {
-		return common.CreateFailureResponse(errors.New("invalid username"), "ValidateLoginRequest", 401)
-	}
 
 	passHasher := sha512.New512_256()
-	hash := hex.EncodeToString(passHasher.Sum([]byte(authRequest.Password)))
-	userInfo = u.datastore.GetUser(authRequest.Username)
+	hash := hex.EncodeToString(passHasher.Sum([]byte(request.Password)))
+	userInfo = u.datastore.GetUser(request.Username)
 	if userInfo.PassHash == string(hash) {
-		response = u.GenerateAuthToken(authRequest, userInfo)
+		response = common.CreateAPIResponse("success", nil, 500) //u.GenerateAuthToken(request, userInfo)
 	} else {
 		response = common.CreateFailureResponse(errors.New("incorrect credentials"), "ValidateLoginRequest", 401)
 	}
@@ -122,7 +106,8 @@ func (u *User) ValidateLoginRequest(request *http.Request) common.APIResponse {
 func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bool, string) {
 	var isValid bool
 	var reason string = ""
-	return true, ""
+	var user data.User
+
 	if token, err := jwt.ParseSigned(token); err == nil {
 		var defaultClaims jwt.Claims
 		customClaims := struct {
@@ -134,6 +119,10 @@ func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bo
 		if customClaims.Group == "" && customClaims.UserID == "" && defaultClaims.Issuer == "" {
 			return false, "token invalid"
 		}
+
+		user = u.datastore.GetUserByID(customClaims.UserID)
+		isValid = user.Id != ""
+		reason = "User ID doesn't belong to a valid user."
 
 		isValid = defaultClaims.Issuer == issuerName
 		reason = "Invalid Issuer."
@@ -216,29 +205,33 @@ func (u *User) IsUser(r *http.Request) common.APIResponse {
 }
 
 //GenerateAuthToken ..
-func (u *User) GenerateAuthToken(request AuthRequest, userDetails data.User) common.APIResponse {
+func (u *User) GenerateAuthToken(username string) common.APIResponse {
 	var response common.APIResponse
-	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: u.hmacKey}, (&jose.SignerOptions{}).WithType("JWT"))
-	if err == nil {
-		token := AuthToken{
-			Issuer:  issuerName,
-			Subject: request.Username,
-			Expires: time.Now().Add(744 * time.Hour).Unix(),
-			Group:   userDetails.Group,
-			UserID:  userDetails.Id,
-		}
-		json, _ := json.Marshal(token)
+	if userDetails := u.datastore.GetUser(username); userDetails.Username != "" {
+		sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: u.hmacKey}, (&jose.SignerOptions{}).WithType("JWT"))
+		if err == nil {
+			token := AuthToken{
+				Issuer:  issuerName,
+				Subject: username,
+				Expires: time.Now().Add(744 * time.Hour).Unix(),
+				Group:   userDetails.Group,
+				UserID:  userDetails.Id,
+			}
+			json, _ := json.Marshal(token)
 
-		if webSig, err := sig.Sign(json); err == nil {
-			signature, err := webSig.CompactSerialize()
-			response = common.CreateAPIResponse(signature, err, 500)
+			if webSig, err := sig.Sign(json); err == nil {
+				signature, err := webSig.CompactSerialize()
+				response = common.CreateAPIResponse(signature, err, 500)
+			} else {
+				response = common.CreateFailureResponse(err, "GenerateAuthToken", 500)
+			}
 		} else {
 			response = common.CreateFailureResponse(err, "GenerateAuthToken", 500)
 		}
+		return response
 	} else {
-		response = common.CreateFailureResponse(err, "GenerateAuthToken", 500)
+		return common.CreateFailureResponse(errors.New("could find user with that name"), "GenerateAuthToken", 500)
 	}
-	return response
 }
 
 func generateSymKey() []byte {

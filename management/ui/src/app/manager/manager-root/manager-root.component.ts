@@ -39,7 +39,14 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 	constructor(private menu: MenuService, private router: Router, private route: ActivatedRoute,
 		private api: APIService, private auth: AuthService) {
 		this.setHighlightsFromURL();
-		this.auth.doAuthRequest("", "", "", false);
+		this.api.GetAppState().subscribe(resp => {
+			console.log(resp)
+			if (resp.response == "initialized") {
+				this.auth.doAuthRequest("", "", "", false);
+			} else {
+				window.location.replace(resp.response);
+			}
+		});
 		this.menuClickedSub = this.menu.MenuItemClicked.subscribe(action => {
 			this.showServiceList = true;
 			this.setActionBackgroundColor(action);
