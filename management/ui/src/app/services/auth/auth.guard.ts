@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate, CanLoad, CanActivateChild {
 		let url = `/${childRoute}`;
 		return this.checkLogin(url)
 			.map(status => {
-				if (status == false) { this.router.navigate(['/user/login']); }
+				if (status == false) { this.router.navigate(['/auth']); }
 				return status;
 			})
 			.catch(e => { return Observable.of(false); });
@@ -29,7 +29,7 @@ export class AuthGuard implements CanActivate, CanLoad, CanActivateChild {
 		console.log("check login for " + url);
 		return this.checkLogin(url)
 			.map(status => {
-				if (status == false) { this.router.navigate(['/user/login']); }
+				if (status == false) { this.router.navigate(['/auth']); }
 				return status;
 			})
 			.catch(e => { return Observable.of(false); });
@@ -38,7 +38,7 @@ export class AuthGuard implements CanActivate, CanLoad, CanActivateChild {
 		return this.checkLogin(state.url)
 			.map(status => {
 				console.log(status)
-				if (status == false) { this.router.navigate(['/user/login']) }
+				if (status == false) { this.router.navigate(['/auth']) }
 				return status;
 			})
 			.catch(e => { return Observable.of(false); });

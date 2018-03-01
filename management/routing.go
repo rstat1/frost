@@ -3,7 +3,9 @@ package management
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
+	"time"
 
 	"git.m/svcman/auth"
 	"git.m/svcman/common"
@@ -38,10 +40,14 @@ type APIRouter struct {
 	serviceKey     string
 	serviceID      string
 	watchdog       string
+	httpClient     *http.Client
 }
 
 //NewAPIRouter ...
 func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *ServiceManager, user *auth.User, devMode bool) *APIRouter {
+	var http = &http.Client{
+		Timeout: time.Second * 2,
+	}
 
 	return &APIRouter{
 		dev:           devMode,
@@ -49,6 +55,7 @@ func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *Service
 		data:          store,
 		proxy:         proxy,
 		servMan:       serviceMan,
+		httpClient:    http,
 		bingBGService: services.NewBingBGFetcher(store),
 	}
 }
@@ -91,7 +98,7 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/ws/log", common.RequestWrapper(common.Nothing, "GET", api.ws))
 	api.router.Handle("/api/frost/wsauth", common.RequestWrapper(api.user.IsRoot, "POST", api.wsauth))
 
-	api.router.Handle("/api/frost/user/auth", common.RequestWrapper(common.Nothing, "GET", api.auth))
+	api.router.Handle("/api/frost/auth/token", common.RequestWrapper(common.Nothing, "GET", api.getToken))
 
 	api.router.Handle("/api/frost/service/get", common.RequestWrapper(api.user.IsRoot, "GET", api.getService))
 	api.router.Handle("/api/frost/service/new", common.RequestWrapper(api.user.IsRoot, "POST", api.newService))
@@ -107,23 +114,28 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/init", common.RequestWrapper(common.Nothing, "GET", api.initFrost))
 	api.router.Handle("/api/frost/serviceid", common.RequestWrapper(common.Nothing, "GET", api.getServiceID))
 }
-func (api *APIRouter) auth(resp http.ResponseWriter, r *http.Request) {
-	// var response common.APIResponse
-	var authType = r.URL.Query().Get("type")
+func (api *APIRouter) getToken(resp http.ResponseWriter, r *http.Request) {
+	var serviceResp common.APIResponse
 
-	if authType == "authcode" {
-		code := r.URL.Query().Get("code")
-		req, _ := http.NewRequest("GET", api.authServiceURL+"/token", nil)
-		q := req.URL.Query()
-		q.Set("sid", api.serviceID)
-		q.Set("skey", api.serviceKey)
-		q.Set("code", code)
-
-	} else if authType == "token" {
-
+	code := r.URL.Query().Get("code")
+	req, _ := http.NewRequest("GET", api.baseAPIURL+"/trinity/token", nil)
+	q := req.URL.Query()
+	q.Set("sid", api.serviceID)
+	q.Set("skey", api.serviceKey)
+	q.Set("code", code)
+	req.URL.RawQuery = q.Encode()
+	if httpResp, err := api.httpClient.Do(req); err == nil {
+		body, _ := ioutil.ReadAll(httpResp.Body)
+		json.Unmarshal(body, &serviceResp)
+		if serviceResp.Status == "failed" {
+			serviceResp.HttpStatusCode = 500
+		} else {
+			serviceResp.HttpStatusCode = 200
+		}
+		common.WriteAPIResponseStruct(resp, serviceResp)
+	} else {
+		common.WriteFailureResponse(err, resp, "getToken", 500)
 	}
-	// response = api.user.ValidateLoginRequest(r)
-	// common.WriteAPIResponseStruct(resp, response)
 }
 func (api *APIRouter) newService(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, api.servMan.NewService(r))
@@ -208,7 +220,7 @@ func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
 			IsManagedService: false,
 			ServiceID:        sid,
 			ServiceKey:       skey,
-			RedirectURL:      api.baseAPIURL + "/frost/user/auth",
+			RedirectURL:      api.watchdog + "/auth",
 			ServiceAddress:   "localhost:1000",
 		}
 		p := data.ServiceAccess{

@@ -122,3 +122,17 @@ components-login, components-register, components-list, app-project-page {
 mat-cell, .mat-header-cell{
 	overflow: visible;
 }
+.proper-colors {
+	background-color: #1d1d1d !important;
+	color: #FFB300 !important;
+	text-transform: capitalize;
+}
+.service-name {
+	display:inline-block;
+	margin-bottom:13px;
+	margin-left:7px;
+}
+.service-icon {
+	position:relative;
+	top:7px;
+}

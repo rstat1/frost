@@ -79,11 +79,13 @@ func (auth *AuthService) initAPIRoutes() {
 	} else {
 		auth.loginURL = prodLoginURL
 	}
+	auth.route.Handle("/api/trinity/", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.echo))
+
 	auth.route.Handle("/api/trinity/token", common.RequestWrapper(auth.CodeAndKeyProvided, "GET", auth.token))
 	auth.route.Handle("/api/trinity/validate", common.RequestWrapper(auth.CredsAndIDProvided, "POST", auth.validate))
 	auth.route.Handle("/api/trinity/authorize", common.RequestWrapper(auth.HasServiceID, "GET", auth.authorize))
 
-	auth.route.Handle("/api/trinity/user/new", common.RequestWrapper(common.Nothing, "POST", auth.newuser))
+	auth.route.Handle("/api/trinity/user/new", common.RequestWrapper(auth.user.AuthTokenProvided, "POST", auth.newuser))
 	auth.route.Handle("/api/trinity/service/fromrid", common.RequestWrapper(auth.HasRequestID, "GET", auth.fromrequest))
 }
 
@@ -188,7 +190,7 @@ func (auth *AuthService) token(resp http.ResponseWriter, r *http.Request) {
 	if username := auth.cache.GetString("auth-"+hasSid.Response, hasCode.Response); username != "" {
 		if service, err := auth.db.GetServiceByID(hasSid.Response); err == nil {
 			if service.ServiceKey == hasSKey.Response {
-				common.WriteAPIResponseStruct(resp, auth.user.GenerateAuthToken(username))
+				common.WriteAPIResponseStruct(resp, auth.user.GenerateAuthToken(username, service.AppName))
 			}
 		} else {
 			common.WriteFailureResponse(err, resp, "token", 500)
@@ -262,4 +264,7 @@ func (auth *AuthService) fromrequest(resp http.ResponseWriter, r *http.Request) 
 		}
 	}
 	common.WriteAPIResponseStruct(resp, response)
+}
+func (auth *AuthService) echo(resp http.ResponseWriter, r *http.Request) {
+	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 500))
 }

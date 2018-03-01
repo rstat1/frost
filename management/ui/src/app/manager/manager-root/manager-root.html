@@ -7,39 +7,19 @@
 	</div>
 	<div class="content" [class.hide-element]="!showServiceList">
 		<div class="menu-container" id="background-color">
-			<div class="add-button"  [class.hide-element]="!showAddButton" (click)="newService()">
-				<div class="menu-item" id="newservice">
-					<img src="/assets/plus.png" width="32" height="32" class="menu-item-icon" />
-					<span class="menu-item-details">
-						<span class="menu-item-title">New</span>
-						<span class="menu-item-description">Add new service</span>
-					</span>
-				</div>
-			</div>
-			<div class="add-button" [class.hide-element]="!showAddUser" (click)="newUser()">
-				<div class="menu-item" id="newuser">
-					<img src="/assets/plus.png" width="32" height="32" class="menu-item-icon" />
-					<span class="menu-item-details">
-						<span class="menu-item-title">New</span>
-						<span class="menu-item-description">Add user</span>
-					</span>
-				</div>
-			</div>
-			<div class="menu-block" [class.menu-block-without-add]="!showAddButton && !showAddUser"
-				 [class.menu-block-with-add]="showAddButton">
-				<div class="menu-item" *ngFor="let s of services"  id="{{s.name}}" (click)="navToAction(s.name)">
-					<img src="/assets/{{s.name}}.png" width="32" height="32" class="menu-item-icon" />
-					<span class="menu-item-details">
-						<span class="menu-item-title">{{s.name}}</span>
-						<span class="menu-item-description">{{s.name}}.m.rdro.us</span>
-					</span>
-				</div>
-
+			<app-action-list></app-action-list>
+		</div>
+		<div [class.hide-element]="showSubActionArea == false" class="page-header">
+			<span class="page-title">
+				<span class="path">/frost{{currentPath}}</span>
+				{{currentTitle}}
+			</span>
+			<div class="content proper-width">
+				<router-outlet></router-outlet>
 			</div>
 		</div>
-		<!-- <div style="display:flex;">
-			<router-outlet></router-outlet>
-		</div> -->
+		<div style="display: flex;flex-direction:column;">
+		</div>
 	</div>
-	<router-outlet></router-outlet>
+
 </div>
