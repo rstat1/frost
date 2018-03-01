@@ -13,8 +13,8 @@ export class APIService {
 		if (minimal) { return this.GetRequest("services?type=minimal"); }
 		else { return this.GetRequest("services"); }
 	}
-	public TEMP_GetToken(): Observable<APIResponse> {
-		return this.TrinityGetRequest("generatetoken");
+	public GetAuthToken(code: string): Observable<APIResponse> {
+		return this.GetRequest("auth/token?code="+code);
 	}
 	public GetAppState(): Observable<APIResponse> {
 		return this.GetRequest("status");
@@ -24,6 +24,9 @@ export class APIService {
 	}
 	public InitWatchdog(): Observable<APIResponse> {
 		return this.GetRequest("init");
+	}
+	public ValidateToken(): Observable<APIResponse> {
+		return this.TrinityGetRequest("");
 	}
 	public SaveUser(details: NewUser): Observable<APIResponse> {
 		return this.TrinityPostRequest("user/new", JSON.stringify(details))

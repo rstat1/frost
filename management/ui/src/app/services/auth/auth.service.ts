@@ -50,19 +50,18 @@ export class AuthService {
 	public async setSavedToken() {
 		let token: string = ConfigService.GetAccessToken();
 		if (token != "") {
-			var resp: APIResponse;
-			// await this.api.ValidateToken().toPromise().catch(e => {
-			// 	return null;
-			// })
+			let resp: APIResponse = await this.api.ValidateToken().toPromise().catch(e => {
+				return null;
+			})
 			let decoded = jwt_decode(token);
 			if (resp != null && resp.status == "success") {
 				console.log("set")
 				this.IsLoggedIn = true;
 				this.UserIsRoot = decoded.grp == "root";
 				this.tokenValidate.next(true);
-
 			} else {
-				console.log("set")
+				console.log("clearing...")
+				sessionStorage.clear();
 				this.IsLoggedIn = false;
 				this.tokenValidate.next(false);
 			}
@@ -74,25 +73,17 @@ export class AuthService {
 		}
 	}
 	public doAuthRequest(username: string, password: string, redirect: string, isNewUser: boolean) {
-		window.location.replace(ConfigService.GetAuthorizeEndpoint());
 		if (ConfigService.GetAccessToken() == "") {
-			this.api.TEMP_GetToken().subscribe(
-				resp => this.handleAPIResponse(false, "", resp),
-				error => this.handleAPIError(error)
-			);
+			window.location.replace(ConfigService.GetAuthorizeEndpoint());
+		} else {
+			this.router.navigate(["manage"])
 		}
-		// if (!isNewUser)	{
-		// 	this.api.ValidateLoginCredentials(username, password).subscribe(
-		// 		resp => this.handleAPIResponse(isNewUser, redirect, resp),
-		// 	)
-		// } else {
-		// 	this.api.CreateUser(username, password).subscribe(
-		// 		resp => this.handleAPIResponse(isNewUser, redirect, resp),
-		// 		error => this.handleAPIError(error)
-		// 	)
-		// }
 	}
-
+	public GetToken(authCode: string) {
+		this.api.GetAuthToken(authCode).subscribe(resp => {
+			this.handleAPIResponse(false, "manage", resp)
+		});
+	}
 	private handleAPIResponse(isNewUser: boolean, redirectTo: string, resp: APIResponse) {
 		let decoded = jwt_decode(resp.response);
 		ConfigService.SetAccessToken(resp.response)
@@ -105,21 +96,24 @@ export class AuthService {
 		if (decoded.exp == null) {
 			this.AuthRequestInvalid = true;
 			this.CurrentUser = "";
+			this.IsLoggedIn = false;
 			this.FailureReason = "token not valid.";
 		}
 		else {
 			this.UserIsRoot = decoded.grp == "root";
 			this.CurrentUser = decoded.sub;
-
 			sessionStorage.setItem("auth", JSON.stringify({username: this.CurrentUser, token: resp.response}));
-			this.authSuccess.next(true)
+			this.authSuccess.next(true);
+			this.tokenValidate.next(true);
 			this.NoToken = false
+			this.IsLoggedIn = true;
 		}
 
-		this.FailureReason = "";
-		this.IsLoggedIn = true;
-		this.AuthRequestInvalid = false;
-		if (redirectTo != "") { this.router.navigate([redirectTo], navigationExtras); }
+		// this.FailureReason = "";
+		// this.IsLoggedIn = true;
+		// this.AuthRequestInvalid = false;
+		console.log(redirectTo)
+		this.router.navigate([redirectTo]);
 	}
 	private handleAPIError(err: any) {
 		this.AuthRequestInvalid = true;

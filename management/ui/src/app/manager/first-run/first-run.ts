@@ -14,7 +14,7 @@ class InstanceInfo {
 	templateUrl: './first-run.html',
 	styleUrls: ['./first-run.css']
 })
-export class FirstRunComponent implements OnInit, OnDestroy {
+export class FirstRunComponent {
 	private key: string = "";
 	private id: string = "";
 	private rootPW: string = "";

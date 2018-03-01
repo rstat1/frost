@@ -32,7 +32,7 @@ type AuthToken struct {
 	Issuer  string `json:"iss"`
 	Subject string `json:"sub"`
 	Expires int64  `json:"exp"`
-	Group   string `json:"grp"`
+	ForApp  string `json:"app"`
 	UserID  string `json:"uid"`
 }
 
@@ -111,12 +111,12 @@ func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bo
 	if token, err := jwt.ParseSigned(token); err == nil {
 		var defaultClaims jwt.Claims
 		customClaims := struct {
-			Group  string `json:"grp"`
+			ForApp string `json:"app"`
 			UserID string `json:"uid"`
 		}{}
 		token.Claims(u.hmacKey, &defaultClaims, &customClaims)
 
-		if customClaims.Group == "" && customClaims.UserID == "" && defaultClaims.Issuer == "" {
+		if customClaims.ForApp == "" && customClaims.UserID == "" && defaultClaims.Issuer == "" {
 			return false, "token invalid"
 		}
 
@@ -130,14 +130,9 @@ func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bo
 		isValid = defaultClaims.Expiry.Time().Unix() > time.Now().Unix()
 		reason = "Token expired."
 
-		if sudo {
-			isValid = customClaims.Group == "root"
-			reason = "user is not root"
-		}
-		if requireUserToken {
-			isValid = customClaims.Group != "client"
-			reason = "not a human"
-		}
+		isValid = u.datastore.DoesUserHavePermission(user.Username, customClaims.ForApp, "hasAccess") == true
+		reason = "User doesn't have access to specified service"
+
 	} else {
 		isValid = false
 		reason = "Invalid Token"
@@ -205,7 +200,7 @@ func (u *User) IsUser(r *http.Request) common.APIResponse {
 }
 
 //GenerateAuthToken ..
-func (u *User) GenerateAuthToken(username string) common.APIResponse {
+func (u *User) GenerateAuthToken(username, app string) common.APIResponse {
 	var response common.APIResponse
 	if userDetails := u.datastore.GetUser(username); userDetails.Username != "" {
 		sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: u.hmacKey}, (&jose.SignerOptions{}).WithType("JWT"))
@@ -214,7 +209,7 @@ func (u *User) GenerateAuthToken(username string) common.APIResponse {
 				Issuer:  issuerName,
 				Subject: username,
 				Expires: time.Now().Add(744 * time.Hour).Unix(),
-				Group:   userDetails.Group,
+				ForApp:  app,
 				UserID:  userDetails.Id,
 			}
 			json, _ := json.Marshal(token)
