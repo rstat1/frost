@@ -1,0 +1,20 @@
+.upload-box {
+    display: inline-block !important;
+    color: white;
+	margin-left: 10px;
+    margin-right: 10px;
+    width: 50vw;
+}
+.upload-control {
+    margin-left: 30px;
+}
+@media(min-height: 919px) {
+	.upload-box-width {
+		width: 46.8vw;
+	}
+}
+@media(max-height: 677px) {
+	.upload-box-width {
+		width: 37vw;;
+	}
+}

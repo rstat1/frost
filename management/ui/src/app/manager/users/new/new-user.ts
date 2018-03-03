@@ -28,11 +28,13 @@ export class NewUserComponent implements OnInit, OnDestroy {
 		});
 	}
 	ngOnInit() {
+		console.warn("NewUserComponent init...")
 		this.actions.OnHighlightPrimaryAction();
 		this.actions.SetPrimaryAction(new PrimaryActionInfo("New User", "add", "Add a new user"));
 		this.header.SetPagePath(window.location.pathname);
 	}
 	ngOnDestroy() {
+		console.warn("NewUserComponent goes away")
 		this.actions.ClearSelectedItem();
 	}
 	public save() {

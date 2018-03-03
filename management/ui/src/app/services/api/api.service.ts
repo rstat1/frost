@@ -29,7 +29,13 @@ export class APIService {
 		return this.TrinityGetRequest("");
 	}
 	public SaveUser(details: NewUser): Observable<APIResponse> {
-		return this.TrinityPostRequest("user/new", JSON.stringify(details))
+		return this.TrinityPostRequest("user/new", JSON.stringify(details));
+	}
+	public NewService(details: FormData): Observable<APIResponse> {
+		return this.PostFormRequest("service/new", details);
+	}
+	public DeleteService(name: string): Observable<APIResponse> {
+		return this.DeleteRequest("service/delete?name=" + name);
 	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
 		let apiURL: string = ConfigService.GetAuthURLFor(endpoint);
@@ -43,7 +49,15 @@ export class APIService {
 		let apiURL: string = ConfigService.GetAPIURLFor(url);
 		return this.http.get<APIResponse>(apiURL);
 	}
+	private DeleteRequest(url: string): Observable<APIResponse> {
+		let apiURL: string = ConfigService.GetAPIURLFor(url);
+		return this.http.delete<APIResponse>(apiURL);
+	}
 	private PostRequest(url: string, body: string): Observable<APIResponse> {
+		let apiURL: string = ConfigService.GetAPIURLFor(url);
+		return this.http.post<APIResponse>(apiURL, body);
+	}
+	private PostFormRequest(url: string, body: FormData): Observable<APIResponse> {
 		let apiURL: string = ConfigService.GetAPIURLFor(url);
 		return this.http.post<APIResponse>(apiURL, body);
 	}

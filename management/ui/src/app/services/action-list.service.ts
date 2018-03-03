@@ -2,6 +2,10 @@ import { Subject } from 'rxjs/Subject';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
+export class SubItemDetails {
+	public IconName: string;
+	public Description: string;
+}
 export class PrimaryActionInfo {
 	public PrimaryActionName: string;
 	public PrimaryActionIcon: string;
@@ -12,38 +16,36 @@ export class PrimaryActionInfo {
 		this.PrimaryActionSubText = title;
 	}
 }
-
-export class SubItemDetails {
-	public IconName: string;
-	public Description: string;
+export class SubActionClickEvent {
+	public ContextInfo: string;
+	public SubActionName: string;
 }
-
 @Injectable()
 export class ActionListService {
-	public SubActionClicked: Observable<string>;
 	public ActionListItems: Observable<string[]>;
 	public PrimaryActionClicked: Observable<string>;
 	public ClearPrimarySelection: Observable<string>;
 	public HighlightPrimaryAction: Observable<string>;
 	public PrimaryAction: Observable<PrimaryActionInfo>;
 	public ActionListSubItems: Observable<SubItemDetails[]>;
+	public SubActionClicked: Observable<SubActionClickEvent>;
 
 	private clearPrimary: Subject<string>;
-	private subActionClicked: Subject<string>;
 	private actionListItems: Subject<string[]>;
 	private primaryActionClicked: Subject<string>;
 	private highlightPrimaryAction: Subject<string>;
 	private primaryAction: Subject<PrimaryActionInfo>;
 	private actionListSubItems: Subject<SubItemDetails[]>;
+	private subActionClicked: Subject<SubActionClickEvent>;
 
 	constructor() {
 		this.clearPrimary = new Subject<string>();
-		this.subActionClicked = new Subject<string>();
 		this.actionListItems = new Subject<string[]>();
 		this.primaryActionClicked = new Subject<string>();
+		this.highlightPrimaryAction = new Subject<string>();
 		this.primaryAction = new Subject<PrimaryActionInfo>();
 		this.actionListSubItems = new Subject<SubItemDetails[]>();
-		this.highlightPrimaryAction = new Subject<string>();
+		this.subActionClicked = new Subject<SubActionClickEvent>();
 
 		this.PrimaryAction = this.primaryAction.asObservable();
 		this.ActionListItems = this.actionListItems.asObservable();
@@ -52,12 +54,16 @@ export class ActionListService {
 		this.ActionListSubItems = this.actionListSubItems.asObservable();
 		this.PrimaryActionClicked = this.primaryActionClicked.asObservable();
 		this.HighlightPrimaryAction = this.highlightPrimaryAction.asObservable();
+
+
 	}
 	public ClearSelectedItem() { this.clearPrimary.next("hi"); }
 	public OnHighlightPrimaryAction() { this.highlightPrimaryAction.next("name"); }
-	public OnSubActionClicked(subAction: string) { this.subActionClicked.next(subAction); }
 	public SetActionList(newActionList: string[]) { this.actionListItems.next(newActionList); }
 	public SetSubItems(newSubList: SubItemDetails[]) { this.actionListSubItems.next(newSubList); }
 	public OnPrimaryActionClicked(actionName: string) { this.primaryActionClicked.next(actionName); }
 	public SetPrimaryAction(newPrimaryAction: PrimaryActionInfo) { this.primaryAction.next(newPrimaryAction); }
+	public OnSubActionClicked(subActionName: string, ctx: string) {
+		this.subActionClicked.next({ContextInfo: ctx, SubActionName: subActionName});
+	}
 }
