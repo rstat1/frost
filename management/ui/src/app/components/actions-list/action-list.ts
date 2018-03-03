@@ -55,7 +55,7 @@ export class ActionsListComponent implements OnInit, OnDestroy {
 		this.isSelected = true;
 		this.actionService.OnPrimaryActionClicked(name);
 	}
-	public subActionClicked(name: string) {
-		this.actionService.OnSubActionClicked(name);
+	public subActionClicked(name: string, ctx: string) {
+		this.actionService.OnSubActionClicked(name, ctx);
 	}
 }

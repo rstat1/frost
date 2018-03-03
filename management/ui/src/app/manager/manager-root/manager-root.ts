@@ -74,7 +74,7 @@ export class ManagerRootComponent implements OnDestroy {
 		this.lastAction = action;
 	}
 	private setHighlightsFromURL() {
-		this.showSubActionArea = true;
+		//this.showSubActionArea = true;
 		let urlBits: string[] = window.location.pathname.split("/");
 		let specifiedService: string = window.location.search.replace("?service=", "");
 

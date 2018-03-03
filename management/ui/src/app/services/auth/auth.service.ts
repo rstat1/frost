@@ -55,18 +55,15 @@ export class AuthService {
 			})
 			let decoded = jwt_decode(token);
 			if (resp != null && resp.status == "success") {
-				console.log("set")
 				this.IsLoggedIn = true;
 				this.UserIsRoot = decoded.grp == "root";
 				this.tokenValidate.next(true);
 			} else {
-				console.log("clearing...")
 				sessionStorage.clear();
 				this.IsLoggedIn = false;
 				this.tokenValidate.next(false);
 			}
 		} else {
-			console.log("set")
 			this.IsLoggedIn = false;
 			this.NoToken = true;
 			this.tokenValidate.next(false);

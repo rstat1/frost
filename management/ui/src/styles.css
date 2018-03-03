@@ -108,9 +108,6 @@ components-login, components-register, components-list, app-project-page {
 	margin: 68px 0px 0px 20px;
 	color:white
 }
-.login-register-text-box {
-	margin-right:8px;
-}
 .path {
 	color:#FFB300;
 	text-align:left;
@@ -123,7 +120,7 @@ mat-cell, .mat-header-cell{
 	overflow: visible;
 }
 .proper-colors {
-	background-color: #1d1d1d !important;
+	background-color: #2e2e2e !important;
 	color: #FFB300 !important;
 	text-transform: capitalize;
 }
@@ -135,4 +132,36 @@ mat-cell, .mat-header-cell{
 .service-icon {
 	position:relative;
 	top:7px;
+}
+.project-page-root {
+    padding: 5px 40px 20px 40px
+}
+.group-header {
+	padding:20px 20px 20px 0px;
+	background-color:#1d1d1d;
+	margin-right:0px;
+}
+.toolbar {
+	height: 50px !important;
+	padding: 0px !important;
+	background-color: #404040 !important;
+}
+.toolbar-button {
+	text-transform: uppercase;
+}
+@media(min-height: 919px) {
+	.proper-width {
+		width: 58vw;
+	}
+}
+@media(max-height: 677px) {
+	.proper-width {
+		width: 52.26vw;;
+	}
+}
+.login-register-text-box {
+	display: block !important;
+	color: white;
+	margin-left: 30px;
+	margin-right: 50px;
 }

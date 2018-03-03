@@ -3,14 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule,
-	 	 MatToolbarModule, MatIconModule, MatSnackBarModule, MatTooltipModule } from '@angular/material';
+		 MatToolbarModule, MatIconModule, MatSnackBarModule, MatTooltipModule,
+		 MatSlideToggleModule } from '@angular/material';
 import { FormsModule, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import { MenuModule } from 'app/menu/menu.module';
+import { NewUserComponent } from './users/new/new-user';
 import { UsersRootComponent } from './users/root/users-root';
 import { PageInfoService } from 'app/services/page-info.service';
 import { NewServiceComponent } from './services/new/new-service';
-import { NewUserComponent } from './users/new/new-user.component';
 import { MenuComponent } from 'app/components/menu/menu.component';
 import { ManagerRootComponent } from './manager-root/manager-root';
 import { ActionListService } from '../services/action-list.service';
@@ -47,6 +48,7 @@ const projectRoutes: Routes = [
 		MatCheckboxModule,
 		MatSnackBarModule,
 		ReactiveFormsModule,
+		MatSlideToggleModule,
 		MenuModule.forRoot(null),
 		// MalihuScrollbarModule.forRoot(),
 		RouterModule.forChild(projectRoutes)

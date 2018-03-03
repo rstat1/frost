@@ -1,0 +1,52 @@
+<div class="project-page-root proper-width">
+	<form #loginForm="ngForm" (ngSubmit)="save(loginForm)">
+		<mat-toolbar class="toolbar">
+			<button mat-button color="primary" class="toolbar-button">
+				<mat-icon>save</mat-icon>
+				save
+			</button>
+		</mat-toolbar>
+		<div class="group-header" style="margin-top:10px;margin-bottom:10px;">
+			<span style="margin-left:15px;">Details</span>
+		</div>
+		<mat-form-field class="login-register-text-box">
+			<input [(ngModel)]="s.name" matInput placeholder="Name" name="ServiceName" required>
+		</mat-form-field>
+		<mat-form-field class="login-register-text-box">
+			<input [(ngModel)]="s.api_prefix" matInput placeholder="API Prefix" name="apiPrefix" required>
+		</mat-form-field>
+		<mat-form-field class="login-register-text-box">
+			<input [(ngModel)]="s.address" matInput placeholder="Local address" name="address" required>
+		</mat-form-field>
+		<mat-form-field class="login-register-text-box">
+			<input [(ngModel)]="s.redirectURL" matInput placeholder="Auth Callback URL" name="authCallback" required>
+		</mat-form-field>
+		<span style="display:inline !important;" class="login-register-text-box">
+			<mat-checkbox [(ngModel)]="s.managed" color="primary" name="IsManaged">Managed Service</mat-checkbox>
+		</span>
+		<span style="display:inline !important;" class="login-register-text-box">
+			<mat-checkbox color="primary" name="IsManaged">Managed Updates</mat-checkbox>
+		</span>
+		<div class="group-header" style="margin-top:20px;margin-bottom:10px;">
+			<span style="margin-left:15px;">Files</span>
+		</div>
+		<span class="upload-control">
+			<input style="display:none;" type="file" #serviceFile required (change)="setFile('service', $event)">
+			<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="serviceFile.click()">
+				<mat-icon>cloud_upload</mat-icon>
+			</button>
+			<mat-form-field class="upload-box upload-box-width">
+				<input matInput placeholder="Service File" name="ServiceName" [value]="s.filename" disabled required>
+			</mat-form-field>
+		</span>
+		<span class="upload-control">
+			<input hidden type="file" #ui required (change)="setFile('ui', $event)">
+			<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="ui.click()">
+				<mat-icon>cloud_upload</mat-icon>
+			</button>
+			<mat-form-field class="upload-box upload-box-width">
+				<input matInput placeholder="ZIP containing UI files" name="ServiceName" [value]="uiFilesName" disabled required>
+			</mat-form-field>
+		</span>
+	</form>
+</div>

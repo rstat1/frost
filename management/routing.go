@@ -138,12 +138,12 @@ func (api *APIRouter) getToken(resp http.ResponseWriter, r *http.Request) {
 	}
 }
 func (api *APIRouter) newService(resp http.ResponseWriter, r *http.Request) {
-	common.WriteAPIResponseStruct(resp, api.servMan.NewService(r))
+	common.WriteAPIResponseStruct(resp, api.getServiceListOnSuccess(api.servMan.NewService(r)))
 }
 func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 	var name = r.URL.Query().Get("name")
 	api.servMan.StopManagedService(name)
-	common.WriteAPIResponseStruct(resp, api.servMan.DeleteService(name))
+	common.WriteAPIResponseStruct(resp, api.getServiceListOnSuccess(api.servMan.DeleteService(name)))
 }
 func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {
 	var err error
@@ -246,4 +246,15 @@ func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) getServiceID(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(api.serviceID, nil, 400))
+}
+func (api *APIRouter) getServiceListOnSuccess(resp common.APIResponse) common.APIResponse {
+	var apiResp common.APIResponse
+	if resp.Status == "success" {
+		routes := api.servMan.GetServiceNames()
+		routeList, _ := json.Marshal(routes)
+		apiResp = common.CreateAPIResponse(string(routeList), nil, 500)
+	} else {
+		apiResp = resp;
+	}
+	return apiResp
 }
