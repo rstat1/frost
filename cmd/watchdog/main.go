@@ -31,5 +31,5 @@ func main() {
 	services.StartManagedServices()
 	authService.InitAuthService()
 	manager.StartManagementAPIListener()
-	proxy.StartProxyListener(*devMode)
+	proxy.StartProxyListener(devMode)
 }
