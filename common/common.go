@@ -193,7 +193,7 @@ func CommonProcessInit() {
 
 //CreateFailureResponse ...
 func CreateFailureResponse(err error, functionName string, status int) APIResponse {
-	Logger.WithField("func", functionName).Debugln(err)
+	Logger.WithField("func", functionName).Errorln(err)
 	return CreateAPIResponse("failed", err, status)
 }
 
