@@ -76,9 +76,11 @@ func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 }
 
 //StartProxyListener ...
-func (p *Proxy) StartProxyListener(localMode bool) {
-	p.isInLocalMode = localMode
-	if localMode == false {
+func (p *Proxy) StartProxyListener(localMode *bool) {
+	common.Logger.WithField("localmode", *localMode).Infoln("starting proxy listener.")
+
+	p.isInLocalMode = *localMode
+	if p.isInLocalMode == false {
 		p.baseURL = prodBaseURL
 		p.apiBaseURL = prodBaseAPIURL
 		p.listenerPort = productionPort
