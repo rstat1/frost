@@ -25,7 +25,7 @@ const routes: Routes = [
 	{path: '', redirectTo: "/manage", pathMatch: 'full'}
 ];
 const menuItems = { Items: [
-	{ ItemTitle: "Users", ItemSubtext: "Return to Home page", Icon:"services", ActionName: "users", Category: "Config" },
+	{ ItemTitle: "Users", ItemSubtext: "Return to Home page", Icon:"user", ActionName: "users", Category: "Config" },
 	{ ItemTitle: "Updates", ItemSubtext: "Return to Home page", Icon:"update", ActionName: "update", Category: "Config" },
 	{ ItemTitle: "Services", ItemSubtext: "Return to Home page", Icon:"services", ActionName: "services", Category: "Config" },
 ] };
@@ -46,7 +46,7 @@ const menuItems = { Items: [
 	],
 	providers: [AuthService, APIService, AuthGuard, RootGuard, MenuService, ConfigService,
 				{provide: HTTP_INTERCEPTORS, multi: true, useClass: AuthTokenInjector},
-			   ],
+	],
 	bootstrap: [AppComponent]
 })
 export class AppModule {

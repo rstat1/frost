@@ -1,25 +1,51 @@
 package data
 
+//User ...
 type User struct {
 	Id, PassHash string
 	Username     string `storm:"id"`
 	Group        string
 }
+
+//AuthRequest ...
 type AuthRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+//UserDetails ...
 type UserDetails struct {
-	Username    string          `json:"username"`
-	Password    string          `json:"password"`
-	Permissions []ServiceAccess `json:"permissions"`
+	Username    string           `json:"username"`
+	Password    string           `json:"password"`
+	Permissions []ServiceAuth `json:"access"`
 }
+
+//PermissionList ...
+type PermissionList struct {
+	Permissions []ServiceAuth `json:"permissions"`
+}
+
+//ServiceAuth ...
+type ServiceAuth struct {
+	Service     string            `json:"service"`
+	Permissions []PermissionValue `json:"permissions"`
+}
+
+//PermissionValue ...
+type PermissionValue struct {
+	Name  string `json:"name"`
+	Value bool   `json:"value"`
+}
+
+//Config ...
 type Config struct {
 	ID                 string `storm:"id"`
 	UpdateAuthKey      string
 	ActivationKey      string
 	ActivationRequired bool `json:"ActivationRequired"`
 }
+
+//ServiceDetails ...
 type ServiceDetails struct {
 	AppName          string `storm:"id" json:"name" graph:"name"`
 	BinName          string `json:"filename" graph:"serviceFilename"`
@@ -29,7 +55,10 @@ type ServiceDetails struct {
 	RedirectURL      string
 	ServiceAddress   string `json:"address" graph:"serviceAddress"`
 	IsManagedService bool   `json:"managed" graph:"isManaged"`
+	ServiceNameURLToUI bool `json:"serviceNameToUI"`
 }
+
+//ServiceAccess ...
 type ServiceAccess struct {
 	Service    string `json:"service"`
 	Permission []struct {
@@ -37,8 +66,8 @@ type ServiceAccess struct {
 		Value bool   `json:"value"`
 	}
 }
-type Permission struct {
-}
+
+//BingDailyImage ...
 type BingDailyImage struct {
 	Images []struct {
 		Startdate     string        `json:"startdate"`

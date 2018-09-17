@@ -103,13 +103,23 @@ func (s *ServiceManager) UpdateService(request *http.Request) common.APIResponse
 	if serviceName == "" {
 		return common.CreateFailureResponse(errors.New("service name not specified"), "UpdateService", 500)
 	} else {
-		s.StopManagedService(serviceName)
-		service, _ := s.data.GetRoute(serviceName)
-		resp, _ := s.handleFileUpload(request, service)
-		s.StartManagedService(serviceName)
-		return resp
+		if serviceName == "watchdog" || serviceName == "trinity" {
+			service := data.ServiceDetails{
+				AppName: serviceName,
+			}
+			resp, _ := s.handleFileUpload(request, service)
+			return resp
+		} else {
+			s.StopManagedService(serviceName)
+			service, _ := s.data.GetRoute(serviceName)
+			resp, _ := s.handleFileUpload(request, service)
+			s.StartManagedService(serviceName)
+			return resp
+		}
 	}
 }
+
+//GetService ...
 func (s *ServiceManager) GetService(name string) (data.ServiceDetails, error) {
 	if service, err := s.data.GetRoute(name); err == nil {
 		return service, nil
@@ -119,7 +129,7 @@ func (s *ServiceManager) GetService(name string) (data.ServiceDetails, error) {
 }
 func (s *ServiceManager) handleFileUpload(request *http.Request, info data.ServiceDetails) (common.APIResponse, data.ServiceDetails) {
 	var err error
-	var resp common.APIResponse = common.CreateAPIResponse("success", nil, 500)
+	var resp = common.CreateAPIResponse("success", nil, 500)
 	var service data.ServiceDetails
 
 	if err = request.ParseMultipartForm(75 * 1024 * 1024); err == nil {

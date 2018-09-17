@@ -122,7 +122,7 @@ mat-cell, .mat-header-cell{
 .proper-colors {
 	background-color: #2e2e2e !important;
 	color: #FFB300 !important;
-	text-transform: capitalize;
+	/* text-transform:  */
 }
 .service-name {
 	display:inline-block;
@@ -149,6 +149,13 @@ mat-cell, .mat-header-cell{
 .toolbar-button {
 	text-transform: uppercase;
 }
+
+.login-register-text-box {
+	display: block !important;
+	color: white;
+	margin-left: 30px;
+	margin-right: 50px;
+}
 @media(min-height: 919px) {
 	.proper-width {
 		width: 58vw;
@@ -158,10 +165,4 @@ mat-cell, .mat-header-cell{
 	.proper-width {
 		width: 52.26vw;;
 	}
-}
-.login-register-text-box {
-	display: block !important;
-	color: white;
-	margin-left: 30px;
-	margin-right: 50px;
 }

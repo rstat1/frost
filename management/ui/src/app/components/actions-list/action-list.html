@@ -1,4 +1,4 @@
-<div class="add-button" [class.hide-element]="!showAction" (click)="primaryActionClicked(primaryActionName)">
+<div class="add-button" [class.hide-element]="showAction" (click)="primaryActionClicked(primaryActionName)">
     <div class="menu-item" [class.selected]="isSelected" id="newuser">
         <mat-icon class="menu-item-icon">{{primaryActionIcon}}</mat-icon>
         <span class="menu-item-details">
@@ -13,7 +13,8 @@
             <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
             <mat-cell *matCellDef="let element">
                 <span class="service-icon">
-                    <img src="/assets/{{element}}.png" width="24" height="24" />
+                    <img *ngIf="!useDefaultImage" src="/assets/{{element}}.png" width="24" height="24" />
+                    <img *ngIf="useDefaultImage" src="/assets/user-white.png" width="24" height="24" />
                 </span>
                 <div class="service-name">
                     {{element}}

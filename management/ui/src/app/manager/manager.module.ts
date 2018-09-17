@@ -3,22 +3,22 @@ import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule,
-		 MatToolbarModule, MatIconModule, MatSnackBarModule, MatTooltipModule,
-		 MatSlideToggleModule } from '@angular/material';
-import { FormsModule, FormGroup, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+		MatToolbarModule, MatIconModule, MatSnackBarModule, MatTooltipModule,
+		MatSlideToggleModule, MatExpansionModule, MatAccordion} from '@angular/material';
+import { FormsModule, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import { MenuModule } from 'app/menu/menu.module';
-import { NewUserComponent } from './users/new/new-user';
-import { UsersRootComponent } from './users/root/users-root';
+import { AuthGuard } from 'app/services/auth/auth.guard';
+import { EditServiceComponent } from './services/edit/edit';
 import { PageInfoService } from 'app/services/page-info.service';
-import { NewServiceComponent } from './services/new/new-service';
-import { MenuComponent } from 'app/components/menu/menu.component';
-import { ManagerRootComponent } from './manager-root/manager-root';
-import { ActionListService } from '../services/action-list.service';
-import { AuthGuard, RootGuard } from 'app/services/auth/auth.guard';
-import { ServicesRootComponent } from './services/root/services-root';
-import { LogViewerComponent } from './log-viewer/log-viewer.component';
+import { NewUserComponent } from 'app/manager/users/new/new-user';
+import { ActionListService } from 'app/services/action-list.service';
+import { UsersRootComponent } from 'app/manager/users/root/users-root';
+import { NewServiceComponent } from 'app/manager/services/new/new-service';
+import { ManagerRootComponent } from 'app/manager/manager-root/manager-root';
 import { ActionsListComponent } from 'app/components/actions-list/action-list';
+import { ServicesRootComponent } from 'app/manager/services/root/services-root';
+import { LogViewerComponent } from 'app/manager/log-viewer/log-viewer.component';
 
 const projectRoutes: Routes = [
 	{
@@ -30,10 +30,11 @@ const projectRoutes: Routes = [
 			{ path: 'users', component: UsersRootComponent},
 			{ path: 'users/new', component: NewUserComponent},
 			{ path: 'services', component: ServicesRootComponent},
-			{ path: 'services/new', component: NewServiceComponent}
+			{ path: 'services/new', component: NewServiceComponent},
+			{ path: 'services/edit/:name', component: EditServiceComponent}
 		]
 	}
-]
+];
 @NgModule({
 	imports: [
 		FormsModule,
@@ -47,13 +48,13 @@ const projectRoutes: Routes = [
 		MatStepperModule,
 		MatCheckboxModule,
 		MatSnackBarModule,
+		MatExpansionModule,
 		ReactiveFormsModule,
 		MatSlideToggleModule,
 		MenuModule.forRoot(null),
-		// MalihuScrollbarModule.forRoot(),
 		RouterModule.forChild(projectRoutes)
-  	],
-  	declarations: [
+	],
+	declarations: [
 		NewUserComponent,
 		UsersRootComponent,
 		LogViewerComponent,
@@ -61,6 +62,7 @@ const projectRoutes: Routes = [
 		NewServiceComponent,
 		ActionsListComponent,
 		ServicesRootComponent,
+		EditServiceComponent,
 	],
 	providers: [ FormBuilder, ActionListService, PageInfoService ],
 	// entryComponents: [ ProjectListItem ],

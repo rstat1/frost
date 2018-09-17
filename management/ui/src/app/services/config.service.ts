@@ -15,13 +15,13 @@ export class ConfigService {
 	private static API_ENDPOINT: string = environment.APIBaseURL;
 	private static AUTH_ENDPOINT: string = environment.APIBaseURL + "/trinity/";
 
-	private instanceName : string;
-	private instanceDescription : string;
+	private instanceName: string;
+	private instanceDescription: string;
 	private registrationAllowed: boolean = null;
 
 	constructor(private http: HttpClient) {
 		this.http.get<APIResponse>(ConfigService.GetAPIURLFor("serviceid")).subscribe(resp => {
-			ConfigService.SERVICE_ID = resp.response
+			ConfigService.SERVICE_ID = resp.response;
 		});
 	}
 
@@ -38,9 +38,8 @@ export class ConfigService {
 	public static SetAPIEndpoint(endpoint: string) {
 		this.API_ENDPOINT = endpoint;
 	}
-	public static GetAccessToken(): string
-	{
-		let savedAuthDetails = JSON.parse(sessionStorage.getItem("auth"))
+	public static GetAccessToken(): string 	{
+		const savedAuthDetails = JSON.parse(sessionStorage.getItem("auth"));
 		if (savedAuthDetails != null) { ConfigService.SetAccessToken(savedAuthDetails.token); }
 
 		return this.ACCESS_TOKEN;
@@ -50,9 +49,9 @@ export class ConfigService {
 		return this.registrationAllowed;
 	}
 	private GetConfigValue(valueName: string): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAPIURLFor("config/" + valueName)
+		const apiURL: string = ConfigService.GetAPIURLFor("config/" + valueName);
 		return this.http.get<APIResponse>(apiURL);
 	}
 	// public static getAuth0Callback() : string { return environment.Auth0Callback; }
-	public static isProduction() : boolean { return environment.production; }
+	public static isProduction(): boolean { return environment.production; }
 }

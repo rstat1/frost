@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatTableDataSource } from '@angular/material';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { ActionListService, SubItemDetails } from 'app/services/action-list.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -13,19 +13,26 @@ export class ActionsListComponent implements OnInit, OnDestroy {
 	private subItemsSub: Subscription;
 	private clearPrimary: Subscription;
 	private actionsListSub: Subscription;
-	private primaryActionIcon: string = "";
-	private primaryActionName: string = "";
 	private primaryActionSub: Subscription;
-	private subActions: SubItemDetails[] = [];
+	private useDefaultImageSub: Subscription;
 	private highlightPrimaryAct: Subscription;
-	private primaryActionDescription: string = "";
-	private displayedColumns = ['Name', "Actions"];
-	private dataSource = new MatTableDataSource<string>();
 
+	public showAction: boolean;
+	public useDefaultImage: boolean;
 	public isSelected: boolean = false;
+	public primaryActionIcon: string = "";
+	public primaryActionName: string = "";
+	public subActions: SubItemDetails[] = [];
+	public primaryActionDescription: string = "";
+	public displayedColumns = ['Name', "Actions"];
+	public dataSource = new MatTableDataSource<string>();
 
 	constructor(private actionService: ActionListService) {}
 	ngOnInit(): void {
+		this.useDefaultImageSub = this.actionService.UseDefaultImage.subscribe(img => {
+			console.log(img);
+			this.useDefaultImage = img;
+		});
 		this.actionsListSub = this.actionService.ActionListItems.subscribe(items => {
 			this.dataSource.data = items;
 		});
@@ -49,6 +56,7 @@ export class ActionsListComponent implements OnInit, OnDestroy {
 		this.clearPrimary.unsubscribe();
 		this.actionsListSub.unsubscribe();
 		this.primaryActionSub.unsubscribe();
+		this.useDefaultImageSub.unsubscribe();
 		this.highlightPrimaryAct.unsubscribe();
 	}
 	public primaryActionClicked(name: string) {

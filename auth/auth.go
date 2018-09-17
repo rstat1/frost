@@ -86,6 +86,8 @@ func (auth *AuthService) initAPIRoutes() {
 	auth.route.Handle("/api/trinity/authorize", common.RequestWrapper(auth.HasServiceID, "GET", auth.authorize))
 
 	auth.route.Handle("/api/trinity/user/new", common.RequestWrapper(auth.user.AuthTokenProvided, "POST", auth.newuser))
+	auth.route.Handle("/api/trinity/user/list", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.getusers))
+	auth.route.Handle("/api/trinity/user/delete", common.RequestWrapper(auth.user.AuthTokenProvided, "DELETE", auth.deleteuser))
 	auth.route.Handle("/api/trinity/service/fromrid", common.RequestWrapper(auth.HasRequestID, "GET", auth.fromrequest))
 }
 
@@ -205,7 +207,6 @@ func (auth *AuthService) validate(resp http.ResponseWriter, r *http.Request) {
 	sid := auth.cache.GetString("authrequest", requestID.Response)
 	body, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(body, &authRequest)
-
 	if service, err := auth.db.GetServiceByID(sid); err == nil {
 		if response := auth.user.ValidateLoginRequest(authRequest); response.Status == "success" {
 			if auth.db.DoesUserHavePermission(authRequest.Username, service.AppName, "hasAccess") {
@@ -233,13 +234,13 @@ func (auth *AuthService) authorize(resp http.ResponseWriter, r *http.Request) {
 }
 func (auth *AuthService) newuser(resp http.ResponseWriter, r *http.Request) {
 	var request data.UserDetails
-	common.Logger.Debugln(r.Host)
 	if strings.Contains(r.Host, "localhost") {
 		body, _ := ioutil.ReadAll(r.Body)
 		if err := json.Unmarshal(body, &request); err == nil {
+			auth.user.ParsePermissionList(request.Permissions)
 			common.WriteAPIResponseStruct(resp, auth.user.NewUser(data.AuthRequest{
 				Username: request.Username,
-				Password: request.Username,
+				Password: request.Password,
 			}, request.Permissions))
 		} else {
 			common.WriteFailureResponse(fmt.Errorf("failed deserializing request body %s", err), resp, "register", 500)
@@ -267,4 +268,18 @@ func (auth *AuthService) fromrequest(resp http.ResponseWriter, r *http.Request) 
 }
 func (auth *AuthService) echo(resp http.ResponseWriter, r *http.Request) {
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 500))
+}
+func (auth *AuthService) getusers(resp http.ResponseWriter, r *http.Request) {
+	if users, err := auth.db.GetAllUserNames(); err == nil {
+		if list, e := json.Marshal(users); e == nil {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(list), nil, 200))
+		} else {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("", e, 500))
+		}
+	} else {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("", err, 500))
+	}
+}
+func (auth *AuthService) deleteuser(resp http.ResponseWriter, r *http.Request) {
+	// var name = r.URL.Query().Get("name")
 }

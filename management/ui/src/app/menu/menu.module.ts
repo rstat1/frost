@@ -12,9 +12,9 @@ export class MenuItems {
 @NgModule({ imports: [ CommonModule ], exports: [ MenuComponent ], declarations: [ MenuComponent ], providers:[MenuItem]})
 export class MenuModule {
 	constructor(@Inject(MenuItems) private items: MenuItems, private menuService: MenuService) {
-	 	if (items != null) {
+		if (items != null) {
 			this.menuService.AddItemsToMenu(items.Items);
-		 }
+		}
 	}
 	static forRoot(items: MenuItems) : ModuleWithProviders {
 		return {

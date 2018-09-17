@@ -13,14 +13,20 @@ export class APIService {
 		if (minimal) { return this.GetRequest("services?type=minimal"); }
 		else { return this.GetRequest("services"); }
 	}
+	public GetService(name: string): Observable<APIResponse> {
+		return this.GetRequest("service/get?name=" + name);
+	}
 	public GetAuthToken(code: string): Observable<APIResponse> {
-		return this.GetRequest("auth/token?code="+code);
+		return this.GetRequest("auth/token?code=" + code);
 	}
 	public GetAppState(): Observable<APIResponse> {
 		return this.GetRequest("status");
 	}
 	public GetServiceID(): Observable<APIResponse> {
 		return this.GetRequest("serviceid");
+	}
+	public GetUserList(): Observable<APIResponse> {
+		return this.TrinityGetRequest("user/list");
 	}
 	public InitWatchdog(): Observable<APIResponse> {
 		return this.GetRequest("init");
@@ -31,6 +37,9 @@ export class APIService {
 	public SaveUser(details: NewUser): Observable<APIResponse> {
 		return this.TrinityPostRequest("user/new", JSON.stringify(details));
 	}
+	public DeleteUser(username: string): Observable<APIResponse> {
+		return this.TrinityDeleteRequest("user/delete?name=" + name);
+	}
 	public NewService(details: FormData): Observable<APIResponse> {
 		return this.PostFormRequest("service/new", details);
 	}
@@ -38,27 +47,31 @@ export class APIService {
 		return this.DeleteRequest("service/delete?name=" + name);
 	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAuthURLFor(endpoint);
+		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);
 		return this.http.get<APIResponse>(apiURL);
 	}
 	private TrinityPostRequest(endpoint: string, body: string): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAuthURLFor(endpoint);
+		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);
 		return this.http.post<APIResponse>(apiURL, body);
 	}
+	private TrinityDeleteRequest(endpoint: string): Observable<APIResponse> {
+		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);
+		return this.http.delete<APIResponse>(apiURL);
+	}
 	private GetRequest(url: string): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAPIURLFor(url);
+		const apiURL: string = ConfigService.GetAPIURLFor(url);
 		return this.http.get<APIResponse>(apiURL);
 	}
 	private DeleteRequest(url: string): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAPIURLFor(url);
+		const apiURL: string = ConfigService.GetAPIURLFor(url);
 		return this.http.delete<APIResponse>(apiURL);
 	}
 	private PostRequest(url: string, body: string): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAPIURLFor(url);
+		const apiURL: string = ConfigService.GetAPIURLFor(url);
 		return this.http.post<APIResponse>(apiURL, body);
 	}
 	private PostFormRequest(url: string, body: FormData): Observable<APIResponse> {
-		let apiURL: string = ConfigService.GetAPIURLFor(url);
+		const apiURL: string = ConfigService.GetAPIURLFor(url);
 		return this.http.post<APIResponse>(apiURL, body);
 	}
 }

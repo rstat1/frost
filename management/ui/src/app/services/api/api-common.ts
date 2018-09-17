@@ -8,7 +8,9 @@ export class Service {
 	public filename: string;
 	public managed: boolean;
 	public api_prefix: string;
-	public redirectURL: string;
+	public RedirectURL: string;
+	public ServiceKey: string;
+	public ServiceID: string;
 	public managedUpdates: boolean;
 	constructor() {
 		this.name = "";
@@ -26,12 +28,11 @@ export interface Permission {
 export class NewUser {
 	username: string;
 	password: string;
-	permissions: ServiceAccess[];
-	constructor(name: string, password: string, permissions: ServiceAccess[])
-	{
+	access: ServiceAccess[];
+	constructor(name: string, password: string, permissions: ServiceAccess[]) {
 		this.username = name;
 		this.password = password;
-		this.permissions = permissions;
+		this.access = permissions;
 	}
 }
 export class AuthRequest {
@@ -41,4 +42,12 @@ export class AuthRequest {
 		this.Username = username;
 		this.Password = password;
 	}
+}
+export interface PermissionValues {
+	p2: boolean;
+	p3: boolean;
+}
+
+export interface Service {
+	p: PermissionValues;
 }
