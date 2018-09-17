@@ -9,3 +9,6 @@ routes
 boltbrowser.linux64
 
 \.directory
+*.zip
+
+out/

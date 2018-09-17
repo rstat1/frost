@@ -22,6 +22,7 @@ export class SubActionClickEvent {
 }
 @Injectable()
 export class ActionListService {
+	public UseDefaultImage: Observable<boolean>;
 	public ActionListItems: Observable<string[]>;
 	public PrimaryActionClicked: Observable<string>;
 	public ClearPrimarySelection: Observable<string>;
@@ -31,6 +32,7 @@ export class ActionListService {
 	public SubActionClicked: Observable<SubActionClickEvent>;
 
 	private clearPrimary: Subject<string>;
+	private useDefaultImg: Subject<boolean>;
 	private actionListItems: Subject<string[]>;
 	private primaryActionClicked: Subject<string>;
 	private highlightPrimaryAction: Subject<string>;
@@ -40,6 +42,7 @@ export class ActionListService {
 
 	constructor() {
 		this.clearPrimary = new Subject<string>();
+		this.useDefaultImg = new Subject<boolean>();
 		this.actionListItems = new Subject<string[]>();
 		this.primaryActionClicked = new Subject<string>();
 		this.highlightPrimaryAction = new Subject<string>();
@@ -48,6 +51,7 @@ export class ActionListService {
 		this.subActionClicked = new Subject<SubActionClickEvent>();
 
 		this.PrimaryAction = this.primaryAction.asObservable();
+		this.UseDefaultImage = this.useDefaultImg.asObservable();
 		this.ActionListItems = this.actionListItems.asObservable();
 		this.SubActionClicked = this.subActionClicked.asObservable();
 		this.ClearPrimarySelection = this.clearPrimary.asObservable();
@@ -66,4 +70,5 @@ export class ActionListService {
 	public OnSubActionClicked(subActionName: string, ctx: string) {
 		this.subActionClicked.next({ContextInfo: ctx, SubActionName: subActionName});
 	}
+	public SetImageType(useDefault: boolean) { this.useDefaultImg.next(useDefault); }
 }

@@ -4,9 +4,9 @@ import { APIService } from 'app/services/api/api.service';
 import { ConfigService } from "app/services/config.service";
 
 class InstanceInfo {
-	public Password: string
-	public ServiceID: string
-	public ServiceKey: string
+	public Password: string;
+	public ServiceID: string;
+	public ServiceKey: string;
 }
 
 @Component({
@@ -17,11 +17,11 @@ class InstanceInfo {
 export class FirstRunComponent {
 	private key: string = "";
 	private id: string = "";
-	private rootPW: string = "";
+	public rootPW: string = "";
 
 	constructor(private api: APIService) {
 		(<any>document.getElementsByClassName("background")[0]).style.backgroundImage = 'url("' +
-			ConfigService.GetAPIURLFor("bg") + '")'
+			ConfigService.GetAPIURLFor("bg") + '")';
 		this.api.InitWatchdog().subscribe(resp => {
 			this.rootPW = resp.response;
 		});

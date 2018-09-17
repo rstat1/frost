@@ -11,7 +11,7 @@ import { ConfigService } from 'app/services/config.service';
 import { APIService } from 'app/services/api/api.service';
 import { APIResponse } from 'app/services/api/api-common';
 
-import 'rxjs/add/operator/toPromise'
+import 'rxjs/add/operator/toPromise';
 import { HttpClient } from '@angular/common/http';
 
 class SavedAuthDetails {
@@ -45,14 +45,14 @@ export class AuthService {
 		this.AuthSuccess = this.authSuccess.asObservable();
 		this.TokenValidation = this.tokenValidate.asObservable();
 
-		this.setSavedToken()
+		this.setSavedToken();
 	}
 	public async setSavedToken() {
 		let token: string = ConfigService.GetAccessToken();
 		if (token != "") {
 			let resp: APIResponse = await this.api.ValidateToken().toPromise().catch(e => {
 				return null;
-			})
+			});
 			let decoded = jwt_decode(token);
 			if (resp != null && resp.status == "success") {
 				this.IsLoggedIn = true;
@@ -73,17 +73,17 @@ export class AuthService {
 		if (ConfigService.GetAccessToken() == "") {
 			window.location.replace(ConfigService.GetAuthorizeEndpoint());
 		} else {
-			this.router.navigate(["manage"])
+			this.router.navigate(["manage"]);
 		}
 	}
 	public GetToken(authCode: string) {
 		this.api.GetAuthToken(authCode).subscribe(resp => {
-			this.handleAPIResponse(false, "manage", resp)
+			this.handleAPIResponse(false, "manage", resp);
 		});
 	}
 	private handleAPIResponse(isNewUser: boolean, redirectTo: string, resp: APIResponse) {
 		let decoded = jwt_decode(resp.response);
-		ConfigService.SetAccessToken(resp.response)
+		ConfigService.SetAccessToken(resp.response);
 
 		let navigationExtras: NavigationExtras = {
 			queryParamsHandling: 'preserve',
@@ -102,18 +102,18 @@ export class AuthService {
 			sessionStorage.setItem("auth", JSON.stringify({username: this.CurrentUser, token: resp.response}));
 			this.authSuccess.next(true);
 			this.tokenValidate.next(true);
-			this.NoToken = false
+			this.NoToken = false;
 			this.IsLoggedIn = true;
 		}
 
 		// this.FailureReason = "";
 		// this.IsLoggedIn = true;
 		// this.AuthRequestInvalid = false;
-		console.log(redirectTo)
+		console.log(redirectTo);
 		this.router.navigate([redirectTo]);
 	}
 	private handleAPIError(err: any) {
 		this.AuthRequestInvalid = true;
-		this.FailureReason = err.error.response
+		this.FailureReason = err.error.response;
 	}
 }

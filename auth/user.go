@@ -13,6 +13,7 @@ import (
 
 	"git.m/svcman/common"
 	"git.m/svcman/data"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
@@ -45,9 +46,8 @@ func NewUserService(db *data.DataStore) *User {
 }
 
 //NewUser Creates a new user and returns an auth token.
-func (u *User) NewUser(request data.AuthRequest, p []data.ServiceAccess) common.APIResponse {
+func (u *User) NewUser(request data.AuthRequest, p []data.ServiceAuth) common.APIResponse {
 	var apiResp common.APIResponse
-
 	if _, err := u.datastore.NewUser(request, p); err == nil {
 		apiResp = common.CreateAPIResponse("success", nil, 400)
 	} else {
@@ -94,6 +94,10 @@ func (u *User) ValidateLoginRequest(request data.AuthRequest) common.APIResponse
 	passHasher := sha512.New512_256()
 	hash := hex.EncodeToString(passHasher.Sum([]byte(request.Password)))
 	userInfo = u.datastore.GetUser(request.Username)
+	common.Logger.WithFields(logrus.Fields{
+		"receviedPassHash": hash,
+		"actualPassHash":   userInfo.PassHash,
+	}).Debugln("hashes")
 	if userInfo.PassHash == string(hash) {
 		response = common.CreateAPIResponse("success", nil, 500) //u.GenerateAuthToken(request, userInfo)
 	} else {
@@ -229,6 +233,10 @@ func (u *User) GenerateAuthToken(username, app string) common.APIResponse {
 	}
 }
 
+//ParsePermissionList ...
+func (u *User) ParsePermissionList(p []data.ServiceAuth) {
+	common.Logger.Debugln(p[0])
+}
 func generateSymKey() []byte {
 	k := make([]byte, 64)
 	if _, e := rand.Read(k); e == nil {

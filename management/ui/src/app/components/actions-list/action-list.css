@@ -45,3 +45,6 @@
 	border-bottom: 1px #545454 solid;
 	background-color: #1d1d1d;
 }
+.hide-element {
+	display: none;
+}

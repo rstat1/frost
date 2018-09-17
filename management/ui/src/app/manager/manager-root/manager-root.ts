@@ -12,20 +12,20 @@ import { ActionListService } from 'app/services/action-list.service';
 import { PageInfoService } from 'app/services/page-info.service';
 
 @Component({
-  selector: 'app-manager-root',
-  templateUrl: './manager-root.html',
-  styleUrls: ['./manager-root.css']
+	selector: 'app-manager-root',
+	templateUrl: './manager-root.html',
+	styleUrls: ['./manager-root.css']
 })
 export class ManagerRootComponent implements OnDestroy {
 	public path: string;
 	public pageName: string;
+	public currentPath: string = "";
+	public currentTitle: string = "";
 	public showServiceList: boolean = false;
 	public showSubActionArea: boolean = false;
 
 	private lastAction: string = "";
 	private lastService: string = "";
-	private currentPath: string = "";
-	private currentTitle: string = "";
 	private currentAction: string = "";
 	private currentService: string = "";
 
@@ -43,9 +43,14 @@ export class ManagerRootComponent implements OnDestroy {
 			if (this.showServiceList) {
 				this.router.navigate([action], { relativeTo: this.route });
 			}
-		})
+		});
 		this.primaryActClickSub = this.actions.PrimaryActionClicked.subscribe(() => {
 			this.showSubActionArea = true;
+		});
+		this.actions.SubActionClicked.subscribe((action) => {
+			if (action.SubActionName == "Edit" || action.SubActionName == "Logs") {
+				this.showSubActionArea = true;
+			}
 		});
 		this.pagePathSub = this.header.PagePath.subscribe(path => this.currentPath = path);
 		this.pageTitleSub = this.header.PageTitle.subscribe(title => this.currentTitle = title);
@@ -61,27 +66,27 @@ export class ManagerRootComponent implements OnDestroy {
 		this.setActionBackgroundColor(action);
 		this.actions.ClearSelectedItem();
 		if (!this.showServiceList) {
-			$("#"+this.lastAction).css("background-color", "#1d1d1d");
+			$("#" + this.lastAction).css("background-color", "#1d1d1d");
 		}
-		this.router.navigate(["manage"])
+		this.router.navigate(["manage"]);
 	}
 	private setActionBackgroundColor(action: string) {
 		this.currentAction = action;
-		$("#"+action).css("background-color", "#272727");
+		$("#" + action).css("background-color", "#272727");
 		if (this.lastAction != "" && this.lastAction != action) {
-			$("#"+this.lastAction).css("background-color", "#1d1d1d");
+			$("#" + this.lastAction).css("background-color", "#1d1d1d");
 		}
 		this.lastAction = action;
 	}
 	private setHighlightsFromURL() {
 		//this.showSubActionArea = true;
-		let urlBits: string[] = window.location.pathname.split("/");
-		let specifiedService: string = window.location.search.replace("?service=", "");
+		const urlBits: string[] = window.location.pathname.split("/");
+		const specifiedService: string = window.location.search.replace("?service=", "");
 
 		if (urlBits.length > 2) { this.showServiceList = true; }
 
-		$("#"+urlBits[2]).ready(function() {
-			$("#"+urlBits[2]).css("background-color", "#272727");
+		$("#" + urlBits[2]).ready(function() {
+			$("#" + urlBits[2]).css("background-color", "#272727");
 			this.showServiceList = true;
 		});
 		this.currentAction = this.lastAction = urlBits[2];

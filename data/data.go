@@ -66,7 +66,7 @@ func (data *DataStore) FrostInit() {
 }
 
 //NewUser ...
-func (data *DataStore) NewUser(request AuthRequest, p []ServiceAccess) (User, error) {
+func (data *DataStore) NewUser(request AuthRequest, p []ServiceAuth) (User, error) {
 	var user User
 	UUID, _ := uuid.GenerateUUID()
 	if user = data.GetUser(request.Username); user.Id != "" {
@@ -109,7 +109,7 @@ func (data *DataStore) GetUser(username string) User {
 	}
 }
 
-//GetUserById ...
+//GetUserByID ...
 func (data *DataStore) GetUserByID(id string) User {
 	var userInfo User
 	usersBucket := data.queryEngine.From("Users")
@@ -118,6 +118,21 @@ func (data *DataStore) GetUserByID(id string) User {
 	} else {
 		common.Logger.WithField("userid", id).Errorln("couldn't find user with that id")
 		return User{}
+	}
+}
+
+//GetAllUserNames ...
+func (data *DataStore) GetAllUserNames() ([]string, error) {
+	var users []User
+	var names []string
+	usersBucket := data.queryEngine.From("Users")
+	if err := usersBucket.All(&users); err == nil {
+		for _, v := range users {
+			names = append(names, v.Username)
+		}
+		return names, nil
+	} else {
+		return []string{}, err
 	}
 }
 
@@ -145,43 +160,6 @@ func (data *DataStore) GetFirstRunState() bool {
 	} else {
 		return true
 	}
-}
-
-//SetFirstRunState ...
-func (data *DataStore) SetFirstRunState() {
-	firstRun := data.queryEngine.From("System")
-	firstRun.Set("System", "firstrun", false)
-}
-
-//AddNewRoute ...
-func (data *DataStore) AddNewRoute(service ServiceDetails) error {
-	common.Logger.Debugln(service)
-	if service.ServiceID == "" {
-		service.ServiceID = common.RandomID(32)
-		service.ServiceKey = common.RandomID(48)
-	}
-	if service.AppName == "" {
-		return errors.New("no AppName set")
-	}
-	routes := data.queryEngine.From("Services")
-	if err := routes.Save(&service); err != nil {
-		common.Logger.WithField("func", "AddNewRoute").Errorln(err)
-		return err
-	} else {
-		return nil
-	}
-}
-
-//DeleteRoute ...
-func (data *DataStore) DeleteRoute(route string) error {
-	var foundRoute ServiceDetails
-	routes := data.queryEngine.From("Services")
-	if err := routes.One("AppName", route, &foundRoute); err == nil {
-		return routes.DeleteStruct(&foundRoute)
-	} else {
-		return err
-	}
-	return nil
 }
 
 //GetRoute ...
@@ -240,12 +218,61 @@ func (data *DataStore) GetServiceByID(id string) (ServiceDetails, error) {
 		return ServiceDetails{}, err
 	}
 }
-func (data *DataStore) makeUserPermissionMap(username string, p []ServiceAccess) {
+
+//SetFirstRunState ...
+func (data *DataStore) SetFirstRunState() {
+	firstRun := data.queryEngine.From("System")
+	firstRun.Set("System", "firstrun", false)
+}
+
+//AddNewRoute ...
+func (data *DataStore) AddNewRoute(service ServiceDetails) error {
+	common.Logger.Debugln(service)
+	if service.ServiceID == "" {
+		service.ServiceID = common.RandomID(32)
+		service.ServiceKey = common.RandomID(48)
+	}
+	if service.AppName == "" {
+		return errors.New("no AppName set")
+	}
+	routes := data.queryEngine.From("Services")
+	if err := routes.Save(&service); err != nil {
+		common.Logger.WithField("func", "AddNewRoute").Errorln(err)
+		return err
+	} else {
+		return nil
+	}
+}
+
+//DeleteRoute ...
+func (data *DataStore) DeleteRoute(route string) error {
+	var foundRoute ServiceDetails
+	routes := data.queryEngine.From("Services")
+	if err := routes.One("AppName", route, &foundRoute); err == nil {
+		return routes.DeleteStruct(&foundRoute)
+	} else {
+		return err
+	}
+	return nil
+}
+
+//DeleteUser ...
+func (data *DataStore) DeleteUser(user string) error {
+	usersBucket := data.queryEngine.From("Users")
+	if user := data.GetUser(user); user.Username != "" {
+		usersBucket.DeleteStruct(user)
+		return nil
+	} else {
+		return errors.New("no such user")
+	}
+}
+
+func (data *DataStore) makeUserPermissionMap(username string, p []ServiceAuth) {
 	var serviceAccess map[string]map[string]bool
 	serviceAccess = make(map[string]map[string]bool)
 	for _, v := range p {
 		permMap := make(map[string]bool)
-		for _, v2 := range v.Permission {
+		for _, v2 := range v.Permissions {
 			permMap[v2.Name] = v2.Value
 		}
 		serviceAccess[v.Service] = permMap

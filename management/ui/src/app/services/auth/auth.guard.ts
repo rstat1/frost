@@ -2,11 +2,10 @@ import { Injectable, state } from "@angular/core";
 import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot,
 		 CanLoad, Route, CanActivateChild } from "@angular/router";
 import { Observable } from "rxjs/Observable";
-import { Subject } from 'rxjs/Subject';
 
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/catch'
-import 'rxjs/add/observable/of'
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/observable/of';
 
 import { AuthService } from "app/services/auth/auth.service";
 import { environment } from "environments/environment";
@@ -15,14 +14,14 @@ import { environment } from "environments/environment";
 export class AuthGuard implements CanActivate, CanLoad, CanActivateChild {
 	constructor(private authService: AuthService, private router: Router) {}
 
-	canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
+	canActivateChild(childRoute: ActivatedRouteSnapshot, routerState: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
 		let url = `/${childRoute}`;
 		return this.checkLogin(url)
 			.map(status => {
 				if (status == false) { this.router.navigate(['/auth']); }
 				return status;
 			})
-			.catch(e => { return Observable.of(false); });
+			.catch(e => Observable.of(false));
 		}
 	canLoad(route: Route): boolean | Observable<boolean> | Promise<boolean> {
 		let url = `/${route.path}`;
@@ -31,21 +30,21 @@ export class AuthGuard implements CanActivate, CanLoad, CanActivateChild {
 				if (status == false) { this.router.navigate(['/auth']); }
 				return status;
 			})
-			.catch(e => { return Observable.of(false); });
+			.catch(e => Observable.of(false));
 	}
-	canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> {
-		return this.checkLogin(state.url)
+	canActivate(route: ActivatedRouteSnapshot, routerState: RouterStateSnapshot): boolean | Observable<boolean> {
+		return this.checkLogin(routerState.url)
 			.map(status => {
-				if (status == false) { this.router.navigate(['/auth']) }
+				if (status == false) { this.router.navigate(['/auth']); }
 				return status;
 			})
-			.catch(e => { return Observable.of(false); });
+			.catch(e => Observable.of(false));
 	}
 	checkLogin(redirectTo: string): Observable<boolean> {
 		this.authService.RedirectURL = redirectTo;
 		if (this.authService.IsLoggedIn) {
 			return Observable.of(true);
-		} else if (this.authService.IsLoggedIn == false && this.authService.NoToken == false){
+		} else if (this.authService.IsLoggedIn == false && this.authService.NoToken == false) {
 			return this.authService.TokenValidation;
 		} else {
 			return Observable.of(false);
@@ -56,34 +55,29 @@ export class AuthGuard implements CanActivate, CanLoad, CanActivateChild {
 export class RootGuard implements CanActivate, CanLoad, CanActivateChild {
     constructor(private authService: AuthService, private router: Router) {}
 
-    canActivateChild(childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
-		return this.checkLogin(state.url)
+    canActivateChild(childRoute: ActivatedRouteSnapshot, routerState: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
+		return this.checkLogin(routerState.url)
 			.map(status => {
 				return this.authService.UserIsRoot;
 			})
-			.catch(e => { return Observable.of(false); });
+			.catch(e => Observable.of(false));
     }
     canLoad(route: Route): boolean | Observable<boolean> | Promise<boolean> {
         let url = `/${route.path}`;
 		return this.checkLogin(url)
-			.map(status => {
-				console.log(status)
-				return this.authService.UserIsRoot;
-			})
-			.catch(e => { return Observable.of(false); });
+			.map(status => this.authService.UserIsRoot)
+			.catch(e => Observable.of(false));
     }
-    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
-		return this.checkLogin(state.url)
-			.map(status => {
-				return this.authService.UserIsRoot;
-			})
-			.catch(e => { return Observable.of(false); });
+    canActivate(route: ActivatedRouteSnapshot, routerState: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
+		return this.checkLogin(routerState.url)
+			.map(status => this.authService.UserIsRoot)
+			.catch(e => Observable.of(false));
     }
 	checkLogin(redirectTo: string): Observable<boolean> {
 		this.authService.RedirectURL = redirectTo;
 		if (this.authService.IsLoggedIn) {
 			return Observable.of(true);
-		} else if (this.authService.IsLoggedIn == false && this.authService.NoToken == false){
+		} else if (this.authService.IsLoggedIn == false && this.authService.NoToken == false) {
 			return this.authService.TokenValidation;
 		} else {
 			return Observable.of(false);

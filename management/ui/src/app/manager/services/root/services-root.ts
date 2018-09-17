@@ -20,7 +20,8 @@ export class ServicesRootComponent implements OnInit, OnDestroy {
 		private router: Router, private api: APIService, private snackBar: MatSnackBar) {}
 
 	ngOnInit() {
-		console.warn("services root appears...")
+		console.warn("services root appears...");
+		this.actions.SetImageType(false);
 		this.actions.SetPrimaryAction(new PrimaryActionInfo("New Service", "add",
 			"Add a new managed service"));
 		this.actions.ClearSelectedItem();
@@ -28,7 +29,7 @@ export class ServicesRootComponent implements OnInit, OnDestroy {
 			{IconName: "edit", Description: "Edit"},
 			{IconName: "list", Description: "Logs"},
 			{IconName: "delete", Description: "Delete"},
-		])
+		]);
 		this.subActionClicked = this.actions.SubActionClicked.subscribe(action => {
 			this.SubActionClicked(action);
 		});
@@ -42,29 +43,36 @@ export class ServicesRootComponent implements OnInit, OnDestroy {
 					skipLocationChange: true,
 				});
 			}
-		})
+		});
 	}
 	ngOnDestroy(): void {
-		console.warn("services root goes away...")
+		console.warn("services root goes away...");
 		this.actionClicked.unsubscribe();
 		this.getServicesSub.unsubscribe();
 		this.subActionClicked.unsubscribe();
 	}
 	private SubActionClicked(action: SubActionClickEvent) {
-		if (action.ContextInfo != "watchdog") {
-			switch(action.SubActionName) {
-				case "Delete":
+		switch(action.SubActionName) {
+			case "Delete":
+				if (action.ContextInfo != "watchdog") {
 					this.api.DeleteService(action.ContextInfo).subscribe(resp => {
 						this.actions.SetActionList(JSON.parse(resp.response));
 					});
-				break;
-			}
-		} else {
-			this.snackBar.open("Can't delete the service you're using >_<", "", {
-				duration: 3000, panelClass: "proper-colors", horizontalPosition: 'center',
-				verticalPosition: 'top',
-			});
+				} else {
+					this.snackBar.open("Can't delete the service you're using >_<", "", {
+						duration: 3000, panelClass: "proper-colors", horizontalPosition: 'center',
+						verticalPosition: 'top',
+					});
+				}
+			break;
+			case "Edit":
+				this.router.navigate(["edit", action.ContextInfo], {
+					relativeTo: this.route,
+					skipLocationChange: true,
+				});
+			break;
 		}
+
 		console.log(action);
 	}
 	private handleActionClick(action: string) {

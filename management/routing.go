@@ -64,7 +64,7 @@ func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *Service
 func (api *APIRouter) StartManagementAPIListener() {
 	api.serviceID, api.serviceKey = api.data.GetInstanceDetails()
 	if api.dev {
-		api.watchdog = "http://192.168.1.12:4200" //"http://watchdog" + devBaseURL
+		api.watchdog = "http://watchdog" + devBaseURL //"http://192.168.1.12:4200"
 		api.baseAPIURL = "http://api" + devBaseURL
 		api.authServiceURL = "http://trinity" + devBaseURL
 	} else {
@@ -77,7 +77,7 @@ func (api *APIRouter) StartManagementAPIListener() {
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
 		AllowHeaders: []string{"Authorization", "Cache-Control", "X-Requested-With", "Content-Type"},
 		AllowOrigin: []string{"https://watchdog.m.rdro.us", "http://trinity.dev-m.rdro.us", "https://trinity.m.rdro.us",
-			"http://192.168.1.12:4200"},
+			"http://192.168.1.12:4200", "http://watchdog.dev-m.rdro.us"},
 	})
 	vestigo.CustomNotFoundHandlerFunc(api.NotFound)
 	api.SetupRoutes()
@@ -205,7 +205,7 @@ func (api *APIRouter) firstRunStatus(resp http.ResponseWriter, r *http.Request) 
 	}
 }
 func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
-	var perms []data.ServiceAccess
+	var perms []data.ServiceAuth
 	if api.data.GetFirstRunState() == true {
 		sid, skey := api.data.GetInstanceDetails()
 		password := common.RandomID(48)
@@ -223,14 +223,11 @@ func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
 			RedirectURL:      api.watchdog + "/auth",
 			ServiceAddress:   "localhost:1000",
 		}
-		p := data.ServiceAccess{
+		p := data.ServiceAuth{
 			Service: "watchdog",
-			Permission: []struct {
-				Name  string `json:"name"`
-				Value bool   `json:"value"`
-			}{
-				{"hasAccess", true},
-				{"hasRoot", true},
+			Permissions: []data.PermissionValue{
+				{Name:"hasAccess", Value: true},
+				{Name: "hasRoot", Value: true},
 			},
 		}
 		perms := append(perms, p)
@@ -254,7 +251,7 @@ func (api *APIRouter) getServiceListOnSuccess(resp common.APIResponse) common.AP
 		routeList, _ := json.Marshal(routes)
 		apiResp = common.CreateAPIResponse(string(routeList), nil, 500)
 	} else {
-		apiResp = resp;
+		apiResp = resp
 	}
 	return apiResp
 }

@@ -1,0 +1,134 @@
+<div class="project-page-root proper-width">
+	<mat-accordion>
+		<mat-expansion-panel>
+			<mat-expansion-panel-header>
+				<mat-panel-title><p class="section-header-text">Service Information</p></mat-panel-title>
+			</mat-expansion-panel-header>
+			<mat-accordion class="align-descriptions">
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Service Name:</mat-panel-title>
+						<mat-panel-description>{{currentServiceName}}</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-form-field style="width:400px;">
+						<input matInput placeholder="New service name">
+    				</mat-form-field>
+					<mat-action-row>
+						<button mat-button color="primary">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>API Name:</mat-panel-title>
+						<mat-panel-description>{{currentServiceAPIName}}</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-form-field style="width:400px;">
+						<input matInput placeholder="New API name">
+    				</mat-form-field>
+					<mat-action-row>
+						<button mat-button color="primary">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Service ID:</mat-panel-title>
+						<mat-panel-description>{{currentServiceID}}</mat-panel-description>
+					</mat-expansion-panel-header>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Service Key:</mat-panel-title>
+						<mat-panel-description>*********</mat-panel-description>
+					</mat-expansion-panel-header>
+					<p *ngIf="this.currentServiceKey != ''" class="service-key-label">New Service Key: </p>
+					<p *ngIf="this.currentServiceKey != ''" class="service-key">"key"</p>
+					<mat-action-row>
+						<button mat-button color="primary">Reset Key</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Trinity Auth Redirect URL:</mat-panel-title>
+						<mat-panel-description>{{currentARURL}}</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-form-field style="width:400px;">
+						<input matInput placeholder="New Auth Redirect URL">
+    				</mat-form-field>
+					<mat-action-row>
+						<button mat-button color="primary">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Local Address:</mat-panel-title>
+						<mat-panel-description>{{currentLocalAddress}}</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-form-field style="width:400px;">
+						<input matInput placeholder="New Local Address">
+    				</mat-form-field>
+					<mat-action-row>
+						<button mat-button color="primary">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Auto Process Management</mat-panel-title>
+						<mat-panel-description>
+							<span *ngIf="this.isCurrentServiceManaged">Enabled</span>
+							<span *ngIf="!this.isCurrentServiceManaged">Disabled</span>
+						</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-checkbox [(ngModel)]="this.isCurrentServiceManaged">
+						<span *ngIf="!this.isCurrentServiceManaged">Enable</span>
+						<span *ngIf="this.isCurrentServiceManaged">Disable</span>
+					</mat-checkbox>
+					<mat-action-row>
+						<button mat-button color="primary">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Update Services</mat-panel-title>
+						<mat-panel-description>
+							<span *ngIf="this.isCurrentServiceUpdatesHosted">Enabled</span>
+							<span *ngIf="!this.isCurrentServiceUpdatesHosted">Disabled</span>
+						</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-checkbox [(ngModel)]="this.isCurrentServiceUpdatesHosted">
+						<span *ngIf="!this.isCurrentServiceUpdatesHosted">Enable</span>
+						<span *ngIf="this.isCurrentServiceUpdatesHosted">Disable</span>
+					</mat-checkbox>
+					<mat-action-row>
+						<button mat-button color="primary">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+			</mat-accordion>
+		</mat-expansion-panel>
+		<mat-expansion-panel>
+			<mat-expansion-panel-header>
+				<mat-panel-title><p class="section-header-text">Update Service</p></mat-panel-title>
+			</mat-expansion-panel-header>
+			<span class="upload-control">
+				<input style="display:none;" type="file" #serviceFile required (change)="setFile('service', $event)">
+				<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="serviceFile.click()">
+					<mat-icon>cloud_upload</mat-icon>
+				</button>
+				<mat-form-field class="upload-box upload-box-width">
+					<input matInput placeholder="Service File" name="ServiceName" [value]="s.filename" disabled required>
+				</mat-form-field>
+			</span>
+			<span class="upload-control">
+				<input hidden type="file" #ui required (change)="setFile('ui', $event)">
+				<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="ui.click()">
+					<mat-icon>cloud_upload</mat-icon>
+				</button>
+				<mat-form-field class="upload-box upload-box-width">
+					<input matInput placeholder="ZIP containing UI files" name="ServiceName" [value]="uiFilesName" disabled required>
+				</mat-form-field>
+			</span>
+			<mat-action-row>
+				<button mat-button color="primary">Upload</button>
+			</mat-action-row>
+		</mat-expansion-panel>
+	</mat-accordion>
+</div>
