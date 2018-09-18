@@ -22,7 +22,7 @@ const routes: Routes = [
 	{path: 'auth', component: AuthComponent, pathMatch: "full"},
 	{path: 'first-run', component: FirstRunComponent, pathMatch: "full"},
 	{path: 'manage',  loadChildren: "app/manager/manager.module#ManagerModule", pathMatch: "full", canLoad: [AuthGuard]},
-	{path: '', redirectTo: "/manage", pathMatch: 'full'}
+	{path: '**', redirectTo: "manage", pathMatch: 'full'}
 ];
 const menuItems = { Items: [
 	{ ItemTitle: "Users", ItemSubtext: "Return to Home page", Icon:"user", ActionName: "users", Category: "Config" },

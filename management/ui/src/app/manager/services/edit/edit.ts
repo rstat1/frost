@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { MatSnackBar } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
 
-import { Service } from 'app/services/api/api-common';
+import { Service, ServiceEdit } from 'app/services/api/api-common';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 
@@ -21,17 +22,20 @@ export class EditServiceComponent implements OnInit {
 	public isCurrentServiceManaged: boolean;
 	public isCurrentServiceUpdatesHosted: boolean;
 
+	public uiFiles: File;
+	public serviceBin: File;
 	public uiFilesName: string = "";
 	public s: Service = new Service();
+	public serviceToEdit: string = "";
 
 	constructor(private header: PageInfoService, private route: ActivatedRoute,
-				private api: APIService) { }
+				private api: APIService, private snackBar: MatSnackBar) { }
 
 	ngOnInit() {
-		let serviceName = this.route.snapshot.paramMap.get('name');
+		this.serviceToEdit = this.route.snapshot.paramMap.get('name');
 		this.header.SetPagePath(window.location.pathname + "/edit");
-		this.currentServiceName = serviceName;
-		this.api.GetService(serviceName).subscribe(resp => {
+		this.currentServiceName = this.serviceToEdit;
+		this.api.GetService(this.serviceToEdit).subscribe(resp => {
 			if (resp.status == "success") {
 				let service: Service = JSON.parse(resp.response);
 				this.currentARURL = service.RedirectURL;
@@ -43,5 +47,92 @@ export class EditServiceComponent implements OnInit {
 			}
 		});
 	}
-	public setFile(name: string, event: any) {}
+	public setFile(name: string, event: any) {
+		if (name == "ui") {
+			this.uiFiles = event.target.files[0];
+			if (this.uiFiles.type != "application/zip") {
+				this.uiFiles = null;
+				this.uiFilesName = "";
+				this.snackBar.open("That wasn't a zip file. >_>", "", {
+					duration: 3000, panelClass: "proper-colors", horizontalPosition: 'center',
+					verticalPosition: 'top',
+				});
+			} else {
+				this.uiFilesName = this.uiFiles.name;
+			}
+		} else {
+			this.serviceBin = event.target.files[0];
+			this.s.filename = this.serviceBin.name;
+		}
+	}
+	public upload() {
+		let hasValue: boolean = false;
+		let body: FormData = new FormData();
+		if (this.uiFiles != null) {
+			hasValue = true;
+			body.append("uiblob", this.uiFiles, this.uiFiles.name);
+		}
+		if (this.serviceBin != null) {
+			hasValue = true;
+			body.append("service", this.serviceBin, this.serviceBin.name);
+		}
+		if (hasValue) {
+			this.api.UpdateService(body, this.currentServiceName).subscribe(
+				resp => {
+					this.snackBar.open("Update successful", "", {
+						duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
+						verticalPosition: 'top',
+					});
+				},
+				err => {
+					this.snackBar.open(`Update failed: ${err.error.response}`, "", {
+						duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
+						verticalPosition: 'top',
+					});
+				}
+			);
+		}
+	}
+	public save(propertyName: string) {
+		let propChange: ServiceEdit = new ServiceEdit();
+		propChange.name = this.serviceToEdit;
+		switch (propertyName) {
+			case "name":
+				propChange.new = this.currentServiceName;
+				break;
+			case "apiName":
+				propChange.new = this.currentServiceAPIName;
+				break;
+			case "redirect":
+				propChange.new = this.currentARURL;
+				break;
+			case "localaddr":
+				propChange.new = this.currentLocalAddress;
+				break;
+			case "managed":
+				if (this.isCurrentServiceManaged) {
+					propChange.new = "Enabled";
+				} else {
+					propChange.new = "Disabled";
+				}
+				break;
+		}
+		propChange.property = propertyName;
+		this.api.EditService(propChange).subscribe(resp => {
+			if (resp.status == "success") {
+				if (resp.response != "success") {
+					this.currentServiceKey = resp.response;
+				}
+				this.snackBar.open("Edit successful", "", {
+					duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
+					verticalPosition: 'top',
+				});
+			}
+		}, e => {
+			this.snackBar.open("Edit failed: " + e.error.response, "", {
+				duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
+				verticalPosition: 'top',
+			});
+		});
+	}
 }

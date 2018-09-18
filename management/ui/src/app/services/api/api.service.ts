@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { ConfigService } from "app/services/config.service";
-import { APIResponse, NewUser } from "app/services/api/api-common";
+import { APIResponse, NewUser, ServiceEdit } from "app/services/api/api-common";
 
 @Injectable()
 export class APIService {
@@ -45,6 +45,12 @@ export class APIService {
 	}
 	public DeleteService(name: string): Observable<APIResponse> {
 		return this.DeleteRequest("service/delete?name=" + name);
+	}
+	public EditService(propChange: ServiceEdit): Observable<APIResponse> {
+		return this.PostRequest("service/edit", JSON.stringify(propChange));
+	}
+	public UpdateService(details: FormData, name: string): Observable<APIResponse> {
+		return this.PostFormRequest("service/update?name="+name, details);
 	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
 		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);

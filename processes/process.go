@@ -15,6 +15,7 @@ type ManagedProcess struct {
 	process      *os.Process
 	Stop         chan bool
 	Died         chan bool
+	Stopped      bool
 }
 
 //NewManagedProcess ...
@@ -23,8 +24,6 @@ func NewManagedProcess(name, workDir string, args []string) *ManagedProcess {
 		Name:    name,
 		Args:    args,
 		WorkDir: workDir,
-		Stop:    make(chan bool),
-		Died:    make(chan bool),
 	}
 }
 
@@ -37,6 +36,8 @@ func (mp *ManagedProcess) Run() {
 	procAttr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
 	go func() {
 	procloop:
+		mp.Stop = make(chan bool)
+		mp.Died = make(chan bool)
 		mp.process, err = os.StartProcess(mp.Name, mp.Args, procAttr)
 		if err != nil {
 			common.Logger.Errorln(err)
@@ -50,6 +51,7 @@ func (mp *ManagedProcess) Run() {
 		select {
 		case <-mp.Stop:
 			mp.restart = false
+			mp.Stopped = true
 			mp.process.Kill()
 			return
 		case <-mp.Died:
@@ -60,6 +62,7 @@ func (mp *ManagedProcess) Run() {
 				}
 			} else {
 				common.Logger.Errorln("restart failed 10 times.")
+				mp.Stopped = true
 			}
 		}
 	}()

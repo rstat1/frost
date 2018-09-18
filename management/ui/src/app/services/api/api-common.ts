@@ -51,3 +51,8 @@ export interface PermissionValues {
 export interface Service {
 	p: PermissionValues;
 }
+export class ServiceEdit {
+	public name: string;
+	public property: string;
+	public new: string;
+}
