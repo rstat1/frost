@@ -29,7 +29,7 @@ func (pm *ProcessManager) StartProcess(name, dirName string, devmode bool) bool 
 			return false
 		} else {
 			process := NewManagedProcess(path, dirName, []string{
-				name, "-ppid", strconv.Itoa(os.Getpid()), "-devmode="+strconv.FormatBool(devmode),
+				name, "-ppid", strconv.Itoa(os.Getpid()), "-devmode=" + strconv.FormatBool(devmode),
 			})
 			pm.managedProcesses[name] = process
 			process.Run()
@@ -52,7 +52,9 @@ func (pm *ProcessManager) StopAllProcesses() {
 func (pm *ProcessManager) StopAProcess(name string) {
 	process := pm.managedProcesses[name]
 	if process != nil {
-		process.Stop <- true
+		if process.Stopped == false {
+			process.Stop <- true
+		}
 		delete(pm.managedProcesses, name)
 	}
 }

@@ -51,15 +51,17 @@ export class AuthService {
 		let token: string = ConfigService.GetAccessToken();
 		if (token != "") {
 			let resp: APIResponse = await this.api.ValidateToken().toPromise().catch(e => {
+				console.log("clearing auth totken ...");
+				sessionStorage.clear();
+				ConfigService.SetAccessToken("");
 				return null;
 			});
-			let decoded = jwt_decode(token);
 			if (resp != null && resp.status == "success") {
+				let decoded = jwt_decode(token);
 				this.IsLoggedIn = true;
 				this.UserIsRoot = decoded.grp == "root";
 				this.tokenValidate.next(true);
 			} else {
-				sessionStorage.clear();
 				this.IsLoggedIn = false;
 				this.tokenValidate.next(false);
 			}
@@ -70,6 +72,7 @@ export class AuthService {
 		}
 	}
 	public doAuthRequest(username: string, password: string, redirect: string, isNewUser: boolean) {
+		console.log(ConfigService.GetAccessToken());
 		if (ConfigService.GetAccessToken() == "") {
 			window.location.replace(ConfigService.GetAuthorizeEndpoint());
 		} else {

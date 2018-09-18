@@ -11,10 +11,10 @@
 						<mat-panel-description>{{currentServiceName}}</mat-panel-description>
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
-						<input matInput placeholder="New service name">
+						<input matInput placeholder="New service name" [(ngModel)]="currentServiceName">
     				</mat-form-field>
 					<mat-action-row>
-						<button mat-button color="primary">Save</button>
+						<button mat-button color="primary" (click)="save('name')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
@@ -23,10 +23,10 @@
 						<mat-panel-description>{{currentServiceAPIName}}</mat-panel-description>
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
-						<input matInput placeholder="New API name">
+						<input matInput placeholder="New API name" [(ngModel)]="currentServiceAPIName">
     				</mat-form-field>
 					<mat-action-row>
-						<button mat-button color="primary">Save</button>
+						<button mat-button color="primary" (click)="save('apiName')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
@@ -41,9 +41,9 @@
 						<mat-panel-description>*********</mat-panel-description>
 					</mat-expansion-panel-header>
 					<p *ngIf="this.currentServiceKey != ''" class="service-key-label">New Service Key: </p>
-					<p *ngIf="this.currentServiceKey != ''" class="service-key">"key"</p>
+					<p *ngIf="this.currentServiceKey != ''" class="service-key">{{currentServiceKey}}</p>
 					<mat-action-row>
-						<button mat-button color="primary">Reset Key</button>
+						<button mat-button color="primary" (click)="save('skey')">Reset Key</button>
 					</mat-action-row>
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
@@ -52,10 +52,10 @@
 						<mat-panel-description>{{currentARURL}}</mat-panel-description>
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
-						<input matInput placeholder="New Auth Redirect URL">
+						<input matInput placeholder="New Auth Redirect URL" [(ngModel)]="currentARURL">
     				</mat-form-field>
 					<mat-action-row>
-						<button mat-button color="primary">Save</button>
+						<button mat-button color="primary" (click)="save('redirect')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
@@ -64,10 +64,10 @@
 						<mat-panel-description>{{currentLocalAddress}}</mat-panel-description>
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
-						<input matInput placeholder="New Local Address">
+						<input matInput placeholder="New Local Address" [(ngModel)]="currentLocalAddress">
     				</mat-form-field>
 					<mat-action-row>
-						<button mat-button color="primary">Save</button>
+						<button mat-button color="primary" (click)="save('localaddr')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
@@ -83,10 +83,10 @@
 						<span *ngIf="this.isCurrentServiceManaged">Disable</span>
 					</mat-checkbox>
 					<mat-action-row>
-						<button mat-button color="primary">Save</button>
+						<button mat-button color="primary" (click)="save('managed')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
-				<mat-expansion-panel class="detail-block">
+				<!-- <mat-expansion-panel class="detail-block">
 					<mat-expansion-panel-header>
 						<mat-panel-title>Update Services</mat-panel-title>
 						<mat-panel-description>
@@ -101,7 +101,7 @@
 					<mat-action-row>
 						<button mat-button color="primary">Save</button>
 					</mat-action-row>
-				</mat-expansion-panel>
+				</mat-expansion-panel> -->
 			</mat-accordion>
 		</mat-expansion-panel>
 		<mat-expansion-panel>
@@ -127,7 +127,7 @@
 				</mat-form-field>
 			</span>
 			<mat-action-row>
-				<button mat-button color="primary">Upload</button>
+				<button mat-button color="primary" (click)="upload()">Upload</button>
 			</mat-action-row>
 		</mat-expansion-panel>
 	</mat-accordion>

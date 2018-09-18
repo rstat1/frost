@@ -63,9 +63,15 @@ export class NewServiceComponent implements OnInit {
 		let uiReader: FileReader;
 		let serviceReader: FileReader;
 		let body: FormData = new FormData();
-		let serviceDetails: string = JSON.stringify(this.s);
+		let serviceDetails: Service = new Service();
 
-		body.append("details", serviceDetails);
+		serviceDetails.name = (<any>this.serviceDetails.value).ServiceName;
+		serviceDetails.address = (<any>this.serviceDetails.value).address;
+		serviceDetails.api_prefix = (<any>this.serviceDetails.value).apiPrefix;
+		serviceDetails.managed = (<any>this.managementDetails.value).IsManaged;
+		serviceDetails.RedirectURL = (<any>this.serviceDetails.value).authCallback;
+
+		body.append("details", JSON.stringify(serviceDetails));
 
 		if (this.uiFiles != null) {
 			// console.log("have ui files...")

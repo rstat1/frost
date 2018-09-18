@@ -102,8 +102,9 @@ func (api *APIRouter) SetupRoutes() {
 
 	api.router.Handle("/api/frost/service/get", common.RequestWrapper(api.user.IsRoot, "GET", api.getService))
 	api.router.Handle("/api/frost/service/new", common.RequestWrapper(api.user.IsRoot, "POST", api.newService))
+	api.router.Handle("/api/frost/service/edit", common.RequestWrapper(api.user.IsRoot, "POST", api.editService))
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
-	api.router.Handle("/api/frost/service/update", common.RequestWrapper(common.Nothing, "POST", api.updateService))
+	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
 
 	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.IsRoot, "GET", api.services))
 
@@ -125,14 +126,21 @@ func (api *APIRouter) getToken(resp http.ResponseWriter, r *http.Request) {
 	q.Set("code", code)
 	req.URL.RawQuery = q.Encode()
 	if httpResp, err := api.httpClient.Do(req); err == nil {
-		body, _ := ioutil.ReadAll(httpResp.Body)
-		json.Unmarshal(body, &serviceResp)
-		if serviceResp.Status == "failed" {
-			serviceResp.HttpStatusCode = 500
+		if body, err := ioutil.ReadAll(httpResp.Body); err != nil {
+			common.WriteFailureResponse(err, resp, "getToken", 500)
 		} else {
-			serviceResp.HttpStatusCode = 200
+			common.Logger.Debugln(string(body))
+			if e := json.Unmarshal(body, &serviceResp); e != nil {
+				common.WriteFailureResponse(e, resp, "getToken", 500)
+			} else {
+				if serviceResp.Status == "failed" {
+					serviceResp.HttpStatusCode = 500
+				} else {
+					serviceResp.HttpStatusCode = 200
+				}
+				common.WriteAPIResponseStruct(resp, serviceResp)
+			}
 		}
-		common.WriteAPIResponseStruct(resp, serviceResp)
 	} else {
 		common.WriteFailureResponse(err, resp, "getToken", 500)
 	}
@@ -144,6 +152,60 @@ func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 	var name = r.URL.Query().Get("name")
 	api.servMan.StopManagedService(name)
 	common.WriteAPIResponseStruct(resp, api.getServiceListOnSuccess(api.servMan.DeleteService(name)))
+}
+func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
+	var propChange data.ServiceEdit
+	var e error
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		json.Unmarshal(body, &propChange)
+		if service, err := api.data.GetRoute(propChange.ServiceName); err == nil {
+			switch propChange.PropertyName {
+			case "name":
+				service.AppName = propChange.NewValue
+				break
+			case "apiName":
+				service.APIName = propChange.NewValue
+				break
+			case "skey":
+				propChange.NewValue = common.RandomID(48)
+				if propChange.ServiceName == "watchdog" {
+					api.serviceKey = propChange.NewValue
+				}
+				service.ServiceKey = propChange.NewValue
+				break
+			case "redirect":
+				service.RedirectURL = propChange.NewValue
+				break
+			case "localaddr":
+				service.ServiceAddress = propChange.NewValue
+				break
+			case "managed":
+				if propChange.NewValue == "Enabled" {
+					service.IsManagedService = true
+				} else {
+					service.IsManagedService = false
+				}
+				break
+			}
+			if propChange.ServiceName == "watchdog" {
+				e = api.data.UpdateSysConfig(propChange)
+			}
+			e = api.data.UpdateRoute(service, propChange.ServiceName)
+		} else {
+			e = err
+		}
+	} else {
+		e = err
+	}
+	if e != nil {
+		common.WriteFailureResponse(e, resp, "editService", 400)
+	} else {
+		if propChange.PropertyName == "skey" {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(propChange.NewValue, nil, 200))
+		} else {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 200))
+		}
+	}
 }
 func (api *APIRouter) services(resp http.ResponseWriter, r *http.Request) {
 	var err error
@@ -226,7 +288,7 @@ func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
 		p := data.ServiceAuth{
 			Service: "watchdog",
 			Permissions: []data.PermissionValue{
-				{Name:"hasAccess", Value: true},
+				{Name: "hasAccess", Value: true},
 				{Name: "hasRoot", Value: true},
 			},
 		}

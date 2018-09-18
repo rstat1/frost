@@ -134,10 +134,11 @@ func (s *ServiceManager) handleFileUpload(request *http.Request, info data.Servi
 
 	if err = request.ParseMultipartForm(75 * 1024 * 1024); err == nil {
 		uiFiles, handler, noUIBlob := request.FormFile("uiblob")
-		serviceFile, _, notServiceBlob := request.FormFile("service")
+		serviceFile, header, notServiceBlob := request.FormFile("service")
 		serviceDetails := request.FormValue("details")
 		if serviceDetails != "" {
 			json.Unmarshal([]byte(serviceDetails), &service)
+			service.BinName = header.Filename
 			s.proxy.AddRoute(service)
 			err = s.data.AddNewRoute(service)
 			s.StartManagedService(service.AppName)
@@ -200,6 +201,7 @@ func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName
 		name, _ := os.Getwd()
 		if err := common.Unzip(fileName, name+"/"+appName+"/web"); err != nil {
 			common.CreateFailureResponse(err, "handleUIBlobUpload(unzip)", 500)
+			common.Logger.WithField("func", "handleUIBlobUpload(unzip)").Errorln(err)
 			return err
 		} else {
 			os.Remove(fileName)
@@ -207,6 +209,7 @@ func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName
 		}
 	} else {
 		common.CreateFailureResponse(err, "handleServiceBinUpload", 500)
+		common.Logger.WithField("func", "handleUIBlobUpload(create)").Errorln(err)
 		return err
 	}
 }

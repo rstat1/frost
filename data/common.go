@@ -15,8 +15,8 @@ type AuthRequest struct {
 
 //UserDetails ...
 type UserDetails struct {
-	Username    string           `json:"username"`
-	Password    string           `json:"password"`
+	Username    string        `json:"username"`
+	Password    string        `json:"password"`
 	Permissions []ServiceAuth `json:"access"`
 }
 
@@ -47,15 +47,15 @@ type Config struct {
 
 //ServiceDetails ...
 type ServiceDetails struct {
-	AppName          string `storm:"id" json:"name" graph:"name"`
-	BinName          string `json:"filename" graph:"serviceFilename"`
-	APIName          string `json:"api_prefix" graph:"apiName"`
-	ServiceID        string `storm:"unique"`
-	ServiceKey       string
-	RedirectURL      string
-	ServiceAddress   string `json:"address" graph:"serviceAddress"`
-	IsManagedService bool   `json:"managed" graph:"isManaged"`
-	ServiceNameURLToUI bool `json:"serviceNameToUI"`
+	AppName            string `storm:"id" json:"name" graph:"name"`
+	BinName            string `json:"filename" graph:"serviceFilename"`
+	APIName            string `json:"api_prefix" graph:"apiName"`
+	ServiceID          string `storm:"unique"`
+	ServiceKey         string
+	RedirectURL        string
+	ServiceAddress     string `json:"address" graph:"serviceAddress"`
+	IsManagedService   bool   `json:"managed" graph:"isManaged"`
+	ServiceNameURLToUI bool   `json:"serviceNameToUI"`
 }
 
 //ServiceAccess ...
@@ -65,6 +65,13 @@ type ServiceAccess struct {
 		Name  string `json:"name"`
 		Value bool   `json:"value"`
 	}
+}
+
+//ServiceEdit ...
+type ServiceEdit struct {
+	ServiceName  string `json:"name"`
+	PropertyName string `json:"property"`
+	NewValue     string `json:"new"`
 }
 
 //BingDailyImage ...

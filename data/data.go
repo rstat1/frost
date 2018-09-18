@@ -192,18 +192,6 @@ func (data *DataStore) DoesUserHavePermission(username, service, permission stri
 	}
 }
 
-//GetServiceDetails ...
-func (data *DataStore) GetServiceDetails(name string) (ServiceDetails, error) {
-	var serviceDetails ServiceDetails
-	c := data.queryEngine.From("Services")
-	if err := c.One("ServiceName", name, &serviceDetails); err == nil {
-		return serviceDetails, nil
-	} else {
-		common.CreateFailureResponse(err, "GetServiceDetails", 500)
-		return ServiceDetails{}, err
-	}
-}
-
 //GetServiceByID ...
 func (data *DataStore) GetServiceByID(id string) (ServiceDetails, error) {
 	var serviceDetails ServiceDetails
@@ -265,6 +253,23 @@ func (data *DataStore) DeleteUser(user string) error {
 	} else {
 		return errors.New("no such user")
 	}
+}
+
+//UpdateRoute ...
+func (data *DataStore) UpdateRoute(service ServiceDetails, serviceName string) error {
+	routes := data.queryEngine.From("Services")
+	if e := data.DeleteRoute(serviceName); e != nil {
+		common.Logger.WithFields(logrus.Fields{"func": "AddNewRoute", "action": "delete"}).Errorln(e)
+		return e
+	} else {
+		return routes.Save(&service)
+	}
+}
+
+//UpdateSysConfig ...
+func (data *DataStore) UpdateSysConfig(propChange ServiceEdit) error {
+	system := data.queryEngine.From("System")
+	return system.Set("System", "key", &propChange.NewValue)
 }
 
 func (data *DataStore) makeUserPermissionMap(username string, p []ServiceAuth) {
