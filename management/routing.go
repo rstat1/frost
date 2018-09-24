@@ -105,6 +105,7 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/service/edit", common.RequestWrapper(api.user.IsRoot, "POST", api.editService))
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
+	api.router.Handle("/api/frost/service/newalias", common.RequestWrapper(api.user.IsRoot, "POST", api.extraRoute))
 
 	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.IsRoot, "GET", api.services))
 
@@ -114,6 +115,26 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/status", common.RequestWrapper(common.Nothing, "GET", api.firstRunStatus))
 	api.router.Handle("/api/frost/init", common.RequestWrapper(common.Nothing, "GET", api.initFrost))
 	api.router.Handle("/api/frost/serviceid", common.RequestWrapper(common.Nothing, "GET", api.getServiceID))
+
+}
+func (api *APIRouter) extraRoute(resp http.ResponseWriter, r *http.Request) {
+	var propChange data.RouteAlias
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		json.Unmarshal(body, &propChange)
+		newRoute := data.ExtraRoute{
+			APIName:  propChange.APIName,
+			FullURL:  propChange.FullURL,
+			APIRoute: propChange.APIRoute,
+		}
+		if e := api.data.AddExtraRoute(newRoute); e != nil {
+			common.WriteFailureResponse(e, resp, "extraRoute", 500)
+		} else {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 200))
+		}
+	} else {
+		common.WriteFailureResponse(err, resp, "extraRoute", 500)
+	}
+
 }
 func (api *APIRouter) getToken(resp http.ResponseWriter, r *http.Request) {
 	var serviceResp common.APIResponse
@@ -157,41 +178,49 @@ func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 	var e error
 	if body, err := ioutil.ReadAll(r.Body); err == nil {
 		json.Unmarshal(body, &propChange)
-		if service, err := api.data.GetRoute(propChange.ServiceName); err == nil {
-			switch propChange.PropertyName {
-			case "name":
-				service.AppName = propChange.NewValue
-				break
-			case "apiName":
-				service.APIName = propChange.NewValue
-				break
-			case "skey":
-				propChange.NewValue = common.RandomID(48)
+		if propChange.PropertyName != "newroute" {
+			if service, err := api.data.GetRoute(propChange.ServiceName); err == nil {
+				switch propChange.PropertyName {
+				case "name":
+					service.AppName = propChange.NewValue
+					break
+				case "apiName":
+					service.APIName = propChange.NewValue
+					break
+				case "skey":
+					propChange.NewValue = common.RandomID(48)
+					if propChange.ServiceName == "watchdog" {
+						api.serviceKey = propChange.NewValue
+					}
+					service.ServiceKey = propChange.NewValue
+					break
+				case "redirect":
+					service.RedirectURL = propChange.NewValue
+					break
+				case "localaddr":
+					service.ServiceAddress = propChange.NewValue
+					break
+				case "managed":
+					if propChange.NewValue == "Enabled" {
+						service.IsManagedService = true
+					} else {
+						service.IsManagedService = false
+					}
+					break
+				}
 				if propChange.ServiceName == "watchdog" {
-					api.serviceKey = propChange.NewValue
+					e = api.data.UpdateSysConfig(propChange)
 				}
-				service.ServiceKey = propChange.NewValue
-				break
-			case "redirect":
-				service.RedirectURL = propChange.NewValue
-				break
-			case "localaddr":
-				service.ServiceAddress = propChange.NewValue
-				break
-			case "managed":
-				if propChange.NewValue == "Enabled" {
-					service.IsManagedService = true
-				} else {
-					service.IsManagedService = false
-				}
-				break
+				e = api.data.UpdateRoute(service, propChange.ServiceName)
+			} else {
+				e = err
 			}
-			if propChange.ServiceName == "watchdog" {
-				e = api.data.UpdateSysConfig(propChange)
-			}
-			e = api.data.UpdateRoute(service, propChange.ServiceName)
 		} else {
-			e = err
+			newRoute := data.ExtraRoute{
+				APIName: propChange.ServiceName,
+				FullURL: propChange.NewValue,
+			}
+			e = api.data.AddExtraRoute(newRoute)
 		}
 	} else {
 		e = err

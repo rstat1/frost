@@ -8,6 +8,7 @@ import (
 
 	"git.m/svcman/common"
 	"github.com/asdine/storm"
+	"github.com/asdine/storm/q"
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-uuid"
 	"github.com/sirupsen/logrus"
@@ -46,6 +47,9 @@ func NewDataStoreInstance(filename string) *DataStore {
 		if _, err := tx.CreateBucketIfNotExists([]byte("Users")); err != nil {
 			panic(err)
 		}
+		if _, err := tx.CreateBucketIfNotExists([]byte("ExtraRoutes")); err != nil {
+			panic(err)
+		}
 		return nil
 	})
 	ds.FrostInit()
@@ -62,8 +66,6 @@ func (data *DataStore) FrostInit() {
 		if err := system.Set("System", "key", common.RandomID(48)); err != nil {
 			panic(err)
 		}
-	} else {
-		common.Logger.Debugln("hello!?!?!?")
 	}
 }
 
@@ -205,6 +207,17 @@ func (data *DataStore) GetServiceByID(id string) (ServiceDetails, error) {
 	}
 }
 
+//GetAllExtraRoutes ...
+func (data *DataStore) GetAllExtraRoutes() ([]ExtraRoute, error) {
+	var extraRoutes []ExtraRoute
+	extras := data.queryEngine.From("ExtraRoutes")
+	if e2 := extras.All(&extraRoutes); e2 != nil {
+		common.CreateFailureResponse(e2, "GetAllExtraRoutes", 500)
+		return nil, e2
+	}
+	return extraRoutes, nil
+}
+
 //SetFirstRunState ...
 func (data *DataStore) SetFirstRunState() {
 	firstRun := data.queryEngine.From("System")
@@ -224,19 +237,39 @@ func (data *DataStore) AddNewRoute(service ServiceDetails) error {
 	if err := routes.Save(&service); err != nil {
 		common.Logger.WithField("func", "AddNewRoute").Errorln(err)
 		return err
-	} else {
-		return nil
 	}
+	return nil
+}
+
+//AddExtraRoute ...
+func (data *DataStore) AddExtraRoute(newRoute ExtraRoute) error {
+	if newRoute.APIName == "" || newRoute.FullURL == "" {
+		return errors.New("missing some important info")
+	}
+	extras := data.queryEngine.From("ExtraRoutes")
+	if err := extras.Save(&newRoute); err != nil {
+		common.Logger.WithField("func", "AddExtraRoute").Errorln(err)
+		return err
+	}
+	return nil
 }
 
 //DeleteRoute ...
 func (data *DataStore) DeleteRoute(route string) error {
 	var foundRoute ServiceDetails
 	routes := data.queryEngine.From("Services")
-	if err := routes.One("AppName", route, &foundRoute); err == nil {
-		return routes.DeleteStruct(&foundRoute)
-	} else {
+	extras := data.queryEngine.From("ExtraRoutes")
+
+	if e := routes.One("AppName", route, &foundRoute); e != nil {
+		common.Logger.WithField("func", "DeleteRoute(find)").Errorln(e)
+		return e
+	}
+	if err := routes.DeleteStruct(&foundRoute); err != nil {
+		common.Logger.WithField("func", "DeleteRoute(delete)").Errorln(err)
 		return err
+	}
+	if e2 := extras.Select(q.Eq("AppName", route)).Delete(new(ExtraRoute)); e2 != nil {
+		common.Logger.WithField("func", "DeleteRoute(delete)").Errorln(e2)
 	}
 	return nil
 }

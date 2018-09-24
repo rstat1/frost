@@ -74,6 +74,21 @@ type ServiceEdit struct {
 	NewValue     string `json:"new"`
 }
 
+//RouteAlias ...
+type RouteAlias struct {
+	APIName  string `json:"apiName"`
+	FullURL  string `json:"fullURL"`
+	APIRoute string `json:"apiRoute"`
+}
+
+//ExtraRoute ...
+type ExtraRoute struct {
+	ID       int    `storm:"id,increment"`
+	APIName  string `json:"name"`
+	FullURL  string `json:"fullURL"`
+	APIRoute string `json:"aliasedRoute"`
+}
+
 //BingDailyImage ...
 type BingDailyImage struct {
 	Images []struct {

@@ -56,3 +56,8 @@ export class ServiceEdit {
 	public property: string;
 	public new: string;
 }
+export class RouteAlias {
+	public apiName: string;
+	public fullURL: string;
+	public apiRoute: string;
+}

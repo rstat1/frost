@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { ConfigService } from "app/services/config.service";
-import { APIResponse, NewUser, ServiceEdit } from "app/services/api/api-common";
+import { APIResponse, NewUser, ServiceEdit, RouteAlias } from "app/services/api/api-common";
 
 @Injectable()
 export class APIService {
@@ -50,6 +50,9 @@ export class APIService {
 	}
 	public UpdateService(details: FormData, name: string): Observable<APIResponse> {
 		return this.PostFormRequest("service/update?name="+name, details);
+	}
+	public NewRouteAlias(alias: RouteAlias): Observable<APIResponse> {
+		return this.PostRequest("service/newalias", JSON.stringify(alias));
 	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
 		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);

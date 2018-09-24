@@ -1,0 +1,51 @@
+#!/bin/bash
+
+CURRENT_PWD=$PWD
+
+if [[ $EUID -ne 0 ]]; then
+   echo "this script needs root"
+   exit 1
+fi
+
+echo "Stopping service..."
+systemctl stop svcman.service
+
+if [ -e "watchdog" ]; then
+	echo "Updating service..."
+	cp watchdog /webservices/bin/watchdog
+	chown webservices:webservices /webservices/bin/watchdog
+fi
+
+if [ -e "frost-ui.zip" ]; then
+	echo "Updating frost ui"
+	if [ -d "/webservices/watchdog" ]; then
+		rm -rf /webservices/watchdog
+	fi
+	mkdir /webservices/watchdog
+	mkdir /webservices/watchdog/web
+	cp frost-ui.zip /webservices/watchdog/web
+	cd /webservices/watchdog/web
+	unzip frost-ui.zip
+	rm frost-ui.zip
+	chmod 0760 /webservices/watchdog/ -R
+	chown --recursive webservices:webservices /webservices/watchdog
+fi
+
+if [ -e "trinity-ui.zip" ]; then
+	echo "Updating trinity ui"
+	if [ -d "/webservices/trinity" ]; then
+		rm -rf /webservices/trinity
+	fi
+	mkdir /webservices/trinity
+	mkdir /webservices/trinity/web
+	cp trinity-ui.zip /webservices/trinity/web
+	cd /webservices/trinity/web
+	unzip trinity-ui.zip
+	rm trinity-ui.zip
+	chmod 0760 /webservices/trinity/ -R
+	chown --recursive webservices:webservices /webservices/trinity
+fi
+
+cd $CURRENT_PWD
+echo "Starting service..."
+systemctl start svcman.service
