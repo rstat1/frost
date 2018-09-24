@@ -144,11 +144,15 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
 	apiName := p.extraRoutes[req.Host]
 	serviceAddr := p.apiRoutes[apiName]
-	common.Logger.WithField("key", p.data.Cache.GetString("watchdog", req.Host)).Debugln("")
-	if strings.Contains(req.URL.Path, p.data.Cache.GetString("watchdog", req.Host)) {
+	apiRoute := p.data.Cache.GetString("watchdog", req.Host)
+	if apiRoute == "*" {
 		p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
 	} else {
-		p.invalidRoute(w, req.URL.String())
+		if strings.Contains(req.URL.Path, apiRoute) {
+			p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
+		} else {
+			p.invalidRoute(w, req.URL.String())
+		}
 	}
 }
 func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
