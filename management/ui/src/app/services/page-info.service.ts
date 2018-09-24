@@ -1,6 +1,5 @@
-import { Subject } from 'rxjs/Subject';
+import { Subject ,  Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
 
 @Injectable()
 export class PageInfoService {

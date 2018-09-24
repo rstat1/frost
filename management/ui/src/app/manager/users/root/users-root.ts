@@ -6,7 +6,7 @@ import { MatTableDataSource, MatSnackBar } from '@angular/material';
 import { APIService } from 'app/services/api/api.service';
 import { AuthRequest, NewUser, ServiceAccess } from 'app/services/api/api-common';
 import { ActionListService, PrimaryActionInfo } from 'app/services/action-list.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 @Component({
 	selector: 'app-users-root',
