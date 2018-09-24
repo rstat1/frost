@@ -2,7 +2,7 @@ import { MatSnackBar } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 
-import { Service, ServiceEdit } from 'app/services/api/api-common';
+import { Service, ServiceEdit, RouteAlias } from 'app/services/api/api-common';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 
@@ -12,6 +12,8 @@ import { PageInfoService } from 'app/services/page-info.service';
 	styleUrls: ['./edit.css']
 })
 export class EditServiceComponent implements OnInit {
+	public aliasURL: string = "";
+	public aliasedRoute: string = "";
 	public currentARURL: string = "";
 	public currentServiceID: string = "";
 	public currentServiceKey: string = "";
@@ -95,6 +97,7 @@ export class EditServiceComponent implements OnInit {
 	}
 	public save(propertyName: string) {
 		let propChange: ServiceEdit = new ServiceEdit();
+		propChange.property = propertyName;
 		propChange.name = this.serviceToEdit;
 		switch (propertyName) {
 			case "name":
@@ -117,22 +120,29 @@ export class EditServiceComponent implements OnInit {
 				}
 				break;
 		}
-		propChange.property = propertyName;
 		this.api.EditService(propChange).subscribe(resp => {
 			if (resp.status == "success") {
-				if (resp.response != "success") {
-					this.currentServiceKey = resp.response;
-				}
-				this.snackBar.open("Edit successful", "", {
-					duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
-					verticalPosition: 'top',
-				});
+				if (resp.response != "success") { this.currentServiceKey = resp.response; }
+				this.showResponse("Edit Successful");
 			}
-		}, e => {
-			this.snackBar.open("Edit failed: " + e.error.response, "", {
-				duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
-				verticalPosition: 'top',
-			});
+		}, e => this.showResponse("Edit failed: " + e.error.response) );
+	}
+	public newRoute() {
+		let routeAlias: RouteAlias = new RouteAlias();
+		routeAlias.apiName = this.currentServiceAPIName;
+		routeAlias.fullURL = this.aliasURL;
+		routeAlias.apiRoute = this.aliasedRoute;
+		this.api.NewRouteAlias(routeAlias).subscribe(
+			resp => {
+				if (resp.status == "success") { this.showResponse("Added new route alias"); }
+			},
+			e => this.showResponse("Failed adding new alias: " + e.error.response)
+		);
+	}
+	private showResponse(message: string) {
+		this.snackBar.open(message, "", {
+			duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
+			verticalPosition: 'top',
 		});
 	}
 }

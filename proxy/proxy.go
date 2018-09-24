@@ -25,7 +25,9 @@ type Proxy struct {
 	fwd                  *forward.Forwarder
 	knownUIRoutes        []string
 	knownRoutes          map[string]bool
+	knownExtraRoutes     map[string]bool
 	apiRoutes            map[string]string
+	extraRoutes          map[string]string
 	webuiserver          *services.WebServer
 	isInLocalMode        bool
 	apiBaseURL           string
@@ -67,11 +69,13 @@ func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 	var fwd *forward.Forwarder
 	fwd, _ = forward.New() //forward.Logger(common.Logger))
 	return &Proxy{
-		fwd:         fwd,
-		data:        dataStoreRef,
-		apiRoutes:   make(map[string]string),
-		knownRoutes: make(map[string]bool),
-		webuiserver: services.NewWebServer(),
+		fwd:              fwd,
+		data:             dataStoreRef,
+		apiRoutes:        make(map[string]string),
+		extraRoutes:      make(map[string]string),
+		knownRoutes:      make(map[string]bool),
+		knownExtraRoutes: make(map[string]bool),
+		webuiserver:      services.NewWebServer(),
 	}
 }
 
@@ -119,6 +123,7 @@ func (p *Proxy) DeleteRoute(apiName, appName string) {
 
 //ServeHTTP ...
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	common.Logger.Debugln(p.knownExtraRoutes)
 	if req.URL.String() == "/favicon.ico" {
 		w.WriteHeader(200)
 	} else if req.Host == p.apiBaseURL {
@@ -130,8 +135,20 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		} else {
 			p.invalidRoute(w, req.Host)
 		}
+	} else if p.knownExtraRoutes[req.Host] == true {
+		p.serveExtraRouteRequest(w, req)
 	} else {
 		common.WriteFailureResponse(errors.New("not found"), w, "ServeHTTP", 404)
+	}
+}
+func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
+	apiName := p.extraRoutes[req.Host]
+	serviceAddr := p.apiRoutes[apiName]
+	common.Logger.WithField("key", p.data.Cache.GetString("watchdog", req.Host)).Debugln("")
+	if strings.Contains(req.URL.Path, p.data.Cache.GetString("watchdog", req.Host)) {
+		p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
+	} else {
+		p.invalidRoute(w, req.URL.String())
 	}
 }
 func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
@@ -139,31 +156,33 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 		var urlWithoutHost = strings.Replace(req.URL.String(), p.apiBaseURLWithScheme, "", -1)
 		var urlBits = strings.Split(urlWithoutHost, "/")
 		var apiName = urlBits[1]
-		if p.apiRoutes[apiName] != "" {
-			scheme := req.URL.Scheme
-			if forward.IsWebsocketRequest(req) == false {
-				scheme = "http"
-			} else {
-				scheme = "ws"
-			}
-			req.URL = &url.URL{
-				Host:     p.apiRoutes[apiName],
-				Path:     "/api" + req.URL.Path,
-				Scheme:   scheme,
-				RawQuery: req.URL.Query().Encode(),
-			}
-			req.RequestURI = req.URL.String()
-			req.Header.Add("Access-Control-Allow-Origin", p.data.Cache.GetString("watchdog", apiName))
-			p.fwd.ServeHTTP(w, req)
-
-		} else {
-			p.invalidRoute(w, req.Host)
-		}
+		p.proxyRequest(w, req, p.apiRoutes[apiName], "/api"+req.URL.Path, p.data.Cache.GetString("watchdog", apiName))
+	} else {
+		p.invalidRoute(w, req.URL.String())
 	}
+}
+func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo string, path string, origin string) {
+	scheme := req.URL.Scheme
+	if forward.IsWebsocketRequest(req) == false {
+		scheme = "http"
+	} else {
+		scheme = "ws"
+	}
+	req.URL = &url.URL{
+		Host:     proxyTo,
+		Path:     path, //"/api" + req.URL.Path,
+		Scheme:   scheme,
+		RawQuery: req.URL.Query().Encode(),
+	}
+	req.RequestURI = req.URL.String()
+	if origin != "" {
+		req.Header.Add("Access-Control-Allow-Origin", origin)
+	}
+	p.fwd.ServeHTTP(w, req)
 }
 func (p *Proxy) urlWhiteList() autocert.HostPolicy {
 	return func(_ context.Context, host string) error {
-		if !p.knownRoutes[host] {
+		if !p.knownRoutes[host] || !p.knownExtraRoutes[host] {
 			err := errors.New("host not on whitelist: " + host)
 			common.CreateFailureResponse(err, "urlWhiteList", 400)
 			return err
@@ -182,6 +201,14 @@ func (p *Proxy) setRoutes() {
 			p.apiRoutes[v.APIName] = v.ServiceAddress
 			p.knownRoutes[v.AppName+p.baseURL] = true
 			p.data.Cache.PutString("watchdog", v.APIName, v.AppName+p.baseURL)
+		}
+	}
+	if routes, e2 := p.data.GetAllExtraRoutes(); e2 == nil {
+		common.Logger.Debugln(routes)
+		for _, r := range routes {
+			p.extraRoutes[r.FullURL] = r.APIName
+			p.knownExtraRoutes[r.FullURL] = true
+			p.data.Cache.PutString("watchdog", r.FullURL, r.APIRoute)
 		}
 	}
 }
