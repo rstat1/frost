@@ -12,3 +12,4 @@ boltbrowser.linux64
 *.zip
 
 out/
+node_modules/*

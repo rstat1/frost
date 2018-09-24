@@ -145,7 +145,6 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 				scheme = "http"
 			} else {
 				scheme = "ws"
-				common.Logger.Debugln(req)
 			}
 			req.URL = &url.URL{
 				Host:     p.apiRoutes[apiName],
@@ -164,7 +163,6 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 }
 func (p *Proxy) urlWhiteList() autocert.HostPolicy {
 	return func(_ context.Context, host string) error {
-		common.Logger.Debugln(host)
 		if !p.knownRoutes[host] {
 			err := errors.New("host not on whitelist: " + host)
 			common.CreateFailureResponse(err, "urlWhiteList", 400)
@@ -185,7 +183,6 @@ func (p *Proxy) setRoutes() {
 			p.knownRoutes[v.AppName+p.baseURL] = true
 			p.data.Cache.PutString("watchdog", v.APIName, v.AppName+p.baseURL)
 		}
-		common.Logger.Debugln(p.knownRoutes)
 	}
 }
 func (p *Proxy) invalidRoute(resp http.ResponseWriter, requestedURL string) {

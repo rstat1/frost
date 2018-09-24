@@ -12,7 +12,6 @@ import (
 	"git.m/svcman/common"
 	"git.m/svcman/data"
 	"github.com/husobee/vestigo"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -192,7 +191,6 @@ func (auth *AuthService) token(resp http.ResponseWriter, r *http.Request) {
 	hasCode := auth.hasRequiredParam("code", r)
 	if username := auth.cache.GetString("auth-"+hasSid.Response, hasCode.Response); username != "" {
 		if service, err := auth.db.GetServiceByID(hasSid.Response); err == nil {
-			common.Logger.WithFields(logrus.Fields{"key-recv": hasSKey.Response, "actual": service.ServiceKey}).Debugln("keys")
 			if service.ServiceKey == hasSKey.Response {
 				common.WriteAPIResponseStruct(resp, auth.user.GenerateAuthToken(username, service.AppName))
 			} else {
@@ -262,7 +260,6 @@ func (auth *AuthService) fromrequest(resp http.ResponseWriter, r *http.Request) 
 		response = common.CreateAPIResponse(s.AppName, nil, 200)
 	} else {
 		if sid == auth.serviceID {
-			common.Logger.Debugln(auth.serviceID)
 			response = common.CreateAPIResponse("watchdog", nil, 200)
 		} else {
 			response = common.CreateFailureResponse(err, "fromrequest", 500)

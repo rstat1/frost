@@ -62,6 +62,8 @@ func (data *DataStore) FrostInit() {
 		if err := system.Set("System", "key", common.RandomID(48)); err != nil {
 			panic(err)
 		}
+	} else {
+		common.Logger.Debugln("hello!?!?!?")
 	}
 }
 
@@ -155,9 +157,9 @@ func (data *DataStore) GetFirstRunState() bool {
 	var firstRunState bool
 	firstRun := data.queryEngine.From("System")
 	if err := firstRun.Get("System", "firstrun", &firstRunState); err == nil {
-		common.Logger.Debugln(err)
 		return firstRunState
 	} else {
+		common.Logger.Errorln(err)
 		return true
 	}
 }
@@ -181,8 +183,6 @@ func (data *DataStore) GetRoute(name string) (ServiceDetails, error) {
 func (data *DataStore) DoesUserHavePermission(username, service, permission string) bool {
 	var serviceAccess map[string]map[string]bool
 
-	common.Logger.WithFields(logrus.Fields{"app": service, "username": username}).Debugln("checking permission...")
-
 	permMap := data.queryEngine.From("SitePermissionMappings")
 	if err := permMap.Get("SitePermissionMappings", username, &serviceAccess); err == nil {
 		return serviceAccess[service][permission]
@@ -198,8 +198,6 @@ func (data *DataStore) GetServiceByID(id string) (ServiceDetails, error) {
 	c := data.queryEngine.From("Services")
 	err := c.One("ServiceID", id, &serviceDetails)
 	if err == nil {
-		common.Logger.Debugln(serviceDetails.ServiceID)
-
 		return serviceDetails, nil
 	} else {
 		common.CreateFailureResponse(err, "GetServiceByID", 500)
@@ -215,7 +213,6 @@ func (data *DataStore) SetFirstRunState() {
 
 //AddNewRoute ...
 func (data *DataStore) AddNewRoute(service ServiceDetails) error {
-	common.Logger.Debugln(service)
 	if service.ServiceID == "" {
 		service.ServiceID = common.RandomID(32)
 		service.ServiceKey = common.RandomID(48)

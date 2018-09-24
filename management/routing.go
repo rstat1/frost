@@ -129,7 +129,6 @@ func (api *APIRouter) getToken(resp http.ResponseWriter, r *http.Request) {
 		if body, err := ioutil.ReadAll(httpResp.Body); err != nil {
 			common.WriteFailureResponse(err, resp, "getToken", 500)
 		} else {
-			common.Logger.Debugln(string(body))
 			if e := json.Unmarshal(body, &serviceResp); e != nil {
 				common.WriteFailureResponse(e, resp, "getToken", 500)
 			} else {
@@ -294,7 +293,7 @@ func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
 		}
 		perms := append(perms, p)
 		if err := api.data.AddNewRoute(service); err != nil {
-			common.Logger.WithField("func", "initFrost").Debugln(err)
+			common.Logger.WithField("func", "initFrost").Errorln(err)
 		}
 		api.user.NewUser(newUser, perms)
 		api.data.SetFirstRunState()

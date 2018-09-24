@@ -39,7 +39,6 @@ func (api *BingBGFetcher) GetBGImage(resp http.ResponseWriter, r *http.Request) 
 		req, _ := http.NewRequest("GET", "http://bing.com/"+imageInfo, nil)
 		if response, err := api.httpClient.Do(req); err == nil {
 			if image, err := ioutil.ReadAll(response.Body); err == nil {
-				common.Logger.Debugln("Got")
 				resp.Write(image)
 			} else {
 				common.CreateFailureResponse(err, "getbgimage", 500)
