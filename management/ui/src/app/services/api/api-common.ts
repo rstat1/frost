@@ -57,7 +57,12 @@ export class ServiceEdit {
 	public new: string;
 }
 export class RouteAlias {
+	public ID: number;
 	public apiName: string;
 	public fullURL: string;
 	public apiRoute: string;
+}
+export class AliasDeleteRequest {
+	public route: string;
+	public baseURL: string;
 }

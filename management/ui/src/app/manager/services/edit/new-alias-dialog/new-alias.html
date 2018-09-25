@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Adding new alias for {{forAPI}}</h2>
+<div mat-dialog-content>
+	<mat-form-field class="upload-box upload-box-width">
+		<input matInput placeholder="URL hostname" name="newRoute" [(ngModel)]="aliasURL" required>
+	</mat-form-field>
+	<mat-form-field class="upload-box upload-box-width">
+		<input matInput placeholder="API route" name="routeAlias" [(ngModel)]="aliasedRoute" required>
+	</mat-form-field>
+</div>
+<div mat-dialog-actions style="float:right;margin-bottom: 0px;">
+	<button mat-raised-button color="primary" (click)="save()" tabindex="1">Save</button>
+</div>

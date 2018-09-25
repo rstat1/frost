@@ -4,7 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule,
 		MatToolbarModule, MatIconModule, MatSnackBarModule, MatTooltipModule,
-		MatSlideToggleModule, MatExpansionModule, MatAccordion} from '@angular/material';
+		MatSlideToggleModule, MatExpansionModule, MatListModule, MatDialogModule } from '@angular/material';
 import { FormsModule, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import { MenuModule } from 'app/menu/menu.module';
@@ -19,6 +19,7 @@ import { ManagerRootComponent } from 'app/manager/manager-root/manager-root';
 import { ActionsListComponent } from 'app/components/actions-list/action-list';
 import { ServicesRootComponent } from 'app/manager/services/root/services-root';
 import { LogViewerComponent } from 'app/manager/log-viewer/log-viewer.component';
+import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 
 const projectRoutes: Routes = [
 	{
@@ -39,9 +40,11 @@ const projectRoutes: Routes = [
 	imports: [
 		FormsModule,
 		CommonModule,
+		MatListModule,
 		MatIconModule,
 		MatTableModule,
 		MatInputModule,
+		MatDialogModule,
 		MatButtonModule,
 		MatToolbarModule,
 		MatTooltipModule,
@@ -58,13 +61,14 @@ const projectRoutes: Routes = [
 		NewUserComponent,
 		UsersRootComponent,
 		LogViewerComponent,
-		ManagerRootComponent,
 		NewServiceComponent,
+		ManagerRootComponent,
 		ActionsListComponent,
-		ServicesRootComponent,
 		EditServiceComponent,
+		ServicesRootComponent,
+		NewAliasDialogComponent,
 	],
 	providers: [ FormBuilder, ActionListService, PageInfoService ],
-	// entryComponents: [ ProjectListItem ],
+	entryComponents: [ NewAliasDialogComponent ],
 })
 export class ManagerModule { }

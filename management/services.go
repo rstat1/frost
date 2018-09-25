@@ -40,6 +40,7 @@ func (s *ServiceManager) DeleteService(name string) common.APIResponse {
 	route, _ := s.data.GetRoute(name)
 	s.proxy.DeleteRoute(route.APIName, route.AppName)
 	s.data.DeleteRoute(name)
+
 	return common.CreateAPIResponse("success", os.RemoveAll(route.AppName), 500)
 }
 
@@ -97,6 +98,23 @@ func (s *ServiceManager) NewService(request *http.Request) common.APIResponse {
 	return resp
 }
 
+//AddNewExtraRoute ...
+func (s *ServiceManager) AddNewExtraRoute(newRoute data.RouteAlias) common.APIResponse {
+	var resp common.APIResponse
+	route := data.ExtraRoute{
+		APIName:  newRoute.APIName,
+		FullURL:  newRoute.FullURL,
+		APIRoute: newRoute.APIRoute,
+	}
+	if e := s.data.AddExtraRoute(route); e != nil {
+		resp = common.CreateAPIResponse("failed", e, 500)
+	} else {
+		resp = common.CreateAPIResponse("success", nil, 200)
+		s.proxy.AddExtraRoute(route)
+	}
+	return resp
+}
+
 //UpdateService ...
 func (s *ServiceManager) UpdateService(request *http.Request) common.APIResponse {
 	serviceName := request.URL.Query().Get("name")
@@ -127,6 +145,19 @@ func (s *ServiceManager) GetService(name string) (data.ServiceDetails, error) {
 		return data.ServiceDetails{}, err
 	}
 }
+
+//GetExtraRoutes ...
+func (s *ServiceManager) GetExtraRoutes(apiName string) common.APIResponse {
+	var resp common.APIResponse
+	if routes, err := s.data.GetExtraRoutesForAPIName(apiName); err != nil {
+		resp = common.CreateFailureResponse(err, "GetExtraRoutes", 400)
+	} else {
+		asJSON, _ := json.Marshal(routes)
+		resp = common.CreateAPIResponse(string(asJSON), nil, 200)
+	}
+	return resp
+}
+
 func (s *ServiceManager) handleFileUpload(request *http.Request, info data.ServiceDetails) (common.APIResponse, data.ServiceDetails) {
 	var err error
 	var resp = common.CreateAPIResponse("success", nil, 500)

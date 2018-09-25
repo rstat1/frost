@@ -33,6 +33,7 @@
 	justify-content: space-between;
 	align-items: center;
 }
+
 .service-key-label {
 	display: inline;
 	margin-left: 20px;
@@ -55,4 +56,19 @@
 }
 .upload-box-width {
 	width: 25vw;
+}
+.route-item-title {
+	display: flex;
+	flex-grow:1;
+}
+.route-item-button {
+	display:flex;
+	flex-basis:0;
+	margin-right: 22px;
+}
+.route-item {
+	display:flex;
+	flex:1;
+	flex-direction:row;
+	align-items:center;
 }

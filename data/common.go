@@ -84,9 +84,15 @@ type RouteAlias struct {
 //ExtraRoute ...
 type ExtraRoute struct {
 	ID       int    `storm:"id,increment"`
-	APIName  string `json:"name"`
+	APIName  string `json:"apiName"`
 	FullURL  string `json:"fullURL"`
-	APIRoute string `json:"aliasedRoute"`
+	APIRoute string `json:"apiRoute" storm:"index"`
+}
+
+//AliasDeleteRequest ...
+type AliasDeleteRequest struct {
+	BaseURL string `json:"baseURL"`
+	Route   string `json:"route"`
 }
 
 //BingDailyImage ...

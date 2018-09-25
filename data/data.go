@@ -218,6 +218,17 @@ func (data *DataStore) GetAllExtraRoutes() ([]ExtraRoute, error) {
 	return extraRoutes, nil
 }
 
+//GetExtraRoutesForAPIName ...
+func (data *DataStore) GetExtraRoutesForAPIName(name string) ([]ExtraRoute, error) {
+	var extraRoutes []ExtraRoute
+	extras := data.queryEngine.From("ExtraRoutes")
+	if err := extras.Select(q.Eq("APIName", name)).Find(&extraRoutes); err != nil {
+		common.CreateFailureResponse(err, "GetAllExtraRoutes", 500)
+		return nil, err
+	}
+	return extraRoutes, nil
+}
+
 //SetFirstRunState ...
 func (data *DataStore) SetFirstRunState() {
 	firstRun := data.queryEngine.From("System")
@@ -282,6 +293,18 @@ func (data *DataStore) DeleteUser(user string) error {
 		return nil
 	} else {
 		return errors.New("no such user")
+	}
+}
+
+//DeleteExtraRoute ...
+func (data *DataStore) DeleteExtraRoute(route string) error {
+	var extraRoute []ExtraRoute
+	common.Logger.Debugln(route)
+	extras := data.queryEngine.From("ExtraRoutes")
+	if err := extras.Select(q.Eq("APIRoute", route)).Find(&extraRoute); err == nil {
+		return extras.DeleteStruct(&extraRoute[0])
+	} else {
+		return err
 	}
 }
 

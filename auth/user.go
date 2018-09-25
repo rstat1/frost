@@ -13,7 +13,6 @@ import (
 
 	"git.m/svcman/common"
 	"git.m/svcman/data"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
@@ -94,10 +93,6 @@ func (u *User) ValidateLoginRequest(request data.AuthRequest) common.APIResponse
 	passHasher := sha512.New512_256()
 	hash := hex.EncodeToString(passHasher.Sum([]byte(request.Password)))
 	userInfo = u.datastore.GetUser(request.Username)
-	common.Logger.WithFields(logrus.Fields{
-		"receviedPassHash": hash,
-		"actualPassHash":   userInfo.PassHash,
-	}).Debugln("hashes")
 	if userInfo.PassHash == string(hash) {
 		response = common.CreateAPIResponse("success", nil, 500) //u.GenerateAuthToken(request, userInfo)
 	} else {

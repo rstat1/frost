@@ -68,7 +68,6 @@ export class AuthService {
 		}
 	}
 	public doAuthRequest(username: string, password: string, redirect: string, isNewUser: boolean) {
-		console.log(ConfigService.GetAccessToken());
 		if (ConfigService.GetAccessToken() == "") {
 			window.location.replace(ConfigService.GetAuthorizeEndpoint());
 		} else {

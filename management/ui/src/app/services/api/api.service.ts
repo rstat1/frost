@@ -1,9 +1,9 @@
-import { Subject ,  Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { ConfigService } from "app/services/config.service";
-import { APIResponse, NewUser, ServiceEdit, RouteAlias } from "app/services/api/api-common";
+import { APIResponse, NewUser, ServiceEdit, RouteAlias, AliasDeleteRequest } from "app/services/api/api-common";
 
 @Injectable()
 export class APIService {
@@ -27,23 +27,26 @@ export class APIService {
 	public GetUserList(): Observable<APIResponse> {
 		return this.TrinityGetRequest("user/list");
 	}
-	public InitWatchdog(): Observable<APIResponse> {
-		return this.GetRequest("init");
+	public GetAPIAliases(api: string): Observable<APIResponse> {
+		return this.GetRequest("aliases/all?api="+api);
 	}
 	public ValidateToken(): Observable<APIResponse> {
 		return this.TrinityGetRequest("");
 	}
-	public SaveUser(details: NewUser): Observable<APIResponse> {
-		return this.TrinityPostRequest("user/new", JSON.stringify(details));
+	public InitWatchdog(): Observable<APIResponse> {
+		return this.GetRequest("init");
 	}
 	public DeleteUser(username: string): Observable<APIResponse> {
-		return this.TrinityDeleteRequest("user/delete?name=" + name);
-	}
-	public NewService(details: FormData): Observable<APIResponse> {
-		return this.PostFormRequest("service/new", details);
+		return this.TrinityDeleteRequest("user/delete?name=" + username);
 	}
 	public DeleteService(name: string): Observable<APIResponse> {
 		return this.DeleteRequest("service/delete?name=" + name);
+	}
+	public DeleteAlias(name: AliasDeleteRequest): Observable<APIResponse> {
+		return this.PostRequest("aliases/delete", JSON.stringify(name));
+	}
+	public SaveUser(details: NewUser): Observable<APIResponse> {
+		return this.TrinityPostRequest("user/new", JSON.stringify(details));
 	}
 	public EditService(propChange: ServiceEdit): Observable<APIResponse> {
 		return this.PostRequest("service/edit", JSON.stringify(propChange));
@@ -52,7 +55,10 @@ export class APIService {
 		return this.PostFormRequest("service/update?name="+name, details);
 	}
 	public NewRouteAlias(alias: RouteAlias): Observable<APIResponse> {
-		return this.PostRequest("service/newalias", JSON.stringify(alias));
+		return this.PostRequest("aliases/new", JSON.stringify(alias));
+	}
+	public NewService(details: FormData): Observable<APIResponse> {
+		return this.PostFormRequest("service/new", details);
 	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
 		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);

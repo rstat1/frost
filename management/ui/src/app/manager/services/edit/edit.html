@@ -132,10 +132,29 @@
 		</mat-expansion-panel>
 		<mat-expansion-panel>
 			<mat-expansion-panel-header>
-				<mat-panel-title>Route Aliases</mat-panel-title>
-				<mat-panel-description>Add an alias for a specific API route.</mat-panel-description>
+				<mat-panel-title><p class="section-header-text">Route Aliases</p></mat-panel-title>
 			</mat-expansion-panel-header>
-			<mat-form-field class="upload-box upload-box-width">
+			<mat-accordion class="align-descriptions">
+				<mat-expansion-panel *ngFor="let r of this.apiRouteAliases" class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title><p class="section-header-text">{{r}}</p></mat-panel-title>
+					</mat-expansion-panel-header>
+					<mat-list>
+						<mat-list-item *ngFor="let er of getExtraRoutes(r)">
+							<span class="route-item">
+								<p class="route-item-title">{{er}}</p>
+								<button class="route-item-button" mat-icon-button (click)="deleteAlias(er, r)">
+									<mat-icon>delete</mat-icon>
+								</button>
+							</span>
+						</mat-list-item>
+					</mat-list>
+				</mat-expansion-panel>
+			</mat-accordion>
+			<mat-action-row>
+				<button mat-button color="primary" (click)="showNewAliasDialog()">New Alias</button>
+			</mat-action-row>
+			<!-- <mat-form-field class="upload-box upload-box-width">
 				<input matInput placeholder="URL hostname" name="newRoute" [(ngModel)]="aliasURL" required>
 			</mat-form-field>
 			<mat-form-field class="upload-box upload-box-width">
@@ -143,7 +162,7 @@
 			</mat-form-field>
 			<mat-action-row>
 				<button mat-button color="primary" (click)="newRoute()">Save</button>
-			</mat-action-row>
+			</mat-action-row> -->
 		</mat-expansion-panel>
 	</mat-accordion>
 </div>

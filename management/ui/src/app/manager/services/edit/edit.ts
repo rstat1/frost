@@ -1,10 +1,11 @@
-import { MatSnackBar } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
+import { MatSnackBar, MatDialog } from '@angular/material';
 
-import { Service, ServiceEdit, RouteAlias } from 'app/services/api/api-common';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
+import { Service, ServiceEdit, RouteAlias, AliasDeleteRequest } from 'app/services/api/api-common';
+import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 
 @Component({
 	selector: 'app-edit',
@@ -29,9 +30,11 @@ export class EditServiceComponent implements OnInit {
 	public uiFilesName: string = "";
 	public s: Service = new Service();
 	public serviceToEdit: string = "";
+	public routeList: Map<string, Array<string>>;
+	public apiRouteAliases: string[] = new Array();
 
 	constructor(private header: PageInfoService, private route: ActivatedRoute,
-				private api: APIService, private snackBar: MatSnackBar) { }
+				private api: APIService, private snackBar: MatSnackBar, private dialog: MatDialog) { }
 
 	ngOnInit() {
 		this.serviceToEdit = this.route.snapshot.paramMap.get('name');
@@ -46,8 +49,29 @@ export class EditServiceComponent implements OnInit {
 				this.isCurrentServiceManaged = service.managed;
 				this.currentServiceAPIName = service.api_prefix;
 				this.isCurrentServiceUpdatesHosted = service.managedUpdates;
+
+				this.getAPIAliases();
 			}
 		});
+	}
+	public makeRouteList(resp: RouteAlias[]) {
+		this.routeList = new Map();
+		this.apiRouteAliases = new Array();
+		if (resp.length > 0) {
+			resp.forEach(item => {
+				if (this.routeList.has(item.fullURL) == false) {
+					this.routeList.set(item.fullURL, [item.apiRoute]);
+					this.apiRouteAliases.push(item.fullURL);
+				} else {
+					let r: string[] = this.routeList.get(item.fullURL);
+					r.push(item.apiRoute);
+					this.routeList.set(item.fullURL, r);
+				}
+			});
+		}
+	}
+	public getExtraRoutes(url: string): string[] {
+		return this.routeList.get(url);
 	}
 	public setFile(name: string, event: any) {
 		if (name == "ui") {
@@ -138,6 +162,40 @@ export class EditServiceComponent implements OnInit {
 			},
 			e => this.showResponse("Failed adding new alias: " + e.error.response)
 		);
+	}
+	public deleteAlias(routeToDel, fullURL: string) {
+		let dar: AliasDeleteRequest = new AliasDeleteRequest;
+		dar.route = routeToDel;
+		dar.baseURL = fullURL;
+		this.api.DeleteAlias(dar).subscribe(
+			_ => {
+				this.getAPIAliases();
+				this.showResponse("Deleted alias successfully");
+			},
+			failed => this.showResponse("Failed: " + failed.error.response)
+		);
+	}
+	public showNewAliasDialog() {
+		let dialogRef = this.dialog.open(NewAliasDialogComponent, {
+			width: "550px",
+			data: {apiName: this.currentServiceAPIName},
+		});
+		dialogRef.afterClosed().subscribe(resp => {
+			if (resp.status == "success") {
+				this.showResponse("Added new route alias");
+				this.getAPIAliases();
+			}
+		});
+	}
+	private getAPIAliases() {
+		this.api.GetAPIAliases(this.currentServiceAPIName).subscribe(extras => {
+			if (extras.status == "success") {
+				 this.makeRouteList(JSON.parse(extras.response));
+			}
+		}, _ => {
+			this.routeList = new Map();
+			this.apiRouteAliases = new Array();
+		});
 	}
 	private showResponse(message: string) {
 		this.snackBar.open(message, "", {

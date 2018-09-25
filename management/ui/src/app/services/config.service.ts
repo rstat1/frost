@@ -39,8 +39,10 @@ export class ConfigService {
 		this.API_ENDPOINT = endpoint;
 	}
 	public static GetAccessToken(): string 	{
-		const savedAuthDetails = JSON.parse(sessionStorage.getItem("auth"));
-		if (savedAuthDetails != null) { ConfigService.SetAccessToken(savedAuthDetails.token); }
+		if (sessionStorage.getItem("auth") != "") {
+			const savedAuthDetails = JSON.parse(sessionStorage.getItem("auth"));
+			if (savedAuthDetails != null) { ConfigService.SetAccessToken(savedAuthDetails.token); }
+		}
 
 		return this.ACCESS_TOKEN;
 	}

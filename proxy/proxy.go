@@ -115,15 +115,26 @@ func (p *Proxy) AddRoute(newRoute data.ServiceDetails) {
 	p.knownRoutes[newRoute.AppName+p.baseURL] = true
 }
 
+//AddExtraRoute ...
+func (p *Proxy) AddExtraRoute(newExtraRoute data.ExtraRoute) {
+	p.extraRoutes[newExtraRoute.FullURL+newExtraRoute.APIRoute] = newExtraRoute.APIName
+	p.knownExtraRoutes[newExtraRoute.FullURL+newExtraRoute.APIRoute] = true
+}
+
 //DeleteRoute ...
 func (p *Proxy) DeleteRoute(apiName, appName string) {
 	delete(p.apiRoutes, apiName)
 	delete(p.knownRoutes, appName+p.baseURL)
 }
 
+//DeleteExtraRoute ...
+func (p *Proxy) DeleteExtraRoute(fullURL, apiRoute string) {
+	delete(p.extraRoutes, fullURL+apiRoute)
+	delete(p.knownExtraRoutes, fullURL+apiRoute)
+}
+
 //ServeHTTP ...
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	common.Logger.Debugln(p.knownExtraRoutes)
 	if req.URL.String() == "/favicon.ico" {
 		w.WriteHeader(200)
 	} else if req.Host == p.apiBaseURL {
@@ -135,20 +146,20 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		} else {
 			p.invalidRoute(w, req.Host)
 		}
-	} else if p.knownExtraRoutes[req.Host] == true {
+	} else if p.knownExtraRoutes[req.Host+req.URL.String()] == true {
 		p.serveExtraRouteRequest(w, req)
 	} else {
-		common.WriteFailureResponse(errors.New("not found"), w, "ServeHTTP", 404)
+		common.WriteFailureResponse(errors.New("unknown route "+req.Host+req.URL.String()), w, "ServeHTTP", 404)
 	}
 }
 func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
-	apiName := p.extraRoutes[req.Host]
+	apiName := p.extraRoutes[req.Host+req.URL.Path]
 	serviceAddr := p.apiRoutes[apiName]
 	apiRoute := p.data.Cache.GetString("watchdog", req.Host)
 	if apiRoute == "*" {
 		p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
 	} else {
-		if strings.Contains(req.URL.Path, apiRoute) {
+		if apiName != "" {
 			p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
 		} else {
 			p.invalidRoute(w, req.URL.String())
@@ -186,7 +197,8 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo s
 }
 func (p *Proxy) urlWhiteList() autocert.HostPolicy {
 	return func(_ context.Context, host string) error {
-		if !p.knownRoutes[host] || !p.knownExtraRoutes[host] {
+		common.Logger.Debugln(p.knownExtraRoutes[host])
+		if !p.knownRoutes[host] && !p.knownExtraRoutes[host] {
 			err := errors.New("host not on whitelist: " + host)
 			common.CreateFailureResponse(err, "urlWhiteList", 400)
 			return err
@@ -210,16 +222,14 @@ func (p *Proxy) setRoutes() {
 	if routes, e2 := p.data.GetAllExtraRoutes(); e2 == nil {
 		common.Logger.Debugln(routes)
 		for _, r := range routes {
-			p.extraRoutes[r.FullURL] = r.APIName
-			p.knownExtraRoutes[r.FullURL] = true
-			p.data.Cache.PutString("watchdog", r.FullURL, r.APIRoute)
+			p.extraRoutes[r.FullURL+r.APIRoute] = r.APIName
+			p.knownExtraRoutes[r.FullURL+r.APIRoute] = true
 		}
 	}
 }
-func (p *Proxy) invalidRoute(resp http.ResponseWriter, requestedURL string) {
+func (p *Proxy) invalidRoute(w http.ResponseWriter, requestedURL string) {
 	//TOOD: Proper 404 page.
-	resp.Write([]byte(requestedURL + " not found"))
-	resp.WriteHeader(404)
+	common.WriteFailureResponse(errors.New("unknown route "+requestedURL), w, "ServeHTTP", 404)
 }
 func (p *Proxy) startTLSServer() {
 	m := autocert.Manager{

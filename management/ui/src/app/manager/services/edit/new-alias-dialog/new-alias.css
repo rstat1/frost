@@ -1,0 +1,14 @@
+.upload-box {
+	display: inline-block !important;
+	color: white;
+	margin-left: 10px;
+	margin-right: 10px;
+	width: 50vw;
+}
+.upload-control {
+	margin-left: 30px;
+	display: block;
+}
+.upload-box-width {
+	width: 25vw;
+}

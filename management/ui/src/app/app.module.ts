@@ -17,6 +17,7 @@ import { FirstRunComponent } from './manager/first-run/first-run';
 import { AuthGuard, RootGuard } from './services/auth/auth.guard';
 import { MenuComponent } from "app/components/menu/menu.component";
 import { AuthTokenInjector } from './services/api/AuthTokenInjector';
+import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 
 const routes: Routes = [
 	{path: 'auth', component: AuthComponent, pathMatch: "full"},

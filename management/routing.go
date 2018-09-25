@@ -105,7 +105,10 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/service/edit", common.RequestWrapper(api.user.IsRoot, "POST", api.editService))
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
-	api.router.Handle("/api/frost/service/newalias", common.RequestWrapper(api.user.IsRoot, "POST", api.extraRoute))
+
+	api.router.Handle("/api/frost/aliases/new", common.RequestWrapper(common.Nothing, "POST", api.newExtraRoute))
+	api.router.Handle("/api/frost/aliases/all", common.RequestWrapper(common.Nothing, "GET", api.getExtraRoutes))
+	api.router.Handle("/api/frost/aliases/delete", common.RequestWrapper(common.Nothing, "POST", api.deleteExtraRoute))
 
 	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.IsRoot, "GET", api.services))
 
@@ -117,24 +120,31 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/serviceid", common.RequestWrapper(common.Nothing, "GET", api.getServiceID))
 
 }
-func (api *APIRouter) extraRoute(resp http.ResponseWriter, r *http.Request) {
+func (api *APIRouter) newExtraRoute(resp http.ResponseWriter, r *http.Request) {
 	var propChange data.RouteAlias
 	if body, err := ioutil.ReadAll(r.Body); err == nil {
 		json.Unmarshal(body, &propChange)
-		newRoute := data.ExtraRoute{
-			APIName:  propChange.APIName,
-			FullURL:  propChange.FullURL,
-			APIRoute: propChange.APIRoute,
-		}
-		if e := api.data.AddExtraRoute(newRoute); e != nil {
-			common.WriteFailureResponse(e, resp, "extraRoute", 500)
-		} else {
-			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 200))
-		}
+		common.WriteAPIResponseStruct(resp, api.servMan.AddNewExtraRoute(propChange))
 	} else {
-		common.WriteFailureResponse(err, resp, "extraRoute", 500)
+		common.WriteFailureResponse(err, resp, "newExtraRoute", 500)
 	}
-
+}
+func (api *APIRouter) getExtraRoutes(resp http.ResponseWriter, r *http.Request) {
+	apiName := r.URL.Query().Get("api")
+	if apiName != "" {
+		common.WriteAPIResponseStruct(resp, api.servMan.GetExtraRoutes(apiName))
+	} else {
+		common.WriteFailureResponse(errors.New("specify service API name"), resp, "getExtraRoutes", 400)
+	}
+}
+func (api *APIRouter) deleteExtraRoute(resp http.ResponseWriter, r *http.Request) {
+	var deleteRequest data.AliasDeleteRequest
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		json.Unmarshal(body, &deleteRequest)
+		api.proxy.DeleteExtraRoute(deleteRequest.BaseURL, deleteRequest.Route)
+		apiResp := common.CreateAPIResponse("success", api.data.DeleteExtraRoute(deleteRequest.Route), 500)
+		common.WriteAPIResponseStruct(resp, apiResp)
+	}
 }
 func (api *APIRouter) getToken(resp http.ResponseWriter, r *http.Request) {
 	var serviceResp common.APIResponse
