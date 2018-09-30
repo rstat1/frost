@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { MenuItem } from 'app/menu/menu-common';
 import { MenuService } from 'app/services/menu.service';
-import { MenuItem, Context } from 'app/menu/menu-common';
 import { AuthService } from 'app/services/auth/auth.service';
 
 @Component({
@@ -40,20 +40,20 @@ export class MenuComponent implements OnInit {
 				else if (item.RequiresRoot == false || item.RequiresRoot == undefined) { cat.push(item); }
 				this.menuItems.set(item.Category, cat);
 			}
-		})
+		});
 	}
 	public showMenu() {
 		this.isVisible = !this.isVisible;
 	}
 	public getCategoryItems(category: string): MenuItem[] {
 		let currentPage: string = this.menu.GetMenuContextData("currentPage");
-		let items: MenuItem[] = this.menuItems.get(category)
+		let items: MenuItem[] = this.menuItems.get(category);
 		let result: MenuItem[] = new Array();
 		items.forEach(item => {
 			if (item.Context == currentPage || item.Context == null) {
-				result.push(item)
+				result.push(item);
 			}
-		})
+		});
 		if (result.length > 0) { return result; }
 		else { return null; }
 	}

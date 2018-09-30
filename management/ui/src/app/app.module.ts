@@ -1,23 +1,20 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from "@angular/router";
 import { BrowserModule } from '@angular/platform-browser';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HTTP_INTERCEPTORS, HttpClientModule, HttpClient, HttpHandler } from '@angular/common/http';
 
 import { AppComponent } from './app.component';
-import { MenuItem } from "app/menu/menu-common";
+import { MenuModule } from 'app/menu/menu.module';
 import { APIService } from './services/api/api.service';
 import { MenuService } from "app/services/menu.service";
 import { AuthComponent } from 'app/components/auth/auth';
 import { ManagerModule } from './manager/manager.module';
 import { ConfigService } from './services/config.service';
 import { AuthService } from 'app/services/auth/auth.service';
-import { MenuModule, MenuItems } from 'app/menu/menu.module';
 import { FirstRunComponent } from './manager/first-run/first-run';
 import { AuthGuard, RootGuard } from './services/auth/auth.guard';
-import { MenuComponent } from "app/components/menu/menu.component";
 import { AuthTokenInjector } from './services/api/AuthTokenInjector';
-import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 
 const routes: Routes = [
 	{path: 'auth', component: AuthComponent, pathMatch: "full"},

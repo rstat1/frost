@@ -15,6 +15,7 @@ import (
 	"git.m/svcman/services"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/vulcand/oxy/forward"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -25,9 +26,10 @@ type Proxy struct {
 	fwd                  *forward.Forwarder
 	knownUIRoutes        []string
 	knownRoutes          map[string]bool
-	knownExtraRoutes     map[string]bool
 	apiRoutes            map[string]string
-	extraRoutes          map[string]string
+	aliasHosts           map[string][]string
+	knownAliasHosts      map[string]bool
+	hostsToAPIServer     map[string]string
 	webuiserver          *services.WebServer
 	isInLocalMode        bool
 	apiBaseURL           string
@@ -72,10 +74,11 @@ func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 		fwd:              fwd,
 		data:             dataStoreRef,
 		apiRoutes:        make(map[string]string),
-		extraRoutes:      make(map[string]string),
+		aliasHosts:       make(map[string][]string),
 		knownRoutes:      make(map[string]bool),
-		knownExtraRoutes: make(map[string]bool),
+		knownAliasHosts:  make(map[string]bool),
 		webuiserver:      services.NewWebServer(),
+		hostsToAPIServer: make(map[string]string),
 	}
 }
 
@@ -105,6 +108,7 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 		common.Logger.Infoln("running in dev mode...")
 
 		p.setRoutes()
+		common.Logger.Debugln(p.apiRoutes)
 		p.startNotTLSServer()
 	}
 }
@@ -117,8 +121,12 @@ func (p *Proxy) AddRoute(newRoute data.ServiceDetails) {
 
 //AddExtraRoute ...
 func (p *Proxy) AddExtraRoute(newExtraRoute data.ExtraRoute) {
-	p.extraRoutes[newExtraRoute.FullURL+newExtraRoute.APIRoute] = newExtraRoute.APIName
-	p.knownExtraRoutes[newExtraRoute.FullURL+newExtraRoute.APIRoute] = true
+	if strings.Contains(newExtraRoute.APIRoute, "*") {
+		newExtraRoute.APIRoute = newExtraRoute.APIRoute[0 : len(newExtraRoute.APIRoute)-1]
+	}
+	p.aliasHosts[newExtraRoute.FullURL] = append(p.aliasHosts[newExtraRoute.FullURL], newExtraRoute.APIRoute)
+	p.knownAliasHosts[newExtraRoute.FullURL] = true
+	p.hostsToAPIServer[newExtraRoute.FullURL] = newExtraRoute.APIName
 }
 
 //DeleteRoute ...
@@ -129,8 +137,9 @@ func (p *Proxy) DeleteRoute(apiName, appName string) {
 
 //DeleteExtraRoute ...
 func (p *Proxy) DeleteExtraRoute(fullURL, apiRoute string) {
-	delete(p.extraRoutes, fullURL+apiRoute)
-	delete(p.knownExtraRoutes, fullURL+apiRoute)
+	delete(p.aliasHosts, fullURL)
+	delete(p.knownAliasHosts, fullURL)
+	delete(p.hostsToAPIServer, fullURL)
 }
 
 //ServeHTTP ...
@@ -139,31 +148,35 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 	} else if req.Host == p.apiBaseURL {
 		p.serveAPIRequest(w, req)
-	} else if strings.HasSuffix(req.Host, p.baseURL) {
+	} else if strings.HasSuffix(req.Host, p.baseURL) && p.knownAliasHosts[req.Host] == false {
 		if p.knownRoutes[req.Host] {
 			var name = strings.Replace(req.Host, p.baseURL, "", -1)
 			p.webuiserver.ServeWebRequest(w, req, name)
-		} else {
-			p.invalidRoute(w, req.Host)
 		}
-	} else if p.knownExtraRoutes[req.Host+req.URL.String()] == true {
+	} else if p.knownAliasHosts[req.Host] == true {
 		p.serveExtraRouteRequest(w, req)
 	} else {
 		common.WriteFailureResponse(errors.New("unknown route "+req.Host+req.URL.String()), w, "ServeHTTP", 404)
 	}
 }
 func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
-	apiName := p.extraRoutes[req.Host+req.URL.Path]
-	serviceAddr := p.apiRoutes[apiName]
-	apiRoute := p.data.Cache.GetString("watchdog", req.Host)
-	if apiRoute == "*" {
-		p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
-	} else {
-		if apiName != "" {
-			p.proxyRequest(w, req, serviceAddr, req.URL.Path, req.Host)
-		} else {
+	var proxiedRequest bool
+	routeAliases := p.aliasHosts[req.Host]
+	if routeAliases != nil {
+		apiServerName := p.hostsToAPIServer[req.Host]
+		for _, v := range routeAliases {
+			common.Logger.WithFields(logrus.Fields{"routeAlias": v, "reqPath": req.URL.Path}).Debugln("routeAliases")
+			if strings.Contains(req.URL.Path, v) {
+				p.proxyRequest(w, req, p.apiRoutes[apiServerName], req.URL.Path, req.Host)
+				proxiedRequest = true
+				break
+			}
+		}
+		if proxiedRequest == false {
 			p.invalidRoute(w, req.URL.String())
 		}
+	} else {
+		p.invalidRoute(w, req.URL.String())
 	}
 }
 func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
@@ -197,8 +210,7 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo s
 }
 func (p *Proxy) urlWhiteList() autocert.HostPolicy {
 	return func(_ context.Context, host string) error {
-		common.Logger.Debugln(p.knownExtraRoutes[host])
-		if !p.knownRoutes[host] && !p.knownExtraRoutes[host] {
+		if !p.knownRoutes[host] && !p.knownAliasHosts[host] {
 			err := errors.New("host not on whitelist: " + host)
 			common.CreateFailureResponse(err, "urlWhiteList", 400)
 			return err
@@ -207,6 +219,7 @@ func (p *Proxy) urlWhiteList() autocert.HostPolicy {
 	}
 }
 func (p *Proxy) setRoutes() {
+	var route string
 	p.knownRoutes[p.apiBaseURL] = true
 	p.knownRoutes[p.baseWDURL] = true
 	p.knownRoutes[p.baseAuthURL] = true
@@ -222,8 +235,14 @@ func (p *Proxy) setRoutes() {
 	if routes, e2 := p.data.GetAllExtraRoutes(); e2 == nil {
 		common.Logger.Debugln(routes)
 		for _, r := range routes {
-			p.extraRoutes[r.FullURL+r.APIRoute] = r.APIName
-			p.knownExtraRoutes[r.FullURL+r.APIRoute] = true
+			if strings.Contains(r.APIRoute, "*") {
+				route = r.APIRoute[0 : len(r.APIRoute)-1]
+			} else {
+				route = r.APIRoute
+			}
+			p.knownAliasHosts[r.FullURL] = true
+			p.hostsToAPIServer[r.FullURL] = r.APIName
+			p.aliasHosts[r.FullURL] = append(p.aliasHosts[r.FullURL], route)
 		}
 	}
 }

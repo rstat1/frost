@@ -311,12 +311,12 @@ func (data *DataStore) DeleteExtraRoute(route string) error {
 //UpdateRoute ...
 func (data *DataStore) UpdateRoute(service ServiceDetails, serviceName string) error {
 	routes := data.queryEngine.From("Services")
-	if e := data.DeleteRoute(serviceName); e != nil {
-		common.Logger.WithFields(logrus.Fields{"func": "AddNewRoute", "action": "delete"}).Errorln(e)
-		return e
-	} else {
-		return routes.Save(&service)
-	}
+	return routes.Save(&service)
+	// if e := data.DeleteRoute(serviceName); e != nil {
+	// 	common.Logger.WithFields(logrus.Fields{"func": "AddNewRoute", "action": "delete"}).Errorln(e)
+	// 	return e
+	// } else {
+	// }
 }
 
 //UpdateSysConfig ...

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { NgModule, ModuleWithProviders, Optional, SkipSelf, Inject } from '@angular/core';
+import { NgModule, ModuleWithProviders, Inject } from '@angular/core';
 
 import { MenuItem } from "app/menu/menu-common";
 import { MenuService } from 'app/services/menu.service';
@@ -16,12 +16,12 @@ export class MenuModule {
 			this.menuService.AddItemsToMenu(items.Items);
 		}
 	}
-	static forRoot(items: MenuItems) : ModuleWithProviders {
+	static forRoot(items: MenuItems): ModuleWithProviders {
 		return {
 			ngModule: MenuModule,
 			providers: [
 				{provide: MenuItems, useValue: items, deps: [MenuItem]},
 			]
-		}
+		};
 	}
 }

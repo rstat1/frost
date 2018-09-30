@@ -1,5 +1,5 @@
-import { Subject ,  Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
+import { Subject, Observable } from 'rxjs';
 
 import { MenuItem, Context } from 'app/menu/menu-common';
 
@@ -45,7 +45,7 @@ export class MenuService {
 		this.secondary = ctx;
 		this.secondaryContextChanged.next(this.secondary);
 	}
-	public HandleMouseEvent(clickedItemTitle: string){
+	public HandleMouseEvent(clickedItemTitle: string) {
 		this.menuItemClicked.next(clickedItemTitle);
 	}
 }

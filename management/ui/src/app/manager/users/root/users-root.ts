@@ -39,7 +39,7 @@ export class UsersRootComponent implements OnInit, OnDestroy {
 			}
 		});
 		this.actions.SetSubItems([
-			{IconName: "edit", "Description": "Edit"},
+			{IconName: "edit", Description: "Edit"},
 			{IconName: "delete", Description: "Delete"},
 		]);
 		this.getUserListSub = this.api.GetUserList().subscribe(resp => {
