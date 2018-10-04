@@ -15,7 +15,6 @@ import (
 	"git.m/svcman/services"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/vulcand/oxy/forward"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -24,7 +23,6 @@ import (
 type Proxy struct {
 	data                 *data.DataStore
 	fwd                  *forward.Forwarder
-	knownUIRoutes        []string
 	knownRoutes          map[string]bool
 	apiRoutes            map[string]string
 	aliasHosts           map[string][]string
@@ -108,7 +106,6 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 		common.Logger.Infoln("running in dev mode...")
 
 		p.setRoutes()
-		common.Logger.Debugln(p.apiRoutes)
 		p.startNotTLSServer()
 	}
 }
@@ -142,6 +139,13 @@ func (p *Proxy) DeleteExtraRoute(fullURL, apiRoute string) {
 	delete(p.hostsToAPIServer, fullURL)
 }
 
+//RenameRoute ...
+func (p *Proxy) RenameRoute(oldname, newname string) {
+	p.knownRoutes = make(map[string]bool)
+	p.apiRoutes = make(map[string]string)
+	p.setRoutes()
+}
+
 //ServeHTTP ...
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.URL.String() == "/favicon.ico" {
@@ -152,6 +156,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if p.knownRoutes[req.Host] {
 			var name = strings.Replace(req.Host, p.baseURL, "", -1)
 			p.webuiserver.ServeWebRequest(w, req, name)
+		} else {
+			common.WriteFailureResponse(errors.New("unknown route "+req.Host+req.URL.String()), w, "ServeHTTP", 404)
 		}
 	} else if p.knownAliasHosts[req.Host] == true {
 		p.serveExtraRouteRequest(w, req)
@@ -165,7 +171,7 @@ func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request)
 	if routeAliases != nil {
 		apiServerName := p.hostsToAPIServer[req.Host]
 		for _, v := range routeAliases {
-			common.Logger.WithFields(logrus.Fields{"routeAlias": v, "reqPath": req.URL.Path}).Debugln("routeAliases")
+			// common.Logger.WithFields(logrus.Fields{"routeAlias": v, "reqPath": req.URL.Path}).Debugln("routeAliases")
 			if strings.Contains(req.URL.Path, v) {
 				p.proxyRequest(w, req, p.apiRoutes[apiServerName], req.URL.Path, req.Host)
 				proxiedRequest = true
@@ -198,7 +204,7 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo s
 	}
 	req.URL = &url.URL{
 		Host:     proxyTo,
-		Path:     path, //"/api" + req.URL.Path,
+		Path:     path,
 		Scheme:   scheme,
 		RawQuery: req.URL.Query().Encode(),
 	}
@@ -233,7 +239,6 @@ func (p *Proxy) setRoutes() {
 		}
 	}
 	if routes, e2 := p.data.GetAllExtraRoutes(); e2 == nil {
-		common.Logger.Debugln(routes)
 		for _, r := range routes {
 			if strings.Contains(r.APIRoute, "*") {
 				route = r.APIRoute[0 : len(r.APIRoute)-1]

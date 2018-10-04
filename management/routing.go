@@ -185,6 +185,7 @@ func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 	var propChange data.ServiceEdit
+	var oldServiceName string
 	var e error
 	if body, err := ioutil.ReadAll(r.Body); err == nil {
 		json.Unmarshal(body, &propChange)
@@ -192,6 +193,7 @@ func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 			if service, err := api.data.GetRoute(propChange.ServiceName); err == nil {
 				switch propChange.PropertyName {
 				case "name":
+					oldServiceName = service.AppName
 					service.AppName = propChange.NewValue
 					break
 				case "apiName":
@@ -222,6 +224,10 @@ func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 					e = api.data.UpdateSysConfig(propChange)
 				}
 				e = api.data.UpdateRoute(service, propChange.ServiceName)
+				if propChange.PropertyName == "name" {
+					e = api.servMan.RenameServiceDirectory(oldServiceName, propChange.NewValue)
+					api.proxy.RenameRoute(oldServiceName, propChange.NewValue)
+				}
 			} else {
 				e = err
 			}

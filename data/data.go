@@ -266,7 +266,7 @@ func (data *DataStore) AddExtraRoute(newRoute ExtraRoute) error {
 }
 
 //DeleteRoute ...
-func (data *DataStore) DeleteRoute(route string) error {
+func (data *DataStore) DeleteRoute(route string, deleteForUpdate bool) error {
 	var foundRoute ServiceDetails
 	routes := data.queryEngine.From("Services")
 	extras := data.queryEngine.From("ExtraRoutes")
@@ -279,8 +279,10 @@ func (data *DataStore) DeleteRoute(route string) error {
 		common.Logger.WithField("func", "DeleteRoute(delete)").Errorln(err)
 		return err
 	}
-	if e2 := extras.Select(q.Eq("AppName", route)).Delete(new(ExtraRoute)); e2 != nil {
-		common.Logger.WithField("func", "DeleteRoute(delete)").Errorln(e2)
+	if deleteForUpdate == false {
+		if e2 := extras.Select(q.Eq("AppName", route)).Delete(new(ExtraRoute)); e2 != nil {
+			common.Logger.WithField("func", "DeleteRoute(delete)").Errorln(e2)
+		}
 	}
 	return nil
 }
@@ -311,12 +313,12 @@ func (data *DataStore) DeleteExtraRoute(route string) error {
 //UpdateRoute ...
 func (data *DataStore) UpdateRoute(service ServiceDetails, serviceName string) error {
 	routes := data.queryEngine.From("Services")
-	return routes.Save(&service)
-	// if e := data.DeleteRoute(serviceName); e != nil {
-	// 	common.Logger.WithFields(logrus.Fields{"func": "AddNewRoute", "action": "delete"}).Errorln(e)
-	// 	return e
-	// } else {
-	// }
+	if e := data.DeleteRoute(serviceName, true); e != nil {
+		common.Logger.WithFields(logrus.Fields{"func": "AddNewRoute", "action": "delete"}).Errorln(e)
+		return e
+	} else {
+		return routes.Save(&service)
+	}
 }
 
 //UpdateSysConfig ...

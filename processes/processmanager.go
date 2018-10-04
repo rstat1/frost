@@ -24,8 +24,8 @@ func (pm *ProcessManager) StartProcess(name, dirName string, devmode bool) bool 
 	dir, _ := os.Getwd()
 	path := dir + "/" + dirName + "/" + name
 	if pm.managedProcesses[name] == nil {
-		if _, err := os.Stat(dir + "/" + dirName + "/" + name); os.IsNotExist(err) {
-			common.Logger.Debugln("not starting process...")
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			common.Logger.WithField("path", path).Debugln("not starting process...")
 			return false
 		} else {
 			process := NewManagedProcess(path, dirName, []string{

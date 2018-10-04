@@ -39,7 +39,7 @@ func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool) *Ser
 func (s *ServiceManager) DeleteService(name string) common.APIResponse {
 	route, _ := s.data.GetRoute(name)
 	s.proxy.DeleteRoute(route.APIName, route.AppName)
-	s.data.DeleteRoute(name)
+	s.data.DeleteRoute(name, false)
 
 	return common.CreateAPIResponse("success", os.RemoveAll(route.AppName), 500)
 }
@@ -156,6 +156,18 @@ func (s *ServiceManager) GetExtraRoutes(apiName string) common.APIResponse {
 		resp = common.CreateAPIResponse(string(asJSON), nil, 200)
 	}
 	return resp
+}
+
+//RenameServiceDirectory ...
+func (s *ServiceManager) RenameServiceDirectory(oldname, newname string) error {
+	if _, err := os.Stat(oldname); os.IsNotExist(err) {
+		return err
+	} else {
+		s.StopManagedService(newname)
+		e := os.Rename(oldname, newname)
+		s.StartManagedService(newname)
+		return e
+	}
 }
 
 func (s *ServiceManager) handleFileUpload(request *http.Request, info data.ServiceDetails) (common.APIResponse, data.ServiceDetails) {
