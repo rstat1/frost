@@ -85,9 +85,11 @@ func (auth *AuthService) initAPIRoutes() {
 	auth.route.Handle("/api/trinity/validate", common.RequestWrapper(auth.CredsAndIDProvided, "POST", auth.validate))
 	auth.route.Handle("/api/trinity/authorize", common.RequestWrapper(auth.HasServiceID, "GET", auth.authorize))
 
+	auth.route.Handle("/api/trinity/user", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.userinfo))
 	auth.route.Handle("/api/trinity/user/new", common.RequestWrapper(auth.user.AuthTokenProvided, "POST", auth.newuser))
 	auth.route.Handle("/api/trinity/user/list", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.getusers))
 	auth.route.Handle("/api/trinity/user/delete", common.RequestWrapper(auth.user.AuthTokenProvided, "DELETE", auth.deleteuser))
+
 	auth.route.Handle("/api/trinity/service/fromrid", common.RequestWrapper(auth.HasRequestID, "GET", auth.fromrequest))
 }
 
@@ -201,6 +203,14 @@ func (auth *AuthService) token(resp http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		common.WriteFailureResponse(errors.New("auth code expired or invalid"), resp, "token", 500)
+	}
+}
+
+func (auth *AuthService) userinfo(resp http.ResponseWriter, r *http.Request) {
+	if u, err := json.Marshal(auth.user.GetUserFromToken(r)); err == nil {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(u), nil, 200))
+	} else {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", err, 200))
 	}
 }
 func (auth *AuthService) validate(resp http.ResponseWriter, r *http.Request) {

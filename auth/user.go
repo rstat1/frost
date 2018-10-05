@@ -29,11 +29,12 @@ type User struct {
 
 //AuthToken ...
 type AuthToken struct {
-	Issuer  string `json:"iss"`
-	Subject string `json:"sub"`
-	Expires int64  `json:"exp"`
-	ForApp  string `json:"app"`
-	UserID  string `json:"uid"`
+	Issuer      string `json:"iss"`
+	Subject     string `json:"sub"`
+	Expires     int64  `json:"exp"`
+	ForApp      string `json:"app"`
+	UserID      string `json:"uid"`
+	AccessLevel string `json:"lvl"`
 }
 
 //NewUserService ...
@@ -76,6 +77,7 @@ func (u *User) GetUserFromToken(r *http.Request) data.User {
 		common.Logger.WithField("func", "GetUsernameFromToken").Errorln(errors.New("token not provided"))
 		user = data.User{}
 	}
+	user.PassHash = ""
 	return user
 }
 
@@ -112,6 +114,7 @@ func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bo
 		customClaims := struct {
 			ForApp string `json:"app"`
 			UserID string `json:"uid"`
+			Group  string `json:"lvl"`
 		}{}
 		token.Claims(u.hmacKey, &defaultClaims, &customClaims)
 
@@ -205,11 +208,12 @@ func (u *User) GenerateAuthToken(username, app string) common.APIResponse {
 		sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: u.hmacKey}, (&jose.SignerOptions{}).WithType("JWT"))
 		if err == nil {
 			token := AuthToken{
-				Issuer:  issuerName,
-				Subject: username,
-				Expires: time.Now().Add(744 * time.Hour).Unix(),
-				ForApp:  app,
-				UserID:  userDetails.Id,
+				Issuer:      issuerName,
+				Subject:     username,
+				Expires:     time.Now().Add(744 * time.Hour).Unix(),
+				ForApp:      app,
+				UserID:      userDetails.Id,
+				AccessLevel: u.getAppAccessForUser(username, app),
 			}
 			json, _ := json.Marshal(token)
 
@@ -231,6 +235,12 @@ func (u *User) GenerateAuthToken(username, app string) common.APIResponse {
 //ParsePermissionList ...
 func (u *User) ParsePermissionList(p []data.ServiceAuth) {
 	common.Logger.Debugln(p[0])
+}
+func (u *User) getAppAccessForUser(user, app string) string {
+	if u.datastore.DoesUserHavePermission(user, app, "hasRoot") == true {
+		return "root"
+	}
+	return "user"
 }
 func generateSymKey() []byte {
 	k := make([]byte, 64)

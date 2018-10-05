@@ -184,13 +184,16 @@ func (data *DataStore) GetRoute(name string) (ServiceDetails, error) {
 //DoesUserHavePermission ...
 func (data *DataStore) DoesUserHavePermission(username, service, permission string) bool {
 	var serviceAccess map[string]map[string]bool
-
-	permMap := data.queryEngine.From("SitePermissionMappings")
-	if err := permMap.Get("SitePermissionMappings", username, &serviceAccess); err == nil {
-		return serviceAccess[service][permission]
+	if username == "root" {
+		return true
 	} else {
-		common.Logger.Errorln(err)
-		return false
+		permMap := data.queryEngine.From("SitePermissionMappings")
+		if err := permMap.Get("SitePermissionMappings", username, &serviceAccess); err == nil {
+			return serviceAccess[service][permission]
+		} else {
+			common.Logger.Errorln(err)
+			return false
+		}
 	}
 }
 
