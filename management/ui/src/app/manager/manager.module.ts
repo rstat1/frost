@@ -17,6 +17,7 @@ import { UsersRootComponent } from 'app/manager/users/root/users-root';
 import { NewServiceComponent } from 'app/manager/services/new/new-service';
 import { ManagerRootComponent } from 'app/manager/manager-root/manager-root';
 import { ActionsListComponent } from 'app/components/actions-list/action-list';
+import { EditUserComponent } from 'app/manager/users/edit/edit-user.component';
 import { ServicesRootComponent } from 'app/manager/services/root/services-root';
 import { LogViewerComponent } from 'app/manager/log-viewer/log-viewer.component';
 import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
@@ -27,12 +28,13 @@ const projectRoutes: Routes = [
 		component: ManagerRootComponent,
 		canActivate: [AuthGuard],
 		children: [
-			{ path: 'logs', component: LogViewerComponent},
-			{ path: 'users', component: UsersRootComponent},
-			{ path: 'users/new', component: NewUserComponent},
-			{ path: 'services', component: ServicesRootComponent},
-			{ path: 'services/new', component: NewServiceComponent},
-			{ path: 'services/edit/:name', component: EditServiceComponent}
+			{ path: 'logs', component: LogViewerComponent },
+			{ path: 'users', component: UsersRootComponent },
+			{ path: 'users/new', component: NewUserComponent },
+			{ path: 'users/edit/:name', component: EditUserComponent },
+			{ path: 'services', component: ServicesRootComponent },
+			{ path: 'services/new', component: NewServiceComponent },
+			{ path: 'services/edit/:name', component: EditServiceComponent }
 		]
 	}
 ];
@@ -67,6 +69,7 @@ const projectRoutes: Routes = [
 		EditServiceComponent,
 		ServicesRootComponent,
 		NewAliasDialogComponent,
+		EditUserComponent,
 	],
 	providers: [ FormBuilder, ActionListService, PageInfoService ],
 	entryComponents: [ NewAliasDialogComponent ],

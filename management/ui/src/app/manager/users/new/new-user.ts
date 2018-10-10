@@ -1,6 +1,5 @@
-import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, Renderer2, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatTableDataSource, MatSnackBar } from '@angular/material';
 
 import { APIService } from 'app/services/api/api.service';
@@ -55,7 +54,6 @@ export class NewUserComponent implements OnInit, OnDestroy {
 					horizontalPosition: 'right',
 					verticalPosition: 'top',
 				});
-				//this.status = err.error.response
 			}
 		);
 	}

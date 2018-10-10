@@ -25,9 +25,7 @@ export class ManagerRootComponent implements OnDestroy {
 	public showSubActionArea: boolean = false;
 
 	private lastAction: string = "";
-	private lastService: string = "";
 	private currentAction: string = "";
-	private currentService: string = "";
 
 	private pagePathSub: Subscription;
 	private pageTitleSub: Subscription;
@@ -95,15 +93,6 @@ export class ManagerRootComponent implements OnDestroy {
 		this.router.navigate([this.currentAction], {
 			relativeTo: this.route,
 			queryParams: { service: service }
-		});
-	}
-	public newService() {
-
-	}
-	public newUser() {
-		$("#newuser").css("background-color", "#272727");
-		this.router.navigate(["users/new"], {
-			relativeTo: this.route
 		});
 	}
 	public getCurrentAction(): string {

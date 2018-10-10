@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { ConfigService } from "app/services/config.service";
-import { APIResponse, NewUser, ServiceEdit, RouteAlias, AliasDeleteRequest } from "app/services/api/api-common";
+import { APIResponse, NewUser, ServiceEdit, RouteAlias, AliasDeleteRequest, PermissionChange, PasswordChange } from "app/services/api/api-common";
 
 @Injectable()
 export class APIService {
@@ -27,8 +27,20 @@ export class APIService {
 	public GetUserList(): Observable<APIResponse> {
 		return this.TrinityGetRequest("user/list");
 	}
+	public GetUserInfo(username: string): Observable<APIResponse> {
+		return this.TrinityGetRequest("user?name=" +username);
+	}
+	public GetPermissionMap(username: string): Observable<APIResponse> {
+		return this.TrinityGetRequest("permissions?user=" + username);
+	}
 	public GetAPIAliases(api: string): Observable<APIResponse> {
 		return this.GetRequest("aliases/all?api="+api);
+	}
+	public ChangePermissionValue(change: PermissionChange): Observable<APIResponse> {
+		return this.TrinityPostRequest("permissions/change", JSON.stringify(change));
+	}
+	public ChangePassword(change: PasswordChange): Observable<APIResponse> {
+		return this.TrinityPostRequest("user/edit", JSON.stringify(change));
 	}
 	public ValidateToken(): Observable<APIResponse> {
 		return this.TrinityGetRequest("");

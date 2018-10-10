@@ -1,0 +1,14 @@
+.detail-block {
+	background-color: #3a3a3a;
+}
+.detail-block:hover {
+	background-color: #292929;
+}
+.align-descriptions .mat-expansion-panel-header-title,
+.align-descriptions .mat-expansion-panel-header-description {
+	flex-basis: 0;
+}
+.align-descriptions .mat-expansion-panel-header-description {
+	justify-content: space-between;
+	align-items: center;
+}

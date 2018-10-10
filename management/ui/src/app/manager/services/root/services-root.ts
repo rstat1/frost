@@ -72,8 +72,6 @@ export class ServicesRootComponent implements OnInit, OnDestroy {
 				});
 			break;
 		}
-
-		console.log(action);
 	}
 	private handleActionClick(action: string) {
 		if (action == "New Service") {

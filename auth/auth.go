@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -85,10 +87,15 @@ func (auth *AuthService) initAPIRoutes() {
 	auth.route.Handle("/api/trinity/validate", common.RequestWrapper(auth.CredsAndIDProvided, "POST", auth.validate))
 	auth.route.Handle("/api/trinity/authorize", common.RequestWrapper(auth.HasServiceID, "GET", auth.authorize))
 
+	auth.route.Handle("/api/trinity/permissions", common.RequestWrapper(auth.user.IsRoot, "GET", auth.permissions))
+	auth.route.Handle("/api/trinity/permissions/change", common.RequestWrapper(auth.user.IsRoot, "POST", auth.changepermission))
+
 	auth.route.Handle("/api/trinity/user", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.userinfo))
 	auth.route.Handle("/api/trinity/user/new", common.RequestWrapper(auth.user.AuthTokenProvided, "POST", auth.newuser))
 	auth.route.Handle("/api/trinity/user/list", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.getusers))
-	auth.route.Handle("/api/trinity/user/delete", common.RequestWrapper(auth.user.AuthTokenProvided, "DELETE", auth.deleteuser))
+
+	auth.route.Handle("/api/trinity/user/edit", common.RequestWrapper(auth.user.IsRoot, "POST", auth.edituser))
+	auth.route.Handle("/api/trinity/user/delete", common.RequestWrapper(auth.user.IsRoot, "DELETE", auth.deleteuser))
 
 	auth.route.Handle("/api/trinity/service/fromrid", common.RequestWrapper(auth.HasRequestID, "GET", auth.fromrequest))
 }
@@ -207,7 +214,16 @@ func (auth *AuthService) token(resp http.ResponseWriter, r *http.Request) {
 }
 
 func (auth *AuthService) userinfo(resp http.ResponseWriter, r *http.Request) {
-	if u, err := json.Marshal(auth.user.GetUserFromToken(r)); err == nil {
+	username := r.URL.Query().Get("name")
+	var user data.User
+
+	if username == "" {
+		user = auth.user.GetUserFromToken(r)
+	} else {
+		user = auth.db.GetUser(username)
+	}
+
+	if u, err := json.Marshal(user); err == nil {
 		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(u), nil, 200))
 	} else {
 		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", err, 200))
@@ -292,5 +308,47 @@ func (auth *AuthService) getusers(resp http.ResponseWriter, r *http.Request) {
 	}
 }
 func (auth *AuthService) deleteuser(resp http.ResponseWriter, r *http.Request) {
-	// var name = r.URL.Query().Get("name")
+	var name = r.URL.Query().Get("name")
+	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", auth.db.DeleteUser(name), 400))
+}
+func (auth *AuthService) edituser(resp http.ResponseWriter, r *http.Request) {
+	var request data.PasswordChange
+	body, _ := ioutil.ReadAll(r.Body)
+	if err := json.Unmarshal(body, &request); err == nil {
+		passHasher := sha512.New512_256()
+		hash := passHasher.Sum([]byte(request.Password))
+		user := auth.db.GetUser(request.Username)
+		user.PassHash = hex.EncodeToString(hash)
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", auth.db.UpdateUser(user), 400))
+	} else {
+		common.WriteFailureResponse(err, resp, "edituser", 500)
+	}
+}
+func (auth *AuthService) permissions(writer http.ResponseWriter, r *http.Request) {
+	var resp common.APIResponse
+	var name = r.URL.Query().Get("user")
+	if name != "" {
+		permMap, err := auth.db.GetUserPermissionMap(name)
+		if err == nil {
+			if list, e := json.Marshal(permMap); e == nil {
+				resp = common.CreateAPIResponse(string(list), e, 500)
+			} else {
+				resp = common.CreateAPIResponse("failed", e, 500)
+			}
+		} else {
+			resp = common.CreateAPIResponse("failed", err, 500)
+		}
+		common.WriteAPIResponseStruct(writer, resp)
+	} else {
+		common.WriteFailureResponse(errors.New("no username specified"), writer, "permission", 400)
+	}
+}
+func (auth *AuthService) changepermission(resp http.ResponseWriter, r *http.Request) {
+	var request data.PermissionChange
+
+	body, _ := ioutil.ReadAll(r.Body)
+	if err := json.Unmarshal(body, &request); err == nil {
+		common.Logger.Debugln(request)
+		common.Logger.Errorln(auth.db.UpdateUserPermissions(request))
+	}
 }

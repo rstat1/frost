@@ -65,10 +65,12 @@ func (u *User) GetUserFromToken(r *http.Request) data.User {
 		if token, err := jwt.ParseSigned(response); err == nil {
 			var defaultClaims jwt.Claims
 			username := struct {
-				Name string `json:"sub"`
+				Name        string `json:"sub"`
+				AccessLevel string `json:"lvl"`
 			}{}
 			token.Claims(u.hmacKey, &defaultClaims, &username)
 			user = u.datastore.GetUser(username.Name)
+			user.Group = username.AccessLevel
 		} else {
 			common.Logger.WithField("func", "GetUsernameFromToken").Errorln(errors.New("invalid token"))
 			user = data.User{}

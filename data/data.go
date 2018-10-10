@@ -232,6 +232,17 @@ func (data *DataStore) GetExtraRoutesForAPIName(name string) ([]ExtraRoute, erro
 	return extraRoutes, nil
 }
 
+//GetUserPermisionMap ...
+func (data *DataStore) GetUserPermissionMap(username string) (map[string]map[string]bool, error) {
+	var serviceAccess map[string]map[string]bool
+	permMap := data.queryEngine.From("SitePermissionMappings")
+	if err := permMap.Get("SitePermissionMappings", username, &serviceAccess); err == nil {
+		return serviceAccess, nil
+	} else {
+		return nil, err
+	}
+}
+
 //SetFirstRunState ...
 func (data *DataStore) SetFirstRunState() {
 	firstRun := data.queryEngine.From("System")
@@ -294,8 +305,7 @@ func (data *DataStore) DeleteRoute(route string, deleteForUpdate bool) error {
 func (data *DataStore) DeleteUser(user string) error {
 	usersBucket := data.queryEngine.From("Users")
 	if user := data.GetUser(user); user.Username != "" {
-		usersBucket.DeleteStruct(user)
-		return nil
+		return usersBucket.DeleteStruct(&user)
 	} else {
 		return errors.New("no such user")
 	}
@@ -328,6 +338,31 @@ func (data *DataStore) UpdateRoute(service ServiceDetails, serviceName string) e
 func (data *DataStore) UpdateSysConfig(propChange ServiceEdit) error {
 	system := data.queryEngine.From("System")
 	return system.Set("System", "key", &propChange.NewValue)
+}
+
+//UpdateUserPermissions ...
+func (data *DataStore) UpdateUserPermissions(newPermission PermissionChange) error {
+	if perms, err := data.GetUserPermissionMap(newPermission.Username); err == nil {
+		servicePerms := perms[newPermission.ServiceName]
+		if servicePerms != nil {
+			servicePerms[newPermission.Name] = newPermission.NewValue
+		} else {
+			servicePerms = make(map[string]bool)
+			servicePerms[newPermission.Name] = newPermission.NewValue
+		}
+		perms[newPermission.ServiceName] = servicePerms
+		common.Logger.Debugln(perms)
+		permMap := data.queryEngine.From("SitePermissionMappings")
+		return permMap.Set("SitePermissionMappings", newPermission.Username, perms)
+	} else {
+		return err
+	}
+}
+
+//UpdateUser ...
+func (data *DataStore) UpdateUser(user User) error {
+	usersBucket := data.queryEngine.From("Users")
+	return usersBucket.Update(&user)
 }
 
 func (data *DataStore) makeUserPermissionMap(username string, p []ServiceAuth) {

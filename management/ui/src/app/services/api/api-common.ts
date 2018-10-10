@@ -2,6 +2,21 @@ export interface APIResponse {
 	status: string;
 	response: string;
 }
+export interface ServiceAccess {
+	service: string;
+	permissions: Permission[];
+}
+export interface Permission {
+	name: string;
+	value: boolean;
+}
+export interface PermissionValues {
+	p2: boolean;
+	p3: boolean;
+}
+export interface Service {
+	p: PermissionValues;
+}
 export class Service {
 	public name: string;
 	public address: string;
@@ -16,14 +31,6 @@ export class Service {
 		this.name = "";
 		this.filename = "";
 	}
-}
-export interface ServiceAccess {
-	service: string;
-	permissions: Permission[];
-}
-export interface Permission {
-	name: string;
-	value: boolean;
 }
 export class NewUser {
 	username: string;
@@ -43,18 +50,16 @@ export class AuthRequest {
 		this.Password = password;
 	}
 }
-export interface PermissionValues {
-	p2: boolean;
-	p3: boolean;
-}
-
-export interface Service {
-	p: PermissionValues;
-}
 export class ServiceEdit {
 	public name: string;
 	public property: string;
 	public new: string;
+}
+export class PermissionChange {
+	public name: string;
+	public user: string;
+	public service: string;
+	public newValue: boolean;
 }
 export class RouteAlias {
 	public ID: number;
@@ -65,4 +70,8 @@ export class RouteAlias {
 export class AliasDeleteRequest {
 	public route: string;
 	public baseURL: string;
+}
+export class PasswordChange {
+	public user: string;
+	public pass: string;
 }

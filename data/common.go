@@ -37,6 +37,20 @@ type PermissionValue struct {
 	Value bool   `json:"value"`
 }
 
+//PermissionChange ...
+type PermissionChange struct {
+	Name        string `json:"name"`
+	Username    string `json:"user"`
+	ServiceName string `json:"service"`
+	NewValue    bool   `json:"newValue"`
+}
+
+//PasswordChange ...
+type PasswordChange struct {
+	Username string `json:"user"`
+	Password string `json:"pass"`
+}
+
 //Config ...
 type Config struct {
 	ID                 string `storm:"id"`
