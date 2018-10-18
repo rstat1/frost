@@ -45,7 +45,6 @@ export class EditUserComponent implements OnInit {
 		this.api.ChangePermissionValue(pc).subscribe(_ => {});
 	}
 	public getValue(service: string, permission: string): boolean {
-		// const serviceRow = this.permissions.find(s => s.service == service);
 		let p: Permission[] = this.permissions[service];
 		if (p != undefined) {
 			return p[permission];
