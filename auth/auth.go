@@ -74,7 +74,6 @@ func (auth *AuthService) InitAuthService() {
 		}
 	}()
 }
-
 func (auth *AuthService) initAPIRoutes() {
 	if auth.inDevMode {
 		auth.loginURL = devLoginURL
@@ -86,6 +85,9 @@ func (auth *AuthService) initAPIRoutes() {
 	auth.route.Handle("/api/trinity/token", common.RequestWrapper(auth.CodeAndKeyProvided, "GET", auth.token))
 	auth.route.Handle("/api/trinity/validate", common.RequestWrapper(auth.CredsAndIDProvided, "POST", auth.validate))
 	auth.route.Handle("/api/trinity/authorize", common.RequestWrapper(auth.HasServiceID, "GET", auth.authorize))
+
+	auth.route.Handle("/api/trinity/ws/ticket", common.RequestWrapper(auth.user.AuthTokenProvided, "POST", auth.wsticket))
+	auth.route.Handle("/api/trinity/ws/validate", common.RequestWrapper(common.Nothing, "GET", auth.checkwsticket))
 
 	auth.route.Handle("/api/trinity/permissions", common.RequestWrapper(auth.user.IsRoot, "GET", auth.permissions))
 	auth.route.Handle("/api/trinity/permissions/change", common.RequestWrapper(auth.user.IsRoot, "POST", auth.changepermission))
@@ -351,4 +353,25 @@ func (auth *AuthService) changepermission(resp http.ResponseWriter, r *http.Requ
 		common.Logger.Debugln(request)
 		common.Logger.Errorln(auth.db.UpdateUserPermissions(request))
 	}
+}
+func (auth *AuthService) checkwsticket(resp http.ResponseWriter, r *http.Request) {
+	var apiResp common.APIResponse
+	if t := r.URL.Query().Get("t"); t != "" {
+		userID := auth.cache.GetString(t, "userid")
+		if userID != "" {
+			auth.cache.DeleteString(t, "userid")
+			apiResp = common.CreateAPIResponse(userID, nil, 200)
+		} else {
+			apiResp = common.CreateAPIResponse("", errors.New("no userid"), 200)
+		}
+	} else {
+		apiResp = common.CreateFailureResponse(errors.New("no ticket"), "checkwsticket", 400)
+	}
+	common.WriteAPIResponseStruct(resp, apiResp)
+}
+func (auth *AuthService) wsticket(resp http.ResponseWriter, r *http.Request) {
+	ticket := common.RandomID(48)
+	user := auth.user.GetUserFromToken(r)
+	auth.cache.PutString(ticket, "userid", user.Id)
+	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(ticket, nil, 400))
 }

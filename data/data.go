@@ -9,24 +9,24 @@ import (
 	"git.m/svcman/common"
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/q"
-	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-uuid"
 	"github.com/sirupsen/logrus"
+	"go.etcd.io/bbolt"
 )
 
 //DataStore ...
 type DataStore struct {
 	filename       string
 	knownProjects  []string
-	DB             *bolt.DB
+	DB             *bbolt.DB
 	queryEngine    *storm.DB
-	originalImages *bolt.DB
+	originalImages *bbolt.DB
 	Cache          *CacheService
 }
 
 //NewDataStoreInstance Do I really need to explain this one?
 func NewDataStoreInstance(filename string) *DataStore {
-	db, err := bolt.Open(filename, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bbolt.Open(filename, 0600, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +37,7 @@ func NewDataStoreInstance(filename string) *DataStore {
 		filename:    filename,
 		Cache:       NewCacheService(),
 	}
-	db.Update(func(tx *bolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists([]byte("System")); err != nil {
 			panic(err)
 		}

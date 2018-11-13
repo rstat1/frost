@@ -279,6 +279,7 @@ func (p *Proxy) startTLSServer() {
 	defer listener.Close()
 	httpServer.Handler = p
 	httpServer.Addr = p.listenerPort
+
 	err = httpServer.ServeTLS(listener, "", "")
 
 	if err != nil {
