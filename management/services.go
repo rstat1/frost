@@ -77,6 +77,11 @@ func (s *ServiceManager) StartManagedServices() {
 	}
 }
 
+//StopManagedServices ...
+func (s *ServiceManager) StopManagedServices() {
+	s.processes.StopAllProcesses()
+}
+
 //StartManagedService ...
 func (s *ServiceManager) StartManagedService(name string) bool {
 	routeInfo, _ := s.data.GetRoute(name)

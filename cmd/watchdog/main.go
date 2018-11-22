@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"git.m/svcman/auth"
 	"git.m/svcman/common"
@@ -28,8 +30,19 @@ func main() {
 	manager := management.NewAPIRouter(data, proxy, services, userService, *devMode)
 	authService := auth.NewAuthService(data, userService, *devMode)
 
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		services.StopManagedServices()
+		os.Exit(0)
+	}()
+
 	services.StartManagedServices()
 	authService.InitAuthService()
 	manager.StartManagementAPIListener()
 	proxy.StartProxyListener(devMode)
+}
+
+func interruptHandler() {
 }
