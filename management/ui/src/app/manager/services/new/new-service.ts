@@ -14,8 +14,10 @@ import { APIService } from 'app/services/api/api.service';
 	styleUrls: ['./new-service.css']
 })
 export class NewServiceComponent implements OnInit {
+	public icon: File;
 	public uiFiles: File;
 	public serviceBin: File;
+	public iconName: string = "";
 	public uiFilesName: string = "";
 	public s: Service = new Service();
 	public files: FormGroup;
@@ -29,9 +31,8 @@ export class NewServiceComponent implements OnInit {
 		this.actions.OnHighlightPrimaryAction();
 		this.header.SetPagePath(window.location.pathname);
 		this.serviceDetails = this.formBuilder.group({
-			'ServiceName': new FormControl('', [
-				this.ValidateServiceName,
-			]),
+			'ServiceName': new FormControl('', [ this.ValidateServiceName, ]),
+			'ServiceFileName': new FormControl('', []),
 			'apiPrefix': new FormControl('', []),
 			'address': new FormControl('', []),
 			'authCallback': new FormControl('', []),
@@ -54,18 +55,20 @@ export class NewServiceComponent implements OnInit {
 			} else {
 				this.uiFilesName = this.uiFiles.name;
 			}
-		} else {
+		} else if (name == "service") {
 			this.serviceBin = event.target.files[0];
 			this.s.filename = this.serviceBin.name;
+		} else if (name == "icon") {
+			this.icon = event.target.files[0];
+			this.iconName = this.icon.name;
 		}
 	}
 	public save(form: NgForm) {
-		let uiReader: FileReader;
-		let serviceReader: FileReader;
 		let body: FormData = new FormData();
 		let serviceDetails: Service = new Service();
 
 		serviceDetails.name = (<any>this.serviceDetails.value).ServiceName;
+		serviceDetails.filename = (<any>this.serviceDetails.value).ServiceFileName;
 		serviceDetails.address = (<any>this.serviceDetails.value).address;
 		serviceDetails.api_prefix = (<any>this.serviceDetails.value).apiPrefix;
 		serviceDetails.managed = (<any>this.managementDetails.value).IsManaged;
@@ -74,12 +77,13 @@ export class NewServiceComponent implements OnInit {
 		body.append("details", JSON.stringify(serviceDetails));
 
 		if (this.uiFiles != null) {
-			// console.log("have ui files...")
 			body.append("uiblob", this.uiFiles, this.uiFiles.name);
 		}
 		if (this.serviceBin != null) {
-			// console.log("have serviceBin files...")
 			body.append("service", this.serviceBin, this.serviceBin.name);
+		}
+		if (this.icon != null) {
+			body.append("icon", this.icon, this.icon.name);
 		}
 		this.api.NewService(body).subscribe(
 			resp => {

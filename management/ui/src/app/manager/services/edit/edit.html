@@ -19,6 +19,18 @@
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
 					<mat-expansion-panel-header>
+						<mat-panel-title>Service File Name:</mat-panel-title>
+						<mat-panel-description>{{currentFileName}}</mat-panel-description>
+					</mat-expansion-panel-header>
+					<mat-form-field style="width:400px;">
+						<input matInput placeholder="New service filename" [(ngModel)]="currentFileName">
+    				</mat-form-field>
+					<mat-action-row>
+						<button mat-button color="primary" (click)="save('filename')">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
 						<mat-panel-title>API Name:</mat-panel-title>
 						<mat-panel-description>{{currentServiceAPIName}}</mat-panel-description>
 					</mat-expansion-panel-header>
@@ -86,6 +98,26 @@
 						<button mat-button color="primary" (click)="save('managed')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Service Icon:</mat-panel-title>
+						<mat-panel-description>
+							<img [src]="getServiceIconURL(currentServiceName)" width="24" height="24" />
+						</mat-panel-description>
+					</mat-expansion-panel-header>
+					<span class="upload-control">
+						<input hidden type="file" #icon required (change)="setFile('icon', $event)">
+						<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="icon.click()">
+							<mat-icon>cloud_upload</mat-icon>
+						</button>
+						<mat-form-field class="upload-box upload-box-width">
+							<input matInput placeholder="Icon filename" name="IconName" [value]="iconName" disabled required>
+						</mat-form-field>
+					</span>
+					<mat-action-row>
+						<button mat-button color="primary" (click)="save('icon')">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
 				<!-- <mat-expansion-panel class="detail-block">
 					<mat-expansion-panel-header>
 						<mat-panel-title>Update Services</mat-panel-title>
@@ -127,6 +159,16 @@
 				</mat-form-field>
 			</span>
 			<mat-action-row>
+				<mat-chip-list *ngIf="show">
+					<mat-chip style="background-color:white" *ngIf="success">
+						<mat-icon style="color:#2E7D32">check_circle</mat-icon>
+						<span style="color:black;">Success</span>
+					</mat-chip>
+					<mat-chip style="background-color:white" *ngIf="success == false">
+						<mat-icon style="color:#C62828">cancel</mat-icon>
+						<span style="color:black;" matTooltip="{{lastError}}">Failed</span>
+					</mat-chip>
+				</mat-chip-list>
 				<button mat-button color="primary" (click)="upload()">Upload</button>
 			</mat-action-row>
 		</mat-expansion-panel>

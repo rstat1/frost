@@ -7,6 +7,9 @@
 						<input matInput placeholder="Name" formControlName="ServiceName" required>
 					</mat-form-field>
 					<mat-form-field class="login-register-text-box">
+						<input matInput placeholder="Service File Name" formControlName="ServiceFileName" required>
+					</mat-form-field>
+					<mat-form-field class="login-register-text-box">
 						<input matInput placeholder="API Prefix" formControlName="apiPrefix" required>
 					</mat-form-field>
 					<mat-form-field class="login-register-text-box">
@@ -54,10 +57,19 @@
 					<mat-form-field class="upload-box upload-box-width">
 						<input matInput placeholder="ZIP containing UI files" name="ServiceName" [value]="uiFilesName" disabled required>
 					</mat-form-field>
-					<div>
-						<button color="primary" mat-button color="primary" type="submit" >Save</button>
-					</div>
 				</span>
+				<span class="upload-control">
+					<input hidden type="file" #icon (change)="setFile('icon', $event)">
+					<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="icon.click()">
+						<mat-icon>cloud_upload</mat-icon>
+					</button>
+					<mat-form-field class="upload-box upload-box-width">
+						<input matInput placeholder="Sevice Icon (optional)" name="IconName" [value]="iconName" disabled required>
+					</mat-form-field>
+				</span>
+				<div>
+					<button color="primary" mat-button color="primary" type="submit" >Save</button>
+				</div>
 			</mat-step>
 		</mat-vertical-stepper>
 	</form>

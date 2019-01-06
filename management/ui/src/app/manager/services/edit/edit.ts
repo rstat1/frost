@@ -2,10 +2,11 @@ import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatDialog } from '@angular/material';
 
+import { environment } from 'environments/environment';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
-import { Service, ServiceEdit, RouteAlias, AliasDeleteRequest } from 'app/services/api/api-common';
 import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
+import { Service, ServiceEdit, RouteAlias, AliasDeleteRequest } from 'app/services/api/api-common';
 
 @Component({
 	selector: 'app-edit',
@@ -16,6 +17,7 @@ export class EditServiceComponent implements OnInit {
 	public aliasURL: string = "";
 	public aliasedRoute: string = "";
 	public currentARURL: string = "";
+	public currentFileName: string = "";
 	public currentServiceID: string = "";
 	public currentServiceKey: string = "";
 	public currentServiceName: string = "";
@@ -25,8 +27,13 @@ export class EditServiceComponent implements OnInit {
 	public isCurrentServiceManaged: boolean;
 	public isCurrentServiceUpdatesHosted: boolean;
 
+	public icon: File;
 	public uiFiles: File;
+	public show: boolean;
+	public success: boolean;
 	public serviceBin: File;
+	public iconName: string = "";
+	public lastError: string = "";
 	public uiFilesName: string = "";
 	public s: Service = new Service();
 	public serviceToEdit: string = "";
@@ -43,6 +50,7 @@ export class EditServiceComponent implements OnInit {
 		this.api.GetService(this.serviceToEdit).subscribe(resp => {
 			if (resp.status == "success") {
 				let service: Service = JSON.parse(resp.response);
+				this.currentFileName = service.filename;
 				this.currentARURL = service.RedirectURL;
 				this.currentServiceID = service.ServiceID;
 				this.currentLocalAddress = service.address;
@@ -86,9 +94,12 @@ export class EditServiceComponent implements OnInit {
 			} else {
 				this.uiFilesName = this.uiFiles.name;
 			}
-		} else {
+		} else if (name == "service") {
 			this.serviceBin = event.target.files[0];
 			this.s.filename = this.serviceBin.name;
+		} else if (name == "icon") {
+			this.icon = event.target.files[0];
+			this.iconName = this.icon.name;
 		}
 	}
 	public upload() {
@@ -103,18 +114,24 @@ export class EditServiceComponent implements OnInit {
 			body.append("service", this.serviceBin, this.serviceBin.name);
 		}
 		if (hasValue) {
+			this.show = false;
 			this.api.UpdateService(body, this.currentServiceName).subscribe(
 				resp => {
 					this.snackBar.open("Update successful", "", {
 						duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
 						verticalPosition: 'top',
 					});
+					this.show = true;
+					this.success = true;
 				},
 				err => {
 					this.snackBar.open(`Update failed: ${err.error.response}`, "", {
 						duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
 						verticalPosition: 'top',
 					});
+					this.show = true;
+					this.success = false;
+					this.lastError = err.error.response;
 				}
 			);
 		}
@@ -143,13 +160,34 @@ export class EditServiceComponent implements OnInit {
 					propChange.new = "Disabled";
 				}
 				break;
+			case "filename":
+				propChange.new = this.currentFileName;
+				break;
+			case "icon":
+				propChange.new = "icon";
+				break;
 		}
-		this.api.EditService(propChange).subscribe(resp => {
-			if (resp.status == "success") {
-				if (resp.response != "success") { this.currentServiceKey = resp.response; }
-				this.showResponse("Edit Successful");
-			}
-		}, e => this.showResponse("Edit failed: " + e.error.response) );
+		if (propChange.new != "icon") {
+			this.api.EditService(propChange).subscribe(resp => {
+				if (resp.status == "success") {
+					if (resp.response != "success") { this.currentServiceKey = resp.response; }
+					this.showResponse("Edit Successful");
+				}
+			}, e => this.showResponse("Edit failed: " + e.error.response) );
+		} else {
+			this.uploadIcon();
+		}
+	}
+	public uploadIcon() {
+		let body: FormData = new FormData();
+		if (this.icon != null) {
+			body.append("icon", this.icon, this.icon.name);
+			this.api.UploadIcon(body, this.currentServiceName).subscribe(resp => {
+				this.showResponse("Upload Successful");
+			}, e => this.showResponse("Failed: " + e.error.response) );
+		} else {
+			this.showResponse("Pick an icon first.");
+		}
 	}
 	public newRoute() {
 		let routeAlias: RouteAlias = new RouteAlias();
@@ -186,6 +224,9 @@ export class EditServiceComponent implements OnInit {
 				this.getAPIAliases();
 			}
 		});
+	}
+	public getServiceIconURL(name: string): string {
+		return environment.APIBaseURL + "/frost/icon/"+name;
 	}
 	private getAPIAliases() {
 		this.api.GetAPIAliases(this.currentServiceAPIName).subscribe(extras => {

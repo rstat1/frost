@@ -4,7 +4,8 @@ import { Routes, RouterModule } from '@angular/router';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatInputModule, MatButtonModule, MatCheckboxModule, MatTableModule,
 		MatToolbarModule, MatIconModule, MatSnackBarModule, MatTooltipModule,
-		MatSlideToggleModule, MatExpansionModule, MatListModule, MatDialogModule } from '@angular/material';
+		MatSlideToggleModule, MatExpansionModule, MatListModule, MatDialogModule,
+		MatChipsModule } from '@angular/material';
 import { FormsModule, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 
 import { MenuModule } from 'app/menu/menu.module';
@@ -46,6 +47,7 @@ const projectRoutes: Routes = [
 		MatIconModule,
 		MatTableModule,
 		MatInputModule,
+		MatChipsModule,
 		MatDialogModule,
 		MatButtonModule,
 		MatToolbarModule,

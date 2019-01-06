@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"git.m/svcman/auth"
@@ -105,6 +106,7 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/service/edit", common.RequestWrapper(api.user.IsRoot, "POST", api.editService))
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
+	api.router.Handle("/api/frost/service/restart/:name", common.RequestWrapper(api.user.IsRoot, "GET", api.restartService))
 
 	api.router.Handle("/api/frost/aliases/new", common.RequestWrapper(common.Nothing, "POST", api.newExtraRoute))
 	api.router.Handle("/api/frost/aliases/all", common.RequestWrapper(common.Nothing, "GET", api.getExtraRoutes))
@@ -114,6 +116,10 @@ func (api *APIRouter) SetupRoutes() {
 
 	api.router.Handle("/api/frost/process", common.RequestWrapper(api.user.IsRoot, "GET", api.process))
 	api.router.Handle("/api/frost/bg", common.RequestWrapper(common.Nothing, "GET", api.bingBGService.GetBGImage))
+
+	api.router.Handle("/api/frost/icons", common.RequestWrapper(common.Nothing, "GET", api.icons))
+	api.router.Handle("/api/frost/icon/:service", common.RequestWrapper(common.Nothing, "GET", api.geticon))
+	api.router.Handle("/api/frost/icon/new/:service", common.RequestWrapper(api.user.IsRoot, "POST", api.newicon))
 
 	api.router.Handle("/api/frost/status", common.RequestWrapper(common.Nothing, "GET", api.firstRunStatus))
 	api.router.Handle("/api/frost/init", common.RequestWrapper(common.Nothing, "GET", api.initFrost))
@@ -185,7 +191,7 @@ func (api *APIRouter) deleteService(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 	var propChange data.ServiceEdit
-	var oldServiceName string
+	var oldServiceName, oldBinName string
 	var e error
 	if body, err := ioutil.ReadAll(r.Body); err == nil {
 		json.Unmarshal(body, &propChange)
@@ -219,11 +225,18 @@ func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 						service.IsManagedService = false
 					}
 					break
+				case "filename":
+					oldBinName = service.BinName
+					service.BinName = propChange.NewValue
+					break
 				}
 				if propChange.ServiceName == "watchdog" {
 					e = api.data.UpdateSysConfig(propChange)
 				}
 				e = api.data.UpdateRoute(service, propChange.ServiceName)
+				if propChange.PropertyName == "filename" {
+					e = api.servMan.RenameServiceBin(oldBinName, service.BinName, service.AppName)
+				}
 				if propChange.PropertyName == "name" {
 					e = api.servMan.RenameServiceDirectory(oldServiceName, propChange.NewValue)
 					api.proxy.RenameRoute(oldServiceName, propChange.NewValue)
@@ -303,6 +316,19 @@ func (api *APIRouter) getService(resp http.ResponseWriter, r *http.Request) {
 		common.WriteFailureResponse(err, resp, "getService", 404)
 	}
 }
+func (api *APIRouter) restartService(resp http.ResponseWriter, r *http.Request) {
+	serviceName := vestigo.Param(r, "name")
+	if serviceName != "" {
+		api.servMan.StopManagedService(serviceName)
+		if api.servMan.StartManagedService(serviceName) == false {
+			common.WriteFailureResponse(errors.New("failed to start service: "+serviceName), resp, "restartService", 500)
+		} else {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 200))
+		}
+	} else {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", errors.New("no service specified"), 400))
+	}
+}
 func (api *APIRouter) firstRunStatus(resp http.ResponseWriter, r *http.Request) {
 	if !api.data.GetFirstRunState() {
 		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("initialized", nil, 200))
@@ -360,4 +386,41 @@ func (api *APIRouter) getServiceListOnSuccess(resp common.APIResponse) common.AP
 		apiResp = resp
 	}
 	return apiResp
+}
+func (api *APIRouter) newicon(resp http.ResponseWriter, r *http.Request) {
+	var service = vestigo.Param(r, "service")
+	if err := r.ParseMultipartForm(1 * 1024 * 1024); err == nil {
+		if icon, _, e := r.FormFile("icon"); e == nil {
+			if e = api.servMan.handleIconFileUpload(icon, service); e != nil {
+				common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", err, 500))
+			}
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", nil, 200))
+		}
+	}
+}
+func (api *APIRouter) geticon(resp http.ResponseWriter, r *http.Request) {
+	var iconPath string
+	var service = vestigo.Param(r, "service")
+	if _, e := os.Stat("serviceicons/" + service + ".png"); os.IsNotExist(e) {
+		iconPath = "watchdog/web/assets/services.png"
+	} else {
+		iconPath = "serviceicons/" + service + ".png"
+	}
+	if icon, e := os.Open(iconPath); e == nil {
+		if image, err := ioutil.ReadAll(icon); err == nil {
+			resp.Write(image)
+		}
+	} else {
+		common.Logger.Errorln(e)
+		resp.WriteHeader(404)
+	}
+}
+func (api *APIRouter) icons(resp http.ResponseWriter, r *http.Request) {
+	var icons []string
+	files, _ := ioutil.ReadDir("serviceicons/")
+	for _, file := range files {
+		icons = append(icons, file.Name())
+	}
+	f, _ := json.Marshal(icons)
+	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(f), nil, 200))
 }

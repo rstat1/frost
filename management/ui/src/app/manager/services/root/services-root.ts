@@ -29,6 +29,7 @@ export class ServicesRootComponent implements OnInit, OnDestroy {
 			{IconName: "edit", Description: "Edit"},
 			{IconName: "list", Description: "Logs"},
 			{IconName: "delete", Description: "Delete"},
+			{IconName: "cached", Description: "Restart"},
 		]);
 		this.subActionClicked = this.actions.SubActionClicked.subscribe(action => {
 			this.SubActionClicked(action);
@@ -69,6 +70,16 @@ export class ServicesRootComponent implements OnInit, OnDestroy {
 				this.router.navigate(["edit", action.ContextInfo], {
 					relativeTo: this.route,
 					skipLocationChange: true,
+				});
+			break;
+			case "Restart":
+				this.api.RestartService(action.ContextInfo).subscribe(resp => {
+					if (resp.status == "success") {
+						this.snackBar.open("Restart successful", "", {
+							duration: 3000, panelClass: "proper-colors", horizontalPosition: 'center',
+							verticalPosition: 'top',
+						});
+					}
 				});
 			break;
 		}

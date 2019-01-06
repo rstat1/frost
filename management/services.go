@@ -125,21 +125,19 @@ func (s *ServiceManager) UpdateService(request *http.Request) common.APIResponse
 	serviceName := request.URL.Query().Get("name")
 	if serviceName == "" {
 		return common.CreateFailureResponse(errors.New("service name not specified"), "UpdateService", 500)
-	} else {
-		if serviceName == "watchdog" || serviceName == "trinity" {
-			service := data.ServiceDetails{
-				AppName: serviceName,
-			}
-			resp, _ := s.handleFileUpload(request, service)
-			return resp
-		} else {
-			s.StopManagedService(serviceName)
-			service, _ := s.data.GetRoute(serviceName)
-			resp, _ := s.handleFileUpload(request, service)
-			s.StartManagedService(serviceName)
-			return resp
-		}
 	}
+	if serviceName == "watchdog" || serviceName == "trinity" {
+		service := data.ServiceDetails{
+			AppName: serviceName,
+		}
+		resp, _ := s.handleFileUpload(request, service)
+		return resp
+	}
+	s.StopManagedService(serviceName)
+	service, _ := s.data.GetRoute(serviceName)
+	resp, _ := s.handleFileUpload(request, service)
+	s.StartManagedService(serviceName)
+	return resp
 }
 
 //GetService ...
@@ -167,12 +165,22 @@ func (s *ServiceManager) GetExtraRoutes(apiName string) common.APIResponse {
 func (s *ServiceManager) RenameServiceDirectory(oldname, newname string) error {
 	if _, err := os.Stat(oldname); os.IsNotExist(err) {
 		return err
-	} else {
-		s.StopManagedService(newname)
-		e := os.Rename(oldname, newname)
-		s.StartManagedService(newname)
-		return e
 	}
+	s.StopManagedService(newname)
+	e := os.Rename(oldname, newname)
+	s.StartManagedService(newname)
+	return e
+}
+
+//RenameServiceBin ...
+func (s *ServiceManager) RenameServiceBin(oldName, newName, appName string) error {
+	if _, err := os.Stat(appName + "/" + oldName); os.IsNotExist(err) {
+		return err
+	}
+	s.processes.StopAProcess(oldName)
+	e := os.Rename(appName+"/"+oldName, appName+"/"+newName)
+	s.processes.StartProcess(newName, appName, s.inDevMode)
+	return e
 }
 
 func (s *ServiceManager) handleFileUpload(request *http.Request, info data.ServiceDetails) (common.APIResponse, data.ServiceDetails) {
@@ -182,11 +190,11 @@ func (s *ServiceManager) handleFileUpload(request *http.Request, info data.Servi
 
 	if err = request.ParseMultipartForm(75 * 1024 * 1024); err == nil {
 		uiFiles, handler, noUIBlob := request.FormFile("uiblob")
-		serviceFile, header, notServiceBlob := request.FormFile("service")
+		serviceFile, serviceFileInfo, notServiceBlob := request.FormFile("service")
+		iconFile, _, noIcon := request.FormFile("icon")
 		serviceDetails := request.FormValue("details")
 		if serviceDetails != "" {
 			json.Unmarshal([]byte(serviceDetails), &service)
-			service.BinName = header.Filename
 			s.proxy.AddRoute(service)
 			err = s.data.AddNewRoute(service)
 			s.StartManagedService(service.AppName)
@@ -197,13 +205,19 @@ func (s *ServiceManager) handleFileUpload(request *http.Request, info data.Servi
 			service = info
 		}
 		if _, err := os.Stat(service.AppName); os.IsNotExist(err) {
-			if err := os.Mkdir(service.AppName, 0770); err != nil {
+			if err := os.Mkdir(service.AppName, 0700); err != nil {
 				return common.CreateFailureResponse(err, "NewService(mkdir)", 500), data.ServiceDetails{}
 			}
 		}
 		if notServiceBlob == nil {
-			if err = s.handleServiceBinUpload(serviceFile, service.AppName+"/"+service.BinName); err != nil {
-				resp = common.CreateFailureResponse(err, "NewService(save-service)", 500)
+			if strings.HasSuffix(serviceFileInfo.Filename, ".zip") {
+				if err = s.handleServiceZipUpload(serviceFile, serviceFileInfo.Filename, service); err != nil {
+					resp = common.CreateFailureResponse(err, "NewService(save-service)", 500)
+				}
+			} else {
+				if err = s.handleServiceBinUpload(serviceFile, service.AppName+"/"+service.BinName); err != nil {
+					resp = common.CreateFailureResponse(err, "NewService(save-service)", 500)
+				}
 			}
 		}
 		if noUIBlob == nil {
@@ -214,7 +228,11 @@ func (s *ServiceManager) handleFileUpload(request *http.Request, info data.Servi
 			} else {
 				resp = common.CreateFailureResponse(errors.New("uploaded ui blob not a zip"), "NewService(save-service)", 500)
 			}
-
+		}
+		if noIcon == nil {
+			if err = s.handleIconFileUpload(iconFile, service.AppName); err != nil {
+				resp = common.CreateFailureResponse(err, "NewService(save-icon)", 500)
+			}
 		}
 	} else {
 		resp = common.CreateFailureResponse(err, "NewService(ParseForm)", 500)
@@ -237,9 +255,28 @@ func (s *ServiceManager) handleServiceBinUpload(fileContent multipart.File, file
 	}
 	return nil
 }
-func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName, appName string) error {
+func (s *ServiceManager) handleServiceZipUpload(fileContent multipart.File, fileName string, service data.ServiceDetails) error {
 	var serviceFileBytes bytes.Buffer
 	if file, err := os.Create(fileName); err == nil {
+		io.Copy(&serviceFileBytes, fileContent)
+		if _, err := file.Write(serviceFileBytes.Bytes()); err != nil {
+			common.CreateFailureResponse(err, "handleServiceBinUpload(file-write)", 500)
+			return err
+		}
+		file.Close()
+		name, _ := os.Getwd()
+		if err := common.Unzip(fileName, name+"/"+service.AppName+"/"); err != nil {
+			common.CreateFailureResponse(err, "handleUIBlobUpload(unzip)", 500)
+			common.Logger.WithField("func", "handleUIBlobUpload(unzip)").Errorln(err)
+			return err
+		}
+	}
+	return nil
+}
+func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName, appName string) error {
+	var serviceFileBytes bytes.Buffer
+	file, err := os.Create(fileName)
+	if err == nil {
 		io.Copy(&serviceFileBytes, fileContent)
 		if _, err := file.Write(serviceFileBytes.Bytes()); err != nil {
 			common.CreateFailureResponse(err, "handleServiceBinUpload(file-write)", 500)
@@ -251,13 +288,27 @@ func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName
 			common.CreateFailureResponse(err, "handleUIBlobUpload(unzip)", 500)
 			common.Logger.WithField("func", "handleUIBlobUpload(unzip)").Errorln(err)
 			return err
-		} else {
-			os.Remove(fileName)
-			return nil
 		}
-	} else {
-		common.CreateFailureResponse(err, "handleServiceBinUpload", 500)
-		common.Logger.WithField("func", "handleUIBlobUpload(create)").Errorln(err)
-		return err
+		
+		return os.Remove(fileName)
+
 	}
+	common.CreateFailureResponse(err, "handleServiceBinUpload", 500)
+	common.Logger.WithField("func", "handleUIBlobUpload(create)").Errorln(err)
+	return err
+}
+func (s *ServiceManager) handleIconFileUpload(icon multipart.File, service string) error {
+	var iconBytes bytes.Buffer
+	if _, e := os.Stat("serviceicons"); os.IsNotExist(e) {
+		if err := os.Mkdir("serviceicons", 0600); err != nil {
+			return err
+		}
+	}
+	if file, err := os.Create("serviceicons/" + service + ".png"); err == nil {
+		io.Copy(&iconBytes, icon)
+		if _, err := file.Write(iconBytes.Bytes()); err != nil {
+			return err
+		}
+	}
+	return nil
 }

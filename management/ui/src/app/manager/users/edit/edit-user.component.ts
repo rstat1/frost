@@ -6,6 +6,7 @@ import { ServiceAccess, Permission, PermissionChange, PasswordChange } from 'app
 import { PageInfoService } from 'app/services/page-info.service';
 import { ActionListService, PrimaryActionInfo } from 'app/services/action-list.service';
 import { ActivatedRoute } from '@angular/router';
+import { environment } from 'environments/environment';
 
 @Component({
 	selector: 'app-edit-user',
@@ -53,5 +54,8 @@ export class EditUserComponent implements OnInit {
 	public changePW() {
 		let pc: PasswordChange = {user: this.currentUsername, pass: this.newPassword };
 		this.api.ChangePassword(pc).subscribe(_ => {});
+	}
+	public getServiceIconURL(name: string): string {
+		return environment.APIBaseURL + "/frost/icon/"+name;
 	}
 }

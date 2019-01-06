@@ -1,8 +1,9 @@
+import { Subscription } from 'rxjs';
 import { MatTableDataSource } from '@angular/material';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
+import { environment } from 'environments/environment';
 import { ActionListService, SubItemDetails } from 'app/services/action-list.service';
-import { Subscription } from 'rxjs';
 
 @Component({
 	selector: 'app-action-list',
@@ -65,5 +66,8 @@ export class ActionsListComponent implements OnInit, OnDestroy {
 	}
 	public subActionClicked(name: string, ctx: string) {
 		this.actionService.OnSubActionClicked(name, ctx);
+	}
+	public getServiceIconURL(name: string): string {
+		return environment.APIBaseURL + "/frost/icon/"+name;
 	}
 }

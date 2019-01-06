@@ -327,7 +327,7 @@ func (data *DataStore) DeleteExtraRoute(route string) error {
 func (data *DataStore) UpdateRoute(service ServiceDetails, serviceName string) error {
 	routes := data.queryEngine.From("Services")
 	if e := data.DeleteRoute(serviceName, true); e != nil {
-		common.Logger.WithFields(logrus.Fields{"func": "AddNewRoute", "action": "delete"}).Errorln(e)
+		common.Logger.WithFields(logrus.Fields{"func": "UpdateRoute", "action": "delete"}).Errorln(e)
 		return e
 	} else {
 		return routes.Save(&service)

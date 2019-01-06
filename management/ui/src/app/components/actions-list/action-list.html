@@ -13,7 +13,7 @@
             <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
             <mat-cell *matCellDef="let element">
                 <span class="service-icon">
-                    <img *ngIf="!useDefaultImage" src="/assets/{{element}}.png" width="24" height="24" />
+                    <img *ngIf="!useDefaultImage" [src]="getServiceIconURL(element)" width="24" height="24" />
                     <img *ngIf="useDefaultImage" src="/assets/user-white.png" width="24" height="24" />
                 </span>
                 <div class="service-name">

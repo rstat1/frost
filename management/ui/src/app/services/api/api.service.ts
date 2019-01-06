@@ -72,6 +72,12 @@ export class APIService {
 	public NewService(details: FormData): Observable<APIResponse> {
 		return this.PostFormRequest("service/new", details);
 	}
+	public UploadIcon(details: FormData, name: string): Observable<APIResponse> {
+		return this.PostFormRequest("icon/new/"+name, details);
+	}
+	public RestartService(serviceName: string): Observable<APIResponse> {
+		return this.GetRequest("service/restart/"+serviceName);
+	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
 		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);
 		return this.http.get<APIResponse>(apiURL);

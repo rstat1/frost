@@ -6,6 +6,7 @@ import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { AuthRequest, NewUser, ServiceAccess } from 'app/services/api/api-common';
 import { ActionListService, PrimaryActionInfo } from 'app/services/action-list.service';
+import { environment } from 'environments/environment';
 
 @Component({
 	selector: 'app-new-user',
@@ -56,6 +57,9 @@ export class NewUserComponent implements OnInit, OnDestroy {
 				});
 			}
 		);
+	}
+	public getServiceIconURL(name: string): string {
+		return environment.APIBaseURL + "/frost/icon/"+name;
 	}
 	private checkChanged(row: any, type: string, checkEvent: any) {
 		const service = this.permissions.find(s => s.service == row);

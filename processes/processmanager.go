@@ -43,8 +43,10 @@ func (pm *ProcessManager) StartProcess(name, dirName string, devmode bool) bool 
 //StopAllProcesses ...
 func (pm *ProcessManager) StopAllProcesses() {
 	for k, v := range pm.managedProcesses {
-		v.Stop <- true
-		delete(pm.managedProcesses, k)
+		if v != nil {
+			v.Stop <- true
+			delete(pm.managedProcesses, k)
+		}
 	}
 }
 
