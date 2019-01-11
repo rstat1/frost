@@ -2,6 +2,7 @@ package processes
 
 import (
 	"os"
+	"syscall"
 
 	"git.m/svcman/common"
 )
@@ -52,7 +53,7 @@ func (mp *ManagedProcess) Run() {
 		case <-mp.Stop:
 			mp.restart = false
 			mp.Stopped = true
-			mp.process.Kill()
+			mp.process.Signal(syscall.SIGTERM)
 			return
 		case <-mp.Died:
 			if mp.restartCount <= 10 {

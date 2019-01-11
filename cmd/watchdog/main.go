@@ -30,10 +30,11 @@ func main() {
 	manager := management.NewAPIRouter(data, proxy, services, userService, *devMode)
 	authService := auth.NewAuthService(data, userService, *devMode)
 
-	sigs := make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 2)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigs
+		common.Logger.Debugln("exiting...")
 		services.StopManagedServices()
 		os.Exit(0)
 	}()

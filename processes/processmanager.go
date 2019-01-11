@@ -3,6 +3,7 @@ package processes
 import (
 	"os"
 	"strconv"
+	"syscall"
 
 	"git.m/svcman/common"
 )
@@ -42,11 +43,8 @@ func (pm *ProcessManager) StartProcess(name, dirName string, devmode bool) bool 
 
 //StopAllProcesses ...
 func (pm *ProcessManager) StopAllProcesses() {
-	for k, v := range pm.managedProcesses {
-		if v != nil {
-			v.Stop <- true
-			delete(pm.managedProcesses, k)
-		}
+	for _, v := range pm.managedProcesses {
+		v.process.Signal(syscall.SIGTERM)
 	}
 }
 
