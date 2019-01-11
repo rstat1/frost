@@ -401,10 +401,11 @@ func (api *APIRouter) newicon(resp http.ResponseWriter, r *http.Request) {
 func (api *APIRouter) geticon(resp http.ResponseWriter, r *http.Request) {
 	var iconPath string
 	var service = vestigo.Param(r, "service")
-	if _, e := os.Stat("serviceicons/" + service + ".png"); os.IsNotExist(e) {
+	if _, e := os.Stat("watchdog/serviceicons/" + service + ".png"); e != nil {
 		iconPath = "watchdog/web/assets/services.png"
+		common.Logger.Errorln(e)
 	} else {
-		iconPath = "serviceicons/" + service + ".png"
+		iconPath = "watchdog/serviceicons/" + service + ".png"
 	}
 	if icon, e := os.Open(iconPath); e == nil {
 		if image, err := ioutil.ReadAll(icon); err == nil {
@@ -417,7 +418,7 @@ func (api *APIRouter) geticon(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) icons(resp http.ResponseWriter, r *http.Request) {
 	var icons []string
-	files, _ := ioutil.ReadDir("serviceicons/")
+	files, _ := ioutil.ReadDir("watchdog/sudoserviceicons/")
 	for _, file := range files {
 		icons = append(icons, file.Name())
 	}

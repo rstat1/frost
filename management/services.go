@@ -289,7 +289,7 @@ func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName
 			common.Logger.WithField("func", "handleUIBlobUpload(unzip)").Errorln(err)
 			return err
 		}
-		
+
 		return os.Remove(fileName)
 
 	}
@@ -299,12 +299,12 @@ func (s *ServiceManager) handleUIBlobUpload(fileContent multipart.File, fileName
 }
 func (s *ServiceManager) handleIconFileUpload(icon multipart.File, service string) error {
 	var iconBytes bytes.Buffer
-	if _, e := os.Stat("serviceicons"); os.IsNotExist(e) {
-		if err := os.Mkdir("serviceicons", 0600); err != nil {
+	if _, e := os.Stat("watchdog/serviceicons"); os.IsNotExist(e) {
+		if err := os.Mkdir("watchdog/serviceicons", 0700); err != nil {
 			return err
 		}
 	}
-	if file, err := os.Create("serviceicons/" + service + ".png"); err == nil {
+	if file, err := os.Create("watchdog/serviceicons/" + service + ".png"); err == nil {
 		io.Copy(&iconBytes, icon)
 		if _, err := file.Write(iconBytes.Bytes()); err != nil {
 			return err
