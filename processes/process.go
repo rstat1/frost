@@ -35,6 +35,7 @@ func (mp *ManagedProcess) Run() {
 	procAttr := new(os.ProcAttr)
 	procAttr.Dir = mp.WorkDir
 	procAttr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
+	procAttr.Env = []string{"PWD=" + mp.WorkDir}
 	go func() {
 	procloop:
 		mp.Stop = make(chan bool)

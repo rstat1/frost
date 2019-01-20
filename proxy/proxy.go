@@ -39,10 +39,6 @@ type Proxy struct {
 }
 
 var (
-	httpServer = &http.Server{
-		ReadTimeout:  20 * time.Second,
-		WriteTimeout: 20 * time.Second,
-	}
 	lastHost, lastHostPort string
 )
 
@@ -264,21 +260,26 @@ func (p *Proxy) startTLSServer() {
 		Email:       "rstat1@gmail.com",
 	}
 
-	s := &http.Server{
-		Handler: m.HTTPHandler(nil),
-		Addr:    ":80",
+	// s := &http.Server{
+	// 	Handler: m.HTTPHandler(nil),
+	// 	Addr:    ":80",
+	// }
+	// go s.ListenAndServe()
+	tlsConf := m.TLSConfig()
+	tlsConf.MinVersion = tls.VersionTLS10
+	httpServer := &http.Server{
+		Addr:         p.listenerPort,
+		ReadTimeout:  20 * time.Second,
+		WriteTimeout: 20 * time.Second,
+		TLSConfig:    tlsConf,
+		Handler:      p,
 	}
-	go s.ListenAndServe()
-	httpServer.TLSConfig = &tls.Config{
-		GetCertificate: m.GetCertificate,
-	}
+
 	listener, err := net.Listen("tcp", p.listenerPort)
 	if err != nil {
 		panic(err)
 	}
 	defer listener.Close()
-	httpServer.Handler = p
-	httpServer.Addr = p.listenerPort
 
 	err = httpServer.ServeTLS(listener, "", "")
 
@@ -292,7 +293,11 @@ func (p *Proxy) startNotTLSServer() {
 		panic(err)
 	}
 	defer listener.Close()
-	httpServer.Handler = p
-	httpServer.Addr = p.listenerPort
+	httpServer := &http.Server{
+		Addr:         p.listenerPort,
+		ReadTimeout:  20 * time.Second,
+		WriteTimeout: 20 * time.Second,
+		Handler:      p,
+	}
 	err = httpServer.Serve(listener)
 }
