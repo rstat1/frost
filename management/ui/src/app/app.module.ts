@@ -1,32 +1,39 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from "@angular/router";
+import { ReactiveFormsModule } from '@angular/forms';
+import { Routes, RouterModule } from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { AppComponent } from './app.component';
-import { MenuModule } from 'app/menu/menu.module';
-import { APIService } from './services/api/api.service';
-import { MenuService } from "app/services/menu.service";
+import { AppComponent } from 'app/app.component';
+import { MenuService } from 'app/services/menu.service';
 import { AuthComponent } from 'app/components/auth/auth';
-import { ManagerModule } from './manager/manager.module';
-import { ConfigService } from './services/config.service';
+import { APIService } from 'app/services/api/api.service';
+import { ConfigService } from 'app/services/config.service';
+import { MalihuScrollbarModule } from 'ngx-malihu-scrollbar';
 import { AuthService } from 'app/services/auth/auth.service';
-import { FirstRunComponent } from './manager/first-run/first-run';
-import { AuthGuard, RootGuard } from './services/auth/auth.guard';
-import { AuthTokenInjector } from './services/api/AuthTokenInjector';
+import { FirstRunComponent } from 'app/manager/first-run/first-run';
+import { AuthGuard, RootGuard } from 'app/services/auth/auth.guard';
+import { AuthTokenInjector } from 'app/services/api/AuthTokenInjector';
+
+import { MenuModule } from 'app/menu/menu.module';
+import { ManagerModule } from 'app/manager/manager.module';
 
 const routes: Routes = [
 	{path: 'auth', component: AuthComponent, pathMatch: "full"},
-	{path: 'first-run', component: FirstRunComponent, pathMatch: "full"},
-	{path: 'manage',  loadChildren: "app/manager/manager.module#ManagerModule", pathMatch: "full", canLoad: [AuthGuard]},
-	{path: '**', redirectTo: "manage", pathMatch: 'full'}
+	{ path: 'services',  loadChildren: "app/manager/manager.module#ManagerModule", pathMatch: "full",
+		canLoad: [AuthGuard]
+	},
+	{path: '', redirectTo: "/services", pathMatch: "full"}
 ];
 const menuItems = { Items: [
-	{ ItemTitle: "Users", ItemSubtext: "Return to Home page", Icon:"user", ActionName: "users", Category: "Config" },
-	{ ItemTitle: "Updates", ItemSubtext: "Return to Home page", Icon:"update", ActionName: "update", Category: "Config" },
-	{ ItemTitle: "Services", ItemSubtext: "Return to Home page", Icon:"services", ActionName: "services", Category: "Config" },
-] };
+	{ ItemTitle: "Users", ItemSubtext: "Edit user accounts", Icon:"user", Category:"App",
+		ActionName: "users", RequiresRoot: false, MenuType: "app" },
+	{ ItemTitle: "Telemetry", ItemSubtext: "View service telemetry data", Icon:"logs", Category:"App",
+		ActionName: "services", RequiresRoot: false, MenuType: "app" },
+	{ ItemTitle: "Updates", ItemSubtext: "Updates", Icon:"update", Category:"App",
+		ActionName: "services", RequiresRoot: false, MenuType: "app" },
+
+]};
 
 @NgModule({
 	declarations: [
@@ -38,15 +45,13 @@ const menuItems = { Items: [
 		BrowserModule,
 		ManagerModule,
 		HttpClientModule,
-		BrowserAnimationsModule,
+		MalihuScrollbarModule.forRoot(),
 		MenuModule.forRoot(menuItems),
-		RouterModule.forRoot(routes, {enableTracing: false}),
+		RouterModule.forRoot(routes),
 	],
 	providers: [AuthService, APIService, AuthGuard, RootGuard, MenuService, ConfigService,
-				{provide: HTTP_INTERCEPTORS, multi: true, useClass: AuthTokenInjector},
+		{provide: HTTP_INTERCEPTORS, multi: true, useClass: AuthTokenInjector}
 	],
 	bootstrap: [AppComponent]
 })
-export class AppModule {
-	constructor(private config: ConfigService) {}
-}
+export class AppModule { }

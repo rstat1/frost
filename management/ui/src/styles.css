@@ -1,16 +1,16 @@
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 html, body {
-	font-family: 'system';
-    height: 100vh;
-    display: flex;
-    background-color: #515151;
+	font-family: 'Roboto';
+  	height: 100vh;
+  	display: flex;
+  	background-color: #515151;
 	color: #98959a;
-	font-family: Roboto;
 	font-size: 14px;
 	width: 100%;
 }
@@ -19,8 +19,13 @@ app-projects-root {
 	min-width: 646px;
 	/* max-width: 655px; */
 }
-app-root {
+app-editor-root {
 	width: 100%;
+	min-width: 646px;
+}
+app-project-editor {
+	width: 100%;
+	min-width: 646px;
 }
 components-home {
 	width: 100%;
@@ -30,8 +35,24 @@ components-list-item {
 	flex-direction: column;
 	width: 100%;
 }
-components-login, components-register, components-list, app-project-page {
+components-login, components-register, components-list, app-project-page, app-admin-root, app-new-project {
 	width: 100%;
+}
+app-project-page, app-new-project {
+	height: 100%;
+}
+pre {
+	font-size: 13px;
+	width: 100%;
+	white-space: pre-wrap;
+}
+code {
+	font-family: 'Roboto Mono', monospace;
+}
+blockquote {
+  border-left: 3px solid #888;
+  padding-left: 12px;
+  color: #888;
 }
 #root {
 	display: flex;
@@ -67,16 +88,9 @@ components-login, components-register, components-list, app-project-page {
 #register-logo-block-color {
 	background-color: #689F38
 }
-.background {
-	background-repeat: no-repeat;
-	background-size: cover;
-	position: fixed;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-	z-index: 0;
-	filter: opacity(.5);
+#background-color {
+	background-color: #2e2e2e;
+	width:100%;
 }
 .error {
 	font-size: 10pt;
@@ -107,60 +121,160 @@ components-login, components-register, components-list, app-project-page {
 	margin: 68px 0px 0px 20px;
 	color:white
 }
+.login-register-text-box {
+    display: block !important;
+    color: white;
+}
 .path {
-	color:#FFB300;
+	color:#558b2f;
 	text-align:left;
 	font-size:9pt;
 	display:block;
 	font-weight: bolder;
 	text-transform: uppercase;
 }
-mat-cell, .mat-header-cell{
-	overflow: visible;
+.mCSB_inside > .mCSB_container {
+	margin-right: 0px !important;
 }
-.proper-colors {
-	background-color: #2e2e2e !important;
-	color: #FFB300 !important;
-	/* text-transform:  */
+.block-container {
+	display: flex;
+	height: 100%;
+	/* justify-content: center; */
+	/* align-items: center; */
+	flex-direction: row;
+	/* margin-right: 64px; */
 }
-.service-name {
-	display:inline-block;
-	margin-bottom:5px;
-	margin-left:7px;
+.page-content {
+	display: flex;
+	flex-direction: column;
+	height:100vh;
+	overflow: hidden;
+	/* margin-right:7px; */
 }
-.service-icon {
-	position:relative;
+.logo-plus-menu {
+	align-self: flex-start;
+}
+.admin-description-text {
+	line-height: 1.75;
+	margin-right: 24px;
 }
 .project-page-root {
-    padding: 5px 40px 20px 40px
+    padding: 30px 50px 30px 50px;
+	background-color: #2e2e2e;
+	height: 100%;
 }
-.group-header {
-	padding:20px 20px 20px 0px;
-	background-color:#1d1d1d;
-	margin-right:0px;
+.tree-block {
+    background-color: #1d1d1d;
+    width: 300px;
+    z-index: 1;
+    display:block;
+    padding-top:15px;
 }
-.toolbar {
-	height: 50px !important;
-	padding: 0px !important;
-	background-color: #404040 !important;
+.tree-container {
+	height: 100%;
+    align-items: stretch;
+    flex-direction: row;
+    display: inline-flex;
+    bottom: 0px;
 }
-.toolbar-button {
-	text-transform: uppercase;
-}
+.menu-block {
+    background-color: #1d1d1d;
+    width: 300px;
+    z-index: 1;
+    display:block;
+    /* margin-right: 64px; */
 
-.login-register-text-box {
-	display: block !important;
-	color: white;
-	margin-left: 30px;
-	margin-right: 50px;
+    /* max-height: 630px; */
 }
-@media(min-height: 919px) {
-	.proper-width {
-		width: 58vw;
+.menu-block-hidden {
+    display: none;
+}
+.menu-button-active {
+    background-color: #1d1d1d;
+}
+.menu-category {
+    padding-bottom: 7px;
+    margin: 0px 35px 10px 35px;
+    display: block;
+    font-size: 10.5pt;
+    text-transform: uppercase;
+    font-weight: 900;
+    border-bottom: 1px #333333 solid;
+}
+.menu-category-block div:last-of-type {
+    margin-bottom: 25px;
+}
+.menu-item-details {
+    flex: 7;
+    margin: 10px 30px 10px 10px;
+}
+.menu-item-title {
+    display: block;
+    font-size: 12pt;
+}
+.menu-item {
+    display:flex;
+}
+.menu-item:hover {
+    background-color:#272727;
+    cursor: pointer;
+}
+.menu-button-active {
+    background-color: #1d1d1d;
+}
+.menu-container {
+    height: 100%;
+    align-items: stretch;
+    flex-direction: row;
+    display: inline-flex;
+    bottom: 0px;
+    /* flex: 1; */
+}
+.menu-item-description {
+    color: #515151;
+}
+.menu-item-icon {
+    flex: 1;
+    margin-top: 7px;
+    margin-left: 30px;
+    max-width: 32px;
+    max-height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+}
+.identicon.bg1 {
+    background-color: #ffc1ca
+}
+.identicon.bg2 {
+    background-color: #f3d0f7
+}
+.identicon.bg3 {
+    background-color: #c9d0fa
+}
+.identicon.bg4 {
+    background-color: #a5d9fc
+}
+.identicon.bg5 {
+    background-color: #a8faf6
+}
+.identicon.bg6 {
+    background-color: #fbc9c4
+}
+.identicon.bg7 {
+    background-color: #eee
+}
+.save-button {
+	text-transform:uppercase;
+	display:inline-block;
+	margin-top:10px;
+}
+@media (max-height: 650px) {
+	.content-height {
+		max-height:83vh
 	}
 }
-@media(max-height: 677px) {
-	.proper-width {
-		width: 52.26vw;;
+@media (min-height: 940px) {
+	.content-height {
+		max-height:90vh
 	}
 }

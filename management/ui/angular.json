@@ -3,31 +3,40 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "management-ui": {
+    "ui": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
+      "prefix": "app",
+      "schematics": {},
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist",
+            "outputPath": "dist/ui",
             "index": "src/index.html",
             "main": "src/main.ts",
-            "tsConfig": "src/tsconfig.app.json",
             "polyfills": "src/polyfills.ts",
+            "tsConfig": "src/tsconfig.app.json",
             "assets": [
-              "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/assets"
             ],
             "styles": [
               "src/styles.css",
               "src/material-tweaks.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "es5BrowserSupport": true
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
@@ -37,10 +46,11 @@
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
-              "fileReplacements": [
+              "budgets": [
                 {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
                 }
               ]
             }
@@ -49,18 +59,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "management-ui:build"
+            "browserTarget": "ui:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "management-ui:build:production"
+              "browserTarget": "ui:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "management-ui:build"
+            "browserTarget": "ui:build"
           }
         },
         "lint": {
@@ -76,38 +86,7 @@
           }
         }
       }
-    },
-    "management-ui-e2e": {
-      "root": "e2e",
-      "sourceRoot": "e2e",
-      "projectType": "application"
     }
   },
-  "defaultProject": "management-ui",
-  "schematics": {
-    "@schematics/angular:class": {
-      "spec": false
-    },
-    "@schematics/angular:component": {
-      "spec": false,
-      "prefix": "app",
-      "styleext": "css"
-    },
-    "@schematics/angular:directive": {
-      "spec": false,
-      "prefix": "app"
-    },
-    "@schematics/angular:guard": {
-      "spec": false
-    },
-    "@schematics/angular:module": {
-      "spec": false
-    },
-    "@schematics/angular:pipe": {
-      "spec": false
-    },
-    "@schematics/angular:service": {
-      "spec": false
-    }
-  }
+  "defaultProject": "ui"
 }

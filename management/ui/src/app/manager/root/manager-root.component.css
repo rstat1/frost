@@ -1,0 +1,157 @@
+.logo {
+	min-width: 64px;
+	width: 64px;
+	height: 64px;
+	padding-top: 8px;
+	padding-left: 6px;
+	background-color: #1d1d1d;
+}
+.page-header {
+	display: flex;
+	width:100%;
+	min-height: 75px;
+	flex-direction: column;
+}
+.path {
+	color:#558b2f;
+	text-align:left;
+	font-size:9pt;
+	display:block;
+	font-weight: bolder;
+	text-transform: uppercase;
+}
+.page-title {
+	display:block;
+	border-bottom:1px #95989A solid;
+	padding-bottom: 10px;
+	padding-top: 4px;
+	margin: 20px 40px 0px 40px;
+	font-size:18pt;
+}
+.mCSB_inside > .mCSB_container {
+	margin-right: 0px !important;
+}
+/* HOME PAGE STYLES */
+.page-container {
+    display: flex;
+    flex-direction: row;
+    flex-flow: row;
+    height: 100%;
+}
+::-webkit-input-placeholder {
+    color: #5b5b5b;
+    font-style: italic;
+}
+::-moz-placeholder {
+    color: #5b5b5b;
+}
+:-ms-input-placeholder {
+    color: #5b5b5b;
+}
+:-moz-placeholder {
+    color: #5b5b5b;
+}
+input[type=text]:focus {
+    outline: none;
+}
+#background-color {
+	background-color: #2e2e2e;
+	width:100%;
+}
+#button-style {
+	text-transform: uppercase;
+	font-weight:700;
+    width:40px;
+    height: 39px;
+    float: right;
+}
+.register-link {
+	cursor: pointer;
+	text-align:center;
+	margin-left:15px;
+	display: inline-block;
+}
+.register-link a {
+	color:#95989a;
+	font-size:12pt;
+	font-weight:300;
+	text-decoration-line: none
+}
+.login-block {
+    display: flex;
+    flex-direction: column;
+    /* text-align: center; */
+    /* padding: 0px 150px 0px 150px; */
+}
+.home-block-container {
+	/* display: flex; */
+	height: 100%;
+	width: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+.app-name {
+    color: #98959a;
+    margin: 20px auto;
+    font-size:16pt
+}
+.app-description {
+	color: #98959A;
+	font-size: 18pt;
+	margin-top:3pt;
+}
+.app-img {}
+.search-cmd-box-container {
+    width: 100%;
+    /* align-self: flex-start; */
+}
+.search-cmd-box {
+    background-color: #1d1d1d;
+    width: 60%;
+    height: 40px;
+	margin: 40px auto;
+}
+.search-box {
+    flex: 1 1 auto;
+    height: 39px;
+    width: 80%;
+    background-color: #1d1d1d;
+    border: none;
+    font-family: 'Roboto';
+    color: #98959A;
+    justify-self: left;
+    margin: 0px 12px 0px 19px;
+}
+.nav-links {
+    display: grid;
+    margin: 12px auto;
+	font-size: 16pt;
+	color:white;
+	padding-left: 24.5px;
+}
+/* .nav-links img {
+    height: 48px;
+    width: 48px;
+}
+.nav-link {
+    color: #95989A;
+    text-decoration: none;
+}
+.wiki-icon {
+    width: 48px;
+    height: 48px;
+    fill: #558b2f;
+} */
+.grid-row-1 {
+	grid-row: 1;
+}
+.grid-row-2 {
+	grid-row: 2;
+}
+.grid-column-1 {
+	grid-column: 1
+}
+.grid-column-2 {
+	grid-column: 2;
+}

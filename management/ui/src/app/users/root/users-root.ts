@@ -4,7 +4,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { APIService } from 'app/services/api/api.service';
-import { ActionListService, PrimaryActionInfo } from 'app/services/action-list.service';
+import { PrimaryActionInfo } from 'app/services/action-list/action-list-common';
+import { ActionListService } from 'app/services/action-list/action-list.service';
 
 @Component({
 	selector: 'app-users-root',

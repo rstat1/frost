@@ -1,5 +1,6 @@
 import { Subject, Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router, NavigationExtras } from '@angular/router';
 
 import * as jwt_decode from 'jwt-decode';
@@ -7,8 +8,6 @@ import { ConfigService } from 'app/services/config.service';
 import { APIService } from 'app/services/api/api.service';
 import { APIResponse } from 'app/services/api/api-common';
 
-
-import { HttpClient } from '@angular/common/http';
 
 class SavedAuthDetails {
 	public username: string;

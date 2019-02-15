@@ -1,5 +1,5 @@
 .menu-block {
-	width:17.15vw;
+	width:15.65vw;
 	z-index: 1;
 	display:block;
 	/* margin-left: 34px; */
@@ -29,7 +29,6 @@
 }
 .menu-item {
 	display:flex;
-	padding-left: 20px;
 }
 .menu-item:hover {
 	background-color:#272727;
@@ -39,7 +38,6 @@
 	background-color:#272727;
 }
 .add-button {
-	padding-top: 20px;
     padding-bottom: 16px;
 	font-size: 12pt;
 	border-bottom: 1px #545454 solid;
@@ -47,4 +45,9 @@
 }
 .hide-element {
 	display: none;
+}
+.service-name {
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-left: 7px;
 }

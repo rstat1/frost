@@ -3,21 +3,15 @@ import { MatTableDataSource } from '@angular/material';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { environment } from 'environments/environment';
-import { ActionListService, SubItemDetails } from 'app/services/action-list.service';
+import { ActionListService } from 'app/services/action-list/action-list.service';
+import { SubItemDetails, IActionList, SubActionClickEvent, PrimaryActionState, PrimaryActionInfo } from 'app/services/action-list/action-list-common';
 
 @Component({
 	selector: 'app-action-list',
 	templateUrl: './action-list.html',
 	styleUrls: ['./action-list.css']
 })
-export class ActionsListComponent implements OnInit, OnDestroy {
-	private subItemsSub: Subscription;
-	private clearPrimary: Subscription;
-	private actionsListSub: Subscription;
-	private primaryActionSub: Subscription;
-	private useDefaultImageSub: Subscription;
-	private highlightPrimaryAct: Subscription;
-
+export class ActionsListComponent implements OnInit, OnDestroy, IActionList {
 	public showAction: boolean;
 	public useDefaultImage: boolean;
 	public isSelected: boolean = false;
@@ -28,37 +22,35 @@ export class ActionsListComponent implements OnInit, OnDestroy {
 	public displayedColumns = ['Name', "Actions"];
 	public dataSource = new MatTableDataSource<string>();
 
-	constructor(private actionService: ActionListService) {}
+	constructor(private actionService: ActionListService) { this.actionService.SetActionListInstance(this); }
 	ngOnInit(): void {
-		this.useDefaultImageSub = this.actionService.UseDefaultImage.subscribe(img => {
-			console.log(img);
-			this.useDefaultImage = img;
-		});
-		this.actionsListSub = this.actionService.ActionListItems.subscribe(items => {
-			this.dataSource.data = items;
-		});
-		this.primaryActionSub = this.actionService.PrimaryAction.subscribe(action => {
-			this.primaryActionIcon = action.PrimaryActionIcon;
-			this.primaryActionName = action.PrimaryActionName;
-			this.primaryActionDescription = action.PrimaryActionSubText;
-		});
-		this.subItemsSub = this.actionService.ActionListSubItems.subscribe(subItems => {
-			this.subActions = subItems;
-		});
-		this.clearPrimary = this.actionService.ClearPrimarySelection.subscribe(() => {
-			this.isSelected = false;
-		});
-		this.highlightPrimaryAct = this.actionService.HighlightPrimaryAction.subscribe(() => {
-			this.isSelected = true;
-		});
+		console.log("action list onInit");
 	}
 	ngOnDestroy(): void {
-		this.subItemsSub.unsubscribe();
-		this.clearPrimary.unsubscribe();
-		this.actionsListSub.unsubscribe();
-		this.primaryActionSub.unsubscribe();
-		this.useDefaultImageSub.unsubscribe();
-		this.highlightPrimaryAct.unsubscribe();
+	}
+	PrimaryActionClicked(): void {
+		this.isSelected = true;
+		this.actionService.OnPrimaryActionClicked(name);
+	}
+	SetActionListItems(items: string[]): void {
+		this.dataSource.data = items;
+	}
+	SubActionClicked(details: SubActionClickEvent): void {
+		this.actionService.OnSubActionClicked(details.SubActionName, details.ContextInfo);
+	}
+	SetActionListSubItems(items: SubItemDetails[]): void {
+		this.subActions = items;
+	}
+	ChangePrimaryActionState(newState: PrimaryActionState): void {
+		this.isSelected = newState == PrimaryActionState.Active;
+	}
+	SetUseDefaultImage(newState: boolean): void {
+		this.useDefaultImage = newState;
+	}
+	SetPrimaryAction(details: PrimaryActionInfo): void {
+		this.primaryActionIcon = details.PrimaryActionIcon;
+		this.primaryActionName = details.PrimaryActionName;
+		this.primaryActionDescription = details.PrimaryActionSubText;
 	}
 	public primaryActionClicked(name: string) {
 		this.isSelected = true;

@@ -5,8 +5,9 @@ import { MatTableDataSource, MatSnackBar } from '@angular/material';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { AuthRequest, NewUser, ServiceAccess } from 'app/services/api/api-common';
-import { ActionListService, PrimaryActionInfo } from 'app/services/action-list.service';
+import { ActionListService } from 'app/services/action-list/action-list.service';
 import { environment } from 'environments/environment';
+import { PrimaryActionInfo } from 'app/services/action-list/action-list-common';
 
 @Component({
 	selector: 'app-new-user',

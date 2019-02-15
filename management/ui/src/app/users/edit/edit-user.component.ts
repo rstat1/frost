@@ -1,12 +1,13 @@
+import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource, MatCheckboxChange } from '@angular/material';
 
-import { APIService } from 'app/services/api/api.service';
-import { ServiceAccess, Permission, PermissionChange, PasswordChange } from 'app/services/api/api-common';
-import { PageInfoService } from 'app/services/page-info.service';
-import { ActionListService, PrimaryActionInfo } from 'app/services/action-list.service';
-import { ActivatedRoute } from '@angular/router';
 import { environment } from 'environments/environment';
+import { APIService } from 'app/services/api/api.service';
+import { PageInfoService } from 'app/services/page-info.service';
+import { PrimaryActionInfo } from 'app/services/action-list/action-list-common';
+import { ActionListService } from 'app/services/action-list/action-list.service';
+import { ServiceAccess, Permission, PermissionChange, PasswordChange } from 'app/services/api/api-common';
 
 @Component({
 	selector: 'app-edit-user',

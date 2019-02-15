@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, AbstractControl, FormControl, ValidationErrors 
 
 import { Service } from 'app/services/api/api-common';
 import { PageInfoService } from 'app/services/page-info.service';
-import { ActionListService } from 'app/services/action-list.service';
+import { ActionListService } from 'app/services/action-list/action-list.service';
 import { APIService } from 'app/services/api/api.service';
 
 @Component({
