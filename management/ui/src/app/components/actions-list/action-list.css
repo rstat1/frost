@@ -1,14 +1,14 @@
-.menu-block {
-	width:15.65vw;
+.action-list-block {
+	background-color: #2d2d2d;
 	z-index: 1;
 	display:block;
-	/* margin-left: 34px; */
+	padding: 40px;
 	height: 100%;
 }
-.menu-block-with-add {
+.action-list-block-with-add {
 	padding-top:15px;
 }
-.menu-block-without-add {
+.action-list-block-without-add {
 	padding-top:25px;
 }
 .menu-item-details {
@@ -40,7 +40,7 @@
 .add-button {
     padding-bottom: 16px;
 	font-size: 12pt;
-	border-bottom: 1px #545454 solid;
+	/* border-bottom: 1px #545454 solid; */
 	background-color: #1d1d1d;
 }
 .hide-element {

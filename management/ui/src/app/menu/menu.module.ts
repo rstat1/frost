@@ -14,7 +14,7 @@ export class MenuItem {
 	MenuType?: string;
 	ItemTitle: string;
 	ActionName: string;
-	ItemSubtext: string;
+	ItemSubText: string;
 	RequiresRoot?: boolean;
 }
 export class MenuItems {
@@ -22,7 +22,7 @@ export class MenuItems {
 }
 
 @NgModule({
-	imports: [ CommonModule, MalihuScrollbarModule.forRoot(), MatTooltipModule, BrowserAnimationsModule ],
+	imports: [ CommonModule, MalihuScrollbarModule.forRoot(), MatTooltipModule ],
 	exports: [ MenuComponent ],
 	declarations: [ MenuComponent ],
 	providers:[ MenuItem ]

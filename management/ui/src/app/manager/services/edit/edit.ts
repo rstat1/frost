@@ -2,11 +2,13 @@ import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar, MatDialog } from '@angular/material';
 
+import * as c3 from 'c3';
 import { environment } from 'environments/environment';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 import { Service, ServiceEdit, RouteAlias, AliasDeleteRequest } from 'app/services/api/api-common';
+import { MenuService } from 'app/services/menu.service';
 
 @Component({
 	selector: 'app-edit',
@@ -40,8 +42,9 @@ export class EditServiceComponent implements OnInit {
 	public routeList: Map<string, Array<string>>;
 	public apiRouteAliases: string[] = new Array();
 
-	constructor(private header: PageInfoService, private route: ActivatedRoute,
-				private api: APIService, private snackBar: MatSnackBar, private dialog: MatDialog) { }
+	constructor(private header: PageInfoService, private route: ActivatedRoute, private menu: MenuService,
+				private api: APIService, private snackBar: MatSnackBar, private dialog: MatDialog,
+				private pageInfo: PageInfoService) { }
 
 	ngOnInit() {
 		this.serviceToEdit = this.route.snapshot.paramMap.get('name');
@@ -61,6 +64,10 @@ export class EditServiceComponent implements OnInit {
 				this.getAPIAliases();
 			}
 		});
+		this.menu.SetMenuContext("service", "");
+		this.menu.SetMenuCategory("Service");
+		this.pageInfo.SetPageTitle(this.serviceToEdit);
+		this.pageInfo.SetPageLogo(this.serviceToEdit);
 	}
 	public makeRouteList(resp: RouteAlias[]) {
 		this.routeList = new Map();

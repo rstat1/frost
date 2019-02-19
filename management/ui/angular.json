@@ -23,8 +23,9 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.css",
-              "src/material-tweaks.scss"
+              "src/styles.scss",
+              "src/material-tweaks.scss",
+              "node_modules/c3/c3.min.css"
             ],
             "scripts": [],
             "es5BrowserSupport": true

@@ -32,8 +32,9 @@ export class AuthService {
 	private tokenValidate: Subject<boolean>;
 	private savedAuthDetails: SavedAuthDetails;
 
-	constructor(private api: APIService, private router: Router,
-		private config: ConfigService, private http: HttpClient) {
+	constructor(private api: APIService, private router: Router, private config: ConfigService,
+		private http: HttpClient) {
+
 		this.authSuccess = new Subject<boolean>();
 		this.tokenValidate = new Subject<boolean>();
 
@@ -44,6 +45,7 @@ export class AuthService {
 	}
 	public async setSavedToken() {
 		let token: string = ConfigService.GetAccessToken();
+
 		if (token != "") {
 			let resp: APIResponse = await this.api.ValidateToken().toPromise().catch(e => {
 				console.log("clearing auth totken ...");
@@ -52,6 +54,7 @@ export class AuthService {
 				return null;
 			});
 			if (resp != null && resp.status == "success") {
+				console.log("set saved token");
 				let decoded = jwt_decode(token);
 				this.IsLoggedIn = true;
 				this.UserIsRoot = decoded.grp == "root";

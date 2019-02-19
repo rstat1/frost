@@ -1,11 +1,10 @@
 import { Subscription } from 'rxjs';
-import { MatSnackBar } from '@angular/material';
+import { Router } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
 
-import { APIService } from 'app/services/api/api.service';
-import { ActionListService } from 'app/services/action-list/action-list.service';
-import { PrimaryActionInfo, SubActionClickEvent } from 'app/services/action-list/action-list-common';
+import { environment } from 'environments/environment';
+import { MenuService } from 'app/services/menu.service';
+import { PageInfoService } from 'app/services/page-info.service';
 
 @Component({
 	selector: 'app-manager-root',
@@ -13,63 +12,30 @@ import { PrimaryActionInfo, SubActionClickEvent } from 'app/services/action-list
 	styleUrls: ['./manager-root.component.css']
 })
 export class ManagerRootComponent implements OnInit {
-	private actionClicked: Subscription;
-	private subActionClicked: Subscription;
+	public menuType: string = "app";
+	public menuCategory: string = "App";
+	public pageTitle: string = "frostcloud";
+	public pageLogo: string = "watchdog";
 	private getServicesSub: Subscription;
-	private servicesList: string[];
 
-	constructor(private actions: ActionListService, private api: APIService,
-		private router: Router, private route: ActivatedRoute, private snackBar: MatSnackBar) {}
+	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService) {}
 
 	ngOnInit() {
 		console.log("manager root onInit");
-		this.actions.SetImageType(false);
-		this.actions.SetPrimaryAction(new PrimaryActionInfo("New Service", "add",
-			"Add a new managed service"));
-		this.actions.ClearSelectedItem();
-		this.actions.SetSubItems([
-			{IconName: "edit", Description: "Edit"},
-			{IconName: "delete", Description: "Delete"},
-			{IconName: "cached", Description: "Restart"},
-		]);
-		this.api.GetServices(true).subscribe(s => {
-			this.servicesList = JSON.parse(s.response);
-			this.actions.SetActionList(this.servicesList);
+		this.menu.CategoryChanged.subscribe(newCategory => {
+			this.menuCategory = newCategory;
 		});
-		this.subActionClicked = this.actions.SubActionClicked.subscribe(action => {
-			this.SubActionClicked(action);
+		this.pageInfo.PageTitle.subscribe(newTitle => {
+			this.pageTitle = newTitle;
 		});
-		this.actionClicked = this.actions.PrimaryActionClicked.subscribe(onClick => {
-			if (onClick = "New Service") {
-				this.router.navigate(["new"], {
-					relativeTo: this.route,
-				});
-			}
+		this.pageInfo.PageLogo.subscribe(newLogoURL => {
+			this.pageLogo = newLogoURL;
 		});
 	}
-	SubActionClicked(action: SubActionClickEvent): any {
-		switch(action.SubActionName) {
-			case "Delete":
-				if (action.ContextInfo != "watchdog") {
-					this.api.DeleteService(action.ContextInfo).subscribe(resp => {
-						this.servicesList.splice(this.servicesList.indexOf(action.ContextInfo), 1);
-						this.actions.SetActionList(this.servicesList);
-					});
-				}
-				break;
-			case "Edit":
-				this.router.navigate([action.ContextInfo], { relativeTo: this.route });
-				break;
-			case "Restart":
-				this.api.RestartService(action.ContextInfo).subscribe(resp => {
-					if (resp.status == "success") {
-						this.snackBar.open("Restart successful", "", {
-							duration: 3000, panelClass: "proper-colors", horizontalPosition: 'center',
-							verticalPosition: 'top',
-						});
-					}
-				});
-				break;
-		}
+	goHome() {
+		this.router.navigate(["home"]);
+	}
+	public getServiceIconURL(name: string): string {
+		return environment.APIBaseURL + "/frost/icon/"+name;
 	}
 }

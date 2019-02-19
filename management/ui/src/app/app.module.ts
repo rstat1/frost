@@ -17,37 +17,70 @@ import { AuthTokenInjector } from 'app/services/api/AuthTokenInjector';
 
 import { MenuModule } from 'app/menu/menu.module';
 import { ManagerModule } from 'app/manager/manager.module';
+import { HomeComponent } from 'app/components/home/home.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { UsersModule } from './users/users.module';
+
 
 const routes: Routes = [
-	{path: 'auth', component: AuthComponent, pathMatch: "full"},
-	{ path: 'services',  loadChildren: "app/manager/manager.module#ManagerModule", pathMatch: "full",
+	{ path: 'auth', component: AuthComponent, pathMatch: "full" },
+	{
+		path: 'services',
+		loadChildren: "app/manager/manager.module#ManagerModule",
+		pathMatch: "full",
 		canLoad: [AuthGuard]
 	},
-	{path: '', redirectTo: "/services", pathMatch: "full"}
+	{
+		path: 'users',
+		loadChildren: "app/users/users.module#UsersModule",
+		pathMatch: "full",
+		canLoad: [AuthGuard],
+	},
+	{ path: 'home', component: HomeComponent, pathMatch: "full", canLoad: [AuthGuard] },
+	{ path: '', redirectTo: "/home", pathMatch: "full" }
 ];
 const menuItems = { Items: [
-	{ ItemTitle: "Users", ItemSubtext: "Edit user accounts", Icon:"user", Category:"App",
-		ActionName: "users", RequiresRoot: false, MenuType: "app" },
-	{ ItemTitle: "Telemetry", ItemSubtext: "View service telemetry data", Icon:"logs", Category:"App",
+	//App Menu
+	{ ItemTitle: "Users", ItemSubText: "Edit user accounts", Icon:"user", Category:"App",
+		ActionName: "users", RequiresRoot: false, MenuType: "app", Context: "!users" },
+	{ ItemTitle: "VM Config", ItemSubText: "Set default config for hosted VMs", Icon:"cloud", Category:"App",
 		ActionName: "services", RequiresRoot: false, MenuType: "app" },
-	{ ItemTitle: "Updates", ItemSubtext: "Updates", Icon:"update", Category:"App",
-		ActionName: "services", RequiresRoot: false, MenuType: "app" },
+	{ ItemTitle: "Services", ItemSubText: "Edit or view service configuration and logs", Icon: "services", Category:"App",
+		ActionName: "services", RequiresRoot: false, MenuType: "app", Context: "!services"},
 
+	//New buttons
+	{ ItemTitle: "New Service", ItemSubText:"Add a new managed service", Icon: "plus", Category: "App",
+		ActionName: "newservice", RequiresRoot: false, MenuType: "app", Context: "list" },
+	{ ItemTitle: "New User", ItemSubText:"Add a new managed service", Icon: "plus", Category: "App",
+		ActionName: "newuser", RequiresRoot: false, MenuType: "app", Context: "users" },
+
+	//Service menu
+	{ ItemTitle: "Delete service", ItemSubText: "Delete this service", Icon: "delete", Category: "Service",
+		MenuType: "app", ActionName: "deleteservice", RequiresRoot: false, Context: "service" },
+	{ ItemTitle: "Service Logs", ItemSubText: "View service specific log data", Icon: "logs",
+		MenuType: "app", ActionName: "editconfig", RequiresRoot: false, Category: "Service", Context: "service"  },
+	{ ItemTitle: "Host Configuration", ItemSubText: "Edit configuration of the VM hosting this service", Icon: "cloud",
+		MenuType: "app", ActionName: "edithostconfig", RequiresRoot: false, Category: "Service", Context: "service" },
+	{ ItemTitle: "Restart Service", ItemSubText: "Stops and restarts this service", Icon: "restart",
+		MenuType: "app", ActionName: "reboot", RequiresRoot: false, Category: "Service", Context: "service" }
 ]};
 
 @NgModule({
 	declarations: [
 		AppComponent,
 		AuthComponent,
+		HomeComponent,
 		FirstRunComponent,
 	],
 	imports: [
+		UsersModule,
 		BrowserModule,
 		ManagerModule,
 		HttpClientModule,
-		MalihuScrollbarModule.forRoot(),
+		BrowserAnimationsModule,
 		MenuModule.forRoot(menuItems),
-		RouterModule.forRoot(routes),
+		MalihuScrollbarModule.forRoot(),
+		RouterModule.forRoot(routes, {enableTracing: false}),
 	],
 	providers: [AuthService, APIService, AuthGuard, RootGuard, MenuService, ConfigService,
 		{provide: HTTP_INTERCEPTORS, multi: true, useClass: AuthTokenInjector}

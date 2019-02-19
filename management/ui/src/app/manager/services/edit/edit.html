@@ -1,9 +1,33 @@
 <div class="project-page-root proper-width">
-	<mat-accordion>
-		<mat-expansion-panel>
-			<mat-expansion-panel-header>
-				<mat-panel-title><p class="section-header-text">Service Information</p></mat-panel-title>
-			</mat-expansion-panel-header>
+	<!-- <div id="mem-usage-chart"></div> -->
+	<mat-tab-group dynamicHeight="true" animationDuration="0ms" mat-align-tabs="center">
+		<mat-tab label="Service Information">
+			<div class="top-stat-card-container">
+				<mat-card class="stat-card">
+					<mat-card-header>
+						<mat-card-title>Memory Use</mat-card-title>
+					</mat-card-header>
+					<mat-card-content >
+						<app-chart></app-chart>
+					</mat-card-content>
+				</mat-card>
+				<mat-card class="stat-card">
+					<mat-card-header>
+						<mat-card-title>Disk Use</mat-card-title>
+					</mat-card-header>
+					<mat-card-content>
+						<p class="stat">projects</p>
+					</mat-card-content>
+				</mat-card>
+				<!-- <mat-card class="stat-card">
+					<mat-card-header>
+						<mat-card-title>Projects</mat-card-title>
+					</mat-card-header>
+					<mat-card-content>
+						<p class="stat">projects</p>
+					</mat-card-content>
+				</mat-card> -->
+			</div>
 			<mat-accordion class="align-descriptions">
 				<mat-expansion-panel class="detail-block">
 					<mat-expansion-panel-header>
@@ -135,42 +159,58 @@
 					</mat-action-row>
 				</mat-expansion-panel> -->
 			</mat-accordion>
-		</mat-expansion-panel>
+		</mat-tab>
+		<mat-tab label="Update Service">
+			<div style="background-color:#3a3a3a;padding-top:20px;">
+				<div style="padding-bottom:20px;">
+					<span class="upload-control">
+						<input style="display:none;" type="file" #serviceFile required (change)="setFile('service', $event)">
+						<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="serviceFile.click()">
+							<mat-icon>cloud_upload</mat-icon>
+						</button>
+						<mat-form-field class="upload-box upload-box-width">
+							<input matInput placeholder="Service File" name="ServiceName" [value]="s.filename" disabled required>
+						</mat-form-field>
+					</span>
+					<span class="upload-control">
+						<input hidden type="file" #ui required (change)="setFile('ui', $event)">
+						<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="ui.click()">
+							<mat-icon>cloud_upload</mat-icon>
+						</button>
+						<mat-form-field class="upload-box upload-box-width">
+							<input matInput placeholder="ZIP containing UI files" name="ServiceName" [value]="uiFilesName" disabled required>
+						</mat-form-field>
+					</span>
+				</div>
+				<mat-action-row>
+					<mat-chip-list *ngIf="show">
+						<mat-chip style="background-color:white" *ngIf="success">
+							<mat-icon style="color:#2E7D32">check_circle</mat-icon>
+							<span style="color:black;">Success</span>
+						</mat-chip>
+						<mat-chip style="background-color:white" *ngIf="success == false">
+							<mat-icon style="color:#C62828">cancel</mat-icon>
+							<span style="color:black;" matTooltip="{{lastError}}">Failed</span>
+						</mat-chip>
+					</mat-chip-list>
+					<button mat-button color="primary" (click)="upload()">Upload</button>
+				</mat-action-row>
+			</div>
+		</mat-tab>
+		<mat-tab label="Route Aliases"></mat-tab>
+	</mat-tab-group>
+	<!-- <mat-accordion>
+		<mat-expansion-panel>
+			<mat-expansion-panel-header>
+				<mat-panel-title><p class="section-header-text">Service Information</p></mat-panel-title>
+			</mat-expansion-panel-header> -->
+
+		<!-- </mat-expansion-panel>
 		<mat-expansion-panel>
 			<mat-expansion-panel-header>
 				<mat-panel-title><p class="section-header-text">Update Service</p></mat-panel-title>
 			</mat-expansion-panel-header>
-			<span class="upload-control">
-				<input style="display:none;" type="file" #serviceFile required (change)="setFile('service', $event)">
-				<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="serviceFile.click()">
-					<mat-icon>cloud_upload</mat-icon>
-				</button>
-				<mat-form-field class="upload-box upload-box-width">
-					<input matInput placeholder="Service File" name="ServiceName" [value]="s.filename" disabled required>
-				</mat-form-field>
-			</span>
-			<span class="upload-control">
-				<input hidden type="file" #ui required (change)="setFile('ui', $event)">
-				<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="ui.click()">
-					<mat-icon>cloud_upload</mat-icon>
-				</button>
-				<mat-form-field class="upload-box upload-box-width">
-					<input matInput placeholder="ZIP containing UI files" name="ServiceName" [value]="uiFilesName" disabled required>
-				</mat-form-field>
-			</span>
-			<mat-action-row>
-				<mat-chip-list *ngIf="show">
-					<mat-chip style="background-color:white" *ngIf="success">
-						<mat-icon style="color:#2E7D32">check_circle</mat-icon>
-						<span style="color:black;">Success</span>
-					</mat-chip>
-					<mat-chip style="background-color:white" *ngIf="success == false">
-						<mat-icon style="color:#C62828">cancel</mat-icon>
-						<span style="color:black;" matTooltip="{{lastError}}">Failed</span>
-					</mat-chip>
-				</mat-chip-list>
-				<button mat-button color="primary" (click)="upload()">Upload</button>
-			</mat-action-row>
+
 		</mat-expansion-panel>
 		<mat-expansion-panel>
 			<mat-expansion-panel-header>
@@ -196,7 +236,7 @@
 			<mat-action-row>
 				<button mat-button color="primary" (click)="showNewAliasDialog()">New Alias</button>
 			</mat-action-row>
-			<!-- <mat-form-field class="upload-box upload-box-width">
+			<-- <mat-form-field class="upload-box upload-box-width">
 				<input matInput placeholder="URL hostname" name="newRoute" [(ngModel)]="aliasURL" required>
 			</mat-form-field>
 			<mat-form-field class="upload-box upload-box-width">
@@ -204,7 +244,7 @@
 			</mat-form-field>
 			<mat-action-row>
 				<button mat-button color="primary" (click)="newRoute()">Save</button>
-			</mat-action-row> -->
+			</mat-action-row> --
 		</mat-expansion-panel>
-	</mat-accordion>
+	</mat-accordion> -->
 </div>

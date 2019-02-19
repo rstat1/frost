@@ -2,6 +2,15 @@ import { Subject, Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { PrimaryActionInfo, SubItemDetails, SubActionClickEvent, IActionList, PrimaryActionState } from 'app/services/action-list/action-list-common';
 
+class NullActionList implements IActionList {
+	PrimaryActionClicked(name: string): void {}
+	SetActionListItems(items: string[]): void {}
+	SetUseDefaultImage(newState: boolean): void {}
+	SetPrimaryAction(details: PrimaryActionInfo): void {}
+	SubActionClicked(details: SubActionClickEvent): void {}
+	SetActionListSubItems(items: SubItemDetails[]): void {}
+	ChangePrimaryActionState(newState: PrimaryActionState): void {}
+}
 
 @Injectable()
 export class ActionListService {
@@ -14,6 +23,7 @@ export class ActionListService {
 	private list: IActionList;
 
 	constructor() {
+		this.list = new NullActionList();
 		this.primaryActionClicked = new Subject<string>();
 		this.subActionClicked = new Subject<SubActionClickEvent>();
 
@@ -23,7 +33,8 @@ export class ActionListService {
 	public SetActionListInstance(actionList: IActionList) {
 		this.list = actionList;
 	}
-	public ClearSelectedItem() { this.list.ChangePrimaryActionState(PrimaryActionState.Inactive); }
+	public ClearSelectedItem() {
+		this.list.ChangePrimaryActionState(PrimaryActionState.Inactive); }
 	public OnHighlightPrimaryAction() { this.list.ChangePrimaryActionState(PrimaryActionState.Active); }
 	public SetActionList(newActionList: string[]) { this.list.SetActionListItems(newActionList); }
 	public SetSubItems(newSubList: SubItemDetails[]) { this.list.SetActionListSubItems(newSubList); }

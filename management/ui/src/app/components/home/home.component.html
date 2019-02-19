@@ -1,0 +1,16 @@
+<div class="home-container">
+	<div style="max-width:1556px" id="background-color" class="login-block">
+		<div class="search-cmd-box-container">
+			<div class="nav-links">
+				<div (click)="launch(item.ActionName)" *ngFor="let item of this.menu.GetCategoryItems('App', 'app'); let idx = index"
+					 class="grid-row-{{getRowOrColumn(idx, 'row')}} grid-column-{{getRowOrColumn(idx, 'column')}}">
+					<img src="/assets/{{item.Icon}}.png" width="64" height="64" class="home-page-button" />
+					<span class="home-item-details">
+						<span class="home-item-title">{{item.ItemTitle}}</span>
+						<span class="home-item-description">{{item.ItemSubText}}</span>
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

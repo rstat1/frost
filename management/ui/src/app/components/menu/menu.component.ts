@@ -11,6 +11,7 @@ import { AuthService } from 'app/services/auth/auth.service';
 })
 export class MenuComponent implements OnInit {
 	@Input() public navType: string;
+	@Input() public category: string = "App";
 	@Input() public menuType: string = "app";
 
 	public isVisible: boolean = false;
@@ -31,13 +32,10 @@ export class MenuComponent implements OnInit {
 	public showMenu() {
 		this.isVisible = !this.isVisible;
 	}
-	public getCategoryItems(category: string): MenuItem[] {
-		return this.menu.GetCategoryItems(category, this.menuType);
+	public getCategoryItems(c: string): MenuItem[] {
+		return this.menu.GetCategoryItems(c, this.menuType);
 	}
 	public doSomethingWithClick(clickedItemTitle: string) {
-		if (clickedItemTitle == "home") {
-			clickedItemTitle = "projects";
-		}
 		this.isVisible = false;
 		this.menu.SetMenuContext(clickedItemTitle, "");
 		this.menu.HandleMouseEvent(clickedItemTitle);

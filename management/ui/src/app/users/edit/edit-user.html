@@ -1,67 +1,58 @@
 <div class="project-page-root proper-width">
-	<mat-accordion>
-		<mat-expansion-panel>
+	<mat-accordion class="align-descriptions">
+		<mat-expansion-panel class="detail-block">
 			<mat-expansion-panel-header>
-				<mat-panel-title><p class="section-header-text">User Information</p></mat-panel-title>
+				<mat-panel-title>Username:</mat-panel-title>
+				<mat-panel-description>{{currentUsername}}</mat-panel-description>
 			</mat-expansion-panel-header>
-			<mat-accordion class="align-descriptions">
-				<mat-expansion-panel class="detail-block">
-					<mat-expansion-panel-header>
-						<mat-panel-title>Username:</mat-panel-title>
-						<mat-panel-description>{{currentUsername}}</mat-panel-description>
-					</mat-expansion-panel-header>
-				</mat-expansion-panel>
-				<mat-expansion-panel class="detail-block">
-					<mat-expansion-panel-header>
-						<mat-panel-title>Password:</mat-panel-title>
-						<mat-panel-description>*****</mat-panel-description>
-					</mat-expansion-panel-header>
-					<mat-form-field style="width:400px;">
-						<input type="password" matInput placeholder="New" [(ngModel)]="newPassword">
-					</mat-form-field>
-					<mat-action-row>
-						<button mat-button color="primary" (click)="changePW()">Save</button>
-					</mat-action-row>
-				</mat-expansion-panel>
-			</mat-accordion>
 		</mat-expansion-panel>
-		<mat-expansion-panel>
+		<mat-expansion-panel class="detail-block">
 			<mat-expansion-panel-header>
-				<mat-panel-title><p class="section-header-text">Service permissions</p></mat-panel-title>
+				<mat-panel-title>Password:</mat-panel-title>
+				<mat-panel-description>*****</mat-panel-description>
 			</mat-expansion-panel-header>
-			<mat-accordion class="align-descriptions">
-				<mat-table #table [dataSource]="dataSource">
-					<ng-container matColumnDef="name">
-						<mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-						<mat-cell *matCellDef="let element">
-							<span class="service-icon">
-								<img [src]="getServiceIconURL(element)" width="24" height="24" />
-							</span>
-							<div class="service-name">
-								{{element}}
-							</div>
-						</mat-cell>
-					</ng-container>
-					<ng-container matColumnDef="CanAccess">
-						<mat-header-cell *matHeaderCellDef>Can Access</mat-header-cell>
-						<mat-cell *matCellDef="let e">
-							<mat-checkbox id="hasAccess-{{e}}" color="primary" (click)="$event.stopPropagation()"
-								[ngModel]="getValue(e, 'hasAccess')" (change)="checkChanged(e, 'hasAccess', $event)">
-							</mat-checkbox>
-						</mat-cell>
-					</ng-container>
-					<ng-container matColumnDef="HasRoot">
-						<mat-header-cell *matHeaderCellDef>Has Root Access</mat-header-cell>
-						<mat-cell *matCellDef="let e">
-							<mat-checkbox id="hasRoot{{e}}" color="primary" (click)="$event.stopPropagation()"
-								[ngModel]="getValue(e, 'hasRoot')" (change)="checkChanged(e, 'hasRoot', $event)">
-							</mat-checkbox>
-						</mat-cell>
-					</ng-container>
-					<mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-					<mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-				</mat-table>
-			</mat-accordion>
+			<mat-form-field style="width:400px;">
+				<input type="password" matInput placeholder="New" [(ngModel)]="newPassword">
+			</mat-form-field>
+			<mat-action-row>
+				<button mat-button color="primary" (click)="changePW()">Save</button>
+			</mat-action-row>
+		</mat-expansion-panel>
+		<mat-expansion-panel class="detail-block">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Service Permissions</mat-panel-title>
+			</mat-expansion-panel-header>
+			<mat-table #table [dataSource]="dataSource">
+				<ng-container matColumnDef="name">
+					<mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+					<mat-cell *matCellDef="let element">
+						<span class="service-icon">
+							<img [src]="getServiceIconURL(element)" width="24" height="24" />
+						</span>
+						<div class="service-name">
+							{{element}}
+						</div>
+					</mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="CanAccess">
+					<mat-header-cell *matHeaderCellDef>Can Access</mat-header-cell>
+					<mat-cell *matCellDef="let e">
+						<mat-checkbox id="hasAccess-{{e}}" color="primary" (click)="$event.stopPropagation()"
+							[ngModel]="getValue(e, 'hasAccess')" (change)="checkChanged(e, 'hasAccess', $event)">
+						</mat-checkbox>
+					</mat-cell>
+				</ng-container>
+				<ng-container matColumnDef="HasRoot">
+					<mat-header-cell *matHeaderCellDef>Has Root Access</mat-header-cell>
+					<mat-cell *matCellDef="let e">
+						<mat-checkbox id="hasRoot{{e}}" color="primary" (click)="$event.stopPropagation()"
+							[ngModel]="getValue(e, 'hasRoot')" (change)="checkChanged(e, 'hasRoot', $event)">
+						</mat-checkbox>
+					</mat-cell>
+				</ng-container>
+				<mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+				<mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+			</mat-table>
 		</mat-expansion-panel>
 	</mat-accordion>
 </div>

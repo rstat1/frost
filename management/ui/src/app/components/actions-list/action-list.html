@@ -1,13 +1,13 @@
-<div class="add-button" [class.hide-element]="showAction" (click)="primaryActionClicked(primaryActionName)">
-    <div class="menu-item" [class.selected]="isSelected" id="newuser">
+<!-- <div class="add-button" [class.hide-element]="showAction" (click)="primaryActionClicked(primaryActionName)"> -->
+    <!-- <div class="menu-item" [class.selected]="isSelected" id="newuser">
         <mat-icon class="menu-item-icon">{{primaryActionIcon}}</mat-icon>
         <span class="menu-item-details">
             <span class="menu-item-title">{{primaryActionName}}</span>
             <span class="menu-item-description">{{primaryActionDescription}}</span>
         </span>
-    </div>
-</div>
-<div class="menu-block" style="min-width:288px;">
+    </div> -->
+<!-- </div> -->
+<div class="action-list-block" style="min-width:288px;">
     <mat-table style="min-width:288px;" #table [dataSource]="dataSource">
         <ng-container matColumnDef="Name">
             <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>

@@ -72,3 +72,18 @@
 	flex-direction:row;
 	align-items:center;
 }
+
+.stat {
+    text-align: center;
+    font-size: 20pt;
+    color: #558b2f;
+}
+.stat-card {
+	min-width: 17vw;
+    margin: 20px 0px 20px 20px;
+}
+.top-stat-card-container {
+    display:inline-flex;
+    width:100%;
+    justify-content:center;
+}

@@ -1,0 +1,14 @@
+<div class="block-container">
+	<div style="display: inline-flex;height:64px;">
+		<div class="logo">
+			<a (click)="goHome()" matTooltipPosition="below" matTooltip="Home">
+				<img src="/assets/watchdog.png" width="50" height="50"/>
+			</a>
+		</div>
+		<p class="service-title">frostcloud</p>
+		<app-menu navType="quick" menuType="app" category="App"></app-menu>
+	</div>
+	<div style="display: flex;">
+		<router-outlet></router-outlet>
+	</div>
+</div>

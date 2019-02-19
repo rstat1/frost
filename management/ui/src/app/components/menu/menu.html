@@ -1,13 +1,13 @@
-<span *ngIf="this.navType == 'quick'">
-	<div class="logo" (click)="doSomethingWithClick('home')" >
-		<a (click)="doSomethingWithClick('home')" matTooltipPosition="right" matTooltip="Home">
+<span style="display: inline-flex" *ngIf="this.navType == 'quick'">
+	<!-- <div class="logo" (click)="doSomethingWithClick('home')" >
+		<a (click)="doSomethingWithClick('home')" matTooltipPosition="below" matTooltip="Home">
 			<img src="/assets/watchdog.png"/>
 		</a>
-	</div>
+	</div> -->
 	<div class="quick-nav-icons">
-		<div *ngFor="let item of getCategoryItems('App')">
+		<div *ngFor="let item of getCategoryItems(this.category)">
 			<img class="quick-nav-icon" src="/assets/{{item.Icon}}.png" (click)="doSomethingWithClick(item.ActionName)"
-				width="32" height="32" matTooltipPosition="right" matTooltip="{{item.ItemTitle}}"/>
+				width="32" height="32" matTooltipPosition="below" matTooltip="{{item.ItemTitle}}"/>
 		</div>
 	</div>
 </span>
@@ -20,7 +20,7 @@
 				<img src="/assets/{{item.Icon}}.png" width="32" height="32" class="menu-item-icon" />
 				<span class="menu-item-details">
 					<span class="menu-item-title">{{item.ItemTitle}}</span>
-					<span class="menu-item-description">{{item.ItemSubtext}}</span>
+					<span class="menu-item-description">{{item.ItemSubText}}</span>
 				</span>
 			</div>
 		</div>
