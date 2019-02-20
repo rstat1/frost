@@ -19,6 +19,8 @@ import { NewServiceComponent } from 'app/manager/services/new/new-service';
 import { ManagerRootComponent } from 'app/manager/root/manager-root.component';
 import { ActionListService } from 'app/services/action-list/action-list.service';
 import { ServiceListComponent } from 'app/manager/services/list/service-list.component';
+import { DeleteServiceDialogComponent } from './services/edit/delete-service-dialog/delete-service-dialog';
+import { NewAliasDialogComponent } from './services/edit/new-alias-dialog/new-alias';
 
 const managerRoutes: Routes = [
 	{
@@ -40,6 +42,8 @@ const managerRoutes: Routes = [
 		ManagerRootComponent,
 		EditServiceComponent,
 		ServiceListComponent,
+		NewAliasDialogComponent,
+		DeleteServiceDialogComponent
 	],
 	imports: [
 		MenuModule,
@@ -65,6 +69,7 @@ const managerRoutes: Routes = [
 		MatSlideToggleModule,
 		RouterModule.forChild(managerRoutes)
 	],
-	providers: [ ActionListService, FormBuilder, PageInfoService ]
+	providers: [ ActionListService, FormBuilder, PageInfoService ],
+	entryComponents: [ DeleteServiceDialogComponent, NewAliasDialogComponent ]
 })
 export class ManagerModule { }

@@ -37,7 +37,7 @@ export class MenuComponent implements OnInit {
 	}
 	public doSomethingWithClick(clickedItemTitle: string) {
 		this.isVisible = false;
-		this.menu.SetMenuContext(clickedItemTitle, "");
+		//ythis.menu.SetMenuContext(clickedItemTitle, "");
 		this.menu.HandleMouseEvent(clickedItemTitle);
 	}
 }

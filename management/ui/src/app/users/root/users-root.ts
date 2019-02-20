@@ -1,11 +1,8 @@
 import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { MenuService } from 'app/services/menu.service';
-import { APIService } from 'app/services/api/api.service';
-import { PrimaryActionInfo } from 'app/services/action-list/action-list-common';
-import { ActionListService } from 'app/services/action-list/action-list.service';
 
 @Component({
 	selector: 'app-users-root',
@@ -19,7 +16,7 @@ export class UsersRootComponent implements OnInit, OnDestroy {
 	private getUserListSub: Subscription;
 	private subActionClicked: Subscription;
 
-	constructor(private menu: MenuService, private router: Router) {}
+	constructor(private menu: MenuService, private router: Router, private route: ActivatedRoute) {}
 
 	goHome() {
 		this.router.navigate(["home"]);
@@ -28,6 +25,13 @@ export class UsersRootComponent implements OnInit, OnDestroy {
 		this.menu.SetMenuContext("users", "");
 		this.menu.CategoryChanged.subscribe(newCategory => {
 			this.menuCategory = newCategory;
+		});
+		this.menu.MenuItemClicked.subscribe(item => {
+			switch (item) {
+				case "newuser":
+					this.router.navigate(["new"], {relativeTo: this.route});
+					break;
+			}
 		});
 	}
 	ngOnDestroy() {

@@ -24,10 +24,8 @@ export class PageInfoService {
 	public SetPagePath(newPath: string) {
 		this.pagePath.next(newPath);
 	}
-	public SetPageTitle(newTitle: string) {
-		this.pageTitle.next(newTitle);
-	}
-	public SetPageLogo(newLogoName: string) {
+	public SetPageLogoAndTitle(newLogoName: string, newTitle: string) {
 		this.pageLogo.next(newLogoName);
+		this.pageTitle.next(newTitle);
 	}
 }

@@ -1,9 +1,4 @@
 <span style="display: inline-flex" *ngIf="this.navType == 'quick'">
-	<!-- <div class="logo" (click)="doSomethingWithClick('home')" >
-		<a (click)="doSomethingWithClick('home')" matTooltipPosition="below" matTooltip="Home">
-			<img src="/assets/watchdog.png"/>
-		</a>
-	</div> -->
 	<div class="quick-nav-icons">
 		<div *ngFor="let item of getCategoryItems(this.category)">
 			<img class="quick-nav-icon" src="/assets/{{item.Icon}}.png" (click)="doSomethingWithClick(item.ActionName)"

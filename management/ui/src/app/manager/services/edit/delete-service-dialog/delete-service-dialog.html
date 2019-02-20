@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Deleting {{serviceName}}</h2>
+<div mat-dialog-content>
+	<p>You’re about to permanently delete the service <strong>{{serviceName}}</strong>, its data, and all its related resources. Once you confirm and press Delete, it cannot be undone or recovered.</p>
+	<p>To confirm, please enter <code>{{serviceName}}</code></p>
+	<mat-form-field style="width: 252px;margin-top: 10px;" id="login-register-text-box">
+		<input [(ngModel)]="typedServiceName" matInput placeholder="Service Name" name="project" tabindex="0" required>
+	</mat-form-field>
+	<span style="display:block;color:#f44336;" *ngIf="!enteredNameProperly">{{errorMessage}}</span>
+</div>
+<div mat-dialog-actions style="float:right;margin-bottom: 0px;">
+	<button mat-raised-button color="warn" (click)="save()" tabindex="1">Delete</button>
+</div>

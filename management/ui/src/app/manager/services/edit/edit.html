@@ -142,22 +142,6 @@
 						<button mat-button color="primary" (click)="save('icon')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
-				<!-- <mat-expansion-panel class="detail-block">
-					<mat-expansion-panel-header>
-						<mat-panel-title>Update Services</mat-panel-title>
-						<mat-panel-description>
-							<span *ngIf="this.isCurrentServiceUpdatesHosted">Enabled</span>
-							<span *ngIf="!this.isCurrentServiceUpdatesHosted">Disabled</span>
-						</mat-panel-description>
-					</mat-expansion-panel-header>
-					<mat-checkbox [(ngModel)]="this.isCurrentServiceUpdatesHosted">
-						<span *ngIf="!this.isCurrentServiceUpdatesHosted">Enable</span>
-						<span *ngIf="this.isCurrentServiceUpdatesHosted">Disable</span>
-					</mat-checkbox>
-					<mat-action-row>
-						<button mat-button color="primary">Save</button>
-					</mat-action-row>
-				</mat-expansion-panel> -->
 			</mat-accordion>
 		</mat-tab>
 		<mat-tab label="Update Service">
@@ -197,25 +181,7 @@
 				</mat-action-row>
 			</div>
 		</mat-tab>
-		<mat-tab label="Route Aliases"></mat-tab>
-	</mat-tab-group>
-	<!-- <mat-accordion>
-		<mat-expansion-panel>
-			<mat-expansion-panel-header>
-				<mat-panel-title><p class="section-header-text">Service Information</p></mat-panel-title>
-			</mat-expansion-panel-header> -->
-
-		<!-- </mat-expansion-panel>
-		<mat-expansion-panel>
-			<mat-expansion-panel-header>
-				<mat-panel-title><p class="section-header-text">Update Service</p></mat-panel-title>
-			</mat-expansion-panel-header>
-
-		</mat-expansion-panel>
-		<mat-expansion-panel>
-			<mat-expansion-panel-header>
-				<mat-panel-title><p class="section-header-text">Route Aliases</p></mat-panel-title>
-			</mat-expansion-panel-header>
+		<mat-tab label="Route Aliases">
 			<mat-accordion class="align-descriptions">
 				<mat-expansion-panel *ngFor="let r of this.apiRouteAliases" class="detail-block">
 					<mat-expansion-panel-header>
@@ -236,15 +202,6 @@
 			<mat-action-row>
 				<button mat-button color="primary" (click)="showNewAliasDialog()">New Alias</button>
 			</mat-action-row>
-			<-- <mat-form-field class="upload-box upload-box-width">
-				<input matInput placeholder="URL hostname" name="newRoute" [(ngModel)]="aliasURL" required>
-			</mat-form-field>
-			<mat-form-field class="upload-box upload-box-width">
-				<input matInput placeholder="API route" name="routeAlias" [(ngModel)]="aliasedRoute" required>
-			</mat-form-field>
-			<mat-action-row>
-				<button mat-button color="primary" (click)="newRoute()">Save</button>
-			</mat-action-row> --
-		</mat-expansion-panel>
-	</mat-accordion> -->
+		</mat-tab>
+	</mat-tab-group>
 </div>

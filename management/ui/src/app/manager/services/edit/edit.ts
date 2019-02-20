@@ -1,21 +1,22 @@
+import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatSnackBar, MatDialog } from '@angular/material';
 
-import * as c3 from 'c3';
 import { environment } from 'environments/environment';
+import { MenuService } from 'app/services/menu.service';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 import { Service, ServiceEdit, RouteAlias, AliasDeleteRequest } from 'app/services/api/api-common';
-import { MenuService } from 'app/services/menu.service';
+import { DeleteServiceDialogComponent } from 'app/manager/services/edit/delete-service-dialog/delete-service-dialog';
 
 @Component({
 	selector: 'app-edit',
 	templateUrl: './edit.html',
 	styleUrls: ['./edit.css']
 })
-export class EditServiceComponent implements OnInit {
+export class EditServiceComponent implements OnInit, OnDestroy {
 	public aliasURL: string = "";
 	public aliasedRoute: string = "";
 	public currentARURL: string = "";
@@ -42,6 +43,8 @@ export class EditServiceComponent implements OnInit {
 	public routeList: Map<string, Array<string>>;
 	public apiRouteAliases: string[] = new Array();
 
+	private menuItemClickedSub: Subscription;
+
 	constructor(private header: PageInfoService, private route: ActivatedRoute, private menu: MenuService,
 				private api: APIService, private snackBar: MatSnackBar, private dialog: MatDialog,
 				private pageInfo: PageInfoService) { }
@@ -66,8 +69,36 @@ export class EditServiceComponent implements OnInit {
 		});
 		this.menu.SetMenuContext("service", "");
 		this.menu.SetMenuCategory("Service");
-		this.pageInfo.SetPageTitle(this.serviceToEdit);
-		this.pageInfo.SetPageLogo(this.serviceToEdit);
+		this.pageInfo.SetPageLogoAndTitle(this.serviceToEdit, this.serviceToEdit);
+		this.menuItemClickedSub = this.menu.MenuItemClicked.subscribe(item => {
+			switch (item) {
+				case "reboot":
+					if (this.serviceToEdit != "watchdog") {
+						this.api.RestartService(this.serviceToEdit).subscribe(resp => {
+							if (resp.status == "success") {
+								this.showResponse("Restart successful.");
+							}
+						});
+					}
+					break;
+				case "deleteservice":
+					if (this.serviceToEdit != "watchdog") {
+						this.deleteService();
+					} else {
+						this.showResponse("Cannot delete the watchdog service.");
+					}
+					break;
+				case "vmconfig":
+					break;
+				case "logs":
+					break;
+				case "serviceconfig":
+					break;
+			}
+		});
+	}
+	ngOnDestroy() {
+		this.menuItemClickedSub.unsubscribe();
 	}
 	public makeRouteList(resp: RouteAlias[]) {
 		this.routeList = new Map();
@@ -249,6 +280,12 @@ export class EditServiceComponent implements OnInit {
 		this.snackBar.open(message, "", {
 			duration: 3000, panelClass: "proper-colors", horizontalPosition: 'right',
 			verticalPosition: 'top',
+		});
+	}
+	private deleteService() {
+		this.dialog.open(DeleteServiceDialogComponent, {
+			width:'500px',
+			data: {project: this.serviceToEdit},
 		});
 	}
 }

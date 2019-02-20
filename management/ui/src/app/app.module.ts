@@ -43,14 +43,14 @@ const menuItems = { Items: [
 	//App Menu
 	{ ItemTitle: "Users", ItemSubText: "Edit user accounts", Icon:"user", Category:"App",
 		ActionName: "users", RequiresRoot: false, MenuType: "app", Context: "!users" },
-	{ ItemTitle: "VM Config", ItemSubText: "Set default config for hosted VMs", Icon:"cloud", Category:"App",
-		ActionName: "services", RequiresRoot: false, MenuType: "app" },
+	{ ItemTitle: "Default VM Config", ItemSubText: "Set default config for service VMs", Icon:"cloud", Category:"App",
+		ActionName: "vmconfig", RequiresRoot: false, MenuType: "app" },
 	{ ItemTitle: "Services", ItemSubText: "Edit or view service configuration and logs", Icon: "services", Category:"App",
 		ActionName: "services", RequiresRoot: false, MenuType: "app", Context: "!services"},
 
 	//New buttons
 	{ ItemTitle: "New Service", ItemSubText:"Add a new managed service", Icon: "plus", Category: "App",
-		ActionName: "newservice", RequiresRoot: false, MenuType: "app", Context: "list" },
+		ActionName: "newservice", RequiresRoot: false, MenuType: "app", Context: "services" },
 	{ ItemTitle: "New User", ItemSubText:"Add a new managed service", Icon: "plus", Category: "App",
 		ActionName: "newuser", RequiresRoot: false, MenuType: "app", Context: "users" },
 
@@ -58,11 +58,13 @@ const menuItems = { Items: [
 	{ ItemTitle: "Delete service", ItemSubText: "Delete this service", Icon: "delete", Category: "Service",
 		MenuType: "app", ActionName: "deleteservice", RequiresRoot: false, Context: "service" },
 	{ ItemTitle: "Service Logs", ItemSubText: "View service specific log data", Icon: "logs",
-		MenuType: "app", ActionName: "editconfig", RequiresRoot: false, Category: "Service", Context: "service"  },
-	{ ItemTitle: "Host Configuration", ItemSubText: "Edit configuration of the VM hosting this service", Icon: "cloud",
-		MenuType: "app", ActionName: "edithostconfig", RequiresRoot: false, Category: "Service", Context: "service" },
+		MenuType: "app", ActionName: "logs", RequiresRoot: false, Category: "Service", Context: "service"  },
+	{ ItemTitle: "VM Configuration", ItemSubText: "Edit configuration of the VM hosting this service", Icon: "cloud",
+		MenuType: "app", ActionName: "editvmconfig", RequiresRoot: false, Category: "Service", Context: "service" },
 	{ ItemTitle: "Restart Service", ItemSubText: "Stops and restarts this service", Icon: "restart",
-		MenuType: "app", ActionName: "reboot", RequiresRoot: false, Category: "Service", Context: "service" }
+		MenuType: "app", ActionName: "reboot", RequiresRoot: false, Category: "Service", Context: "service" },
+	{ ItemTitle: "Configure Service", ItemSubText: "Allows specifying any service specifc configuration", Icon: "config",
+		MenuType: "app", ActionName: "serviceconfig", RequiresRoot: false, Category: "Service", Context: "service" }
 ]};
 
 @NgModule({

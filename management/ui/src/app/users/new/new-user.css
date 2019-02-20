@@ -2,7 +2,9 @@
   overflow: auto;
   max-height: 500px;
 }
-mat-cell.mat-cell, mat-header-cell.mat-header-cell { overflow: visible; }
+mat-cell.mat-cell, mat-header-cell.mat-header-cell {
+	overflow: visible;
+}
 .save-status {
 	top: 45px;
 	/* left: 1200px; */
@@ -11,4 +13,23 @@ mat-cell.mat-cell, mat-header-cell.mat-header-cell { overflow: visible; }
 	display: inline-block;
 	text-transform: capitalize;
 	color: #FFB300;
+}
+.group-header {
+	padding:20px 20px 20px 0px;
+	background-color:#1d1d1d;
+	margin-right:0px;
+}
+.toolbar {
+	height: 50px !important;
+	padding: 0px !important;
+	background-color: #404040 !important;
+}
+.toolbar-button {
+	text-transform: uppercase;
+}
+.login-register-text-box {
+	display: block !important;
+	color: white;
+	margin-left: 30px;
+	margin-right: 50px;
 }

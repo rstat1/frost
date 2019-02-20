@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
-import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { environment } from 'environments/environment';
 import { MenuService } from 'app/services/menu.service';
@@ -11,14 +11,14 @@ import { PageInfoService } from 'app/services/page-info.service';
 	templateUrl: './manager-root.component.html',
 	styleUrls: ['./manager-root.component.css']
 })
-export class ManagerRootComponent implements OnInit {
+export class ManagerRootComponent implements OnInit, OnDestroy {
 	public menuType: string = "app";
 	public menuCategory: string = "App";
 	public pageTitle: string = "frostcloud";
 	public pageLogo: string = "watchdog";
-	private getServicesSub: Subscription;
+	private menuItemClicked: Subscription;
 
-	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService) {}
+	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService, private route: ActivatedRoute) {}
 
 	ngOnInit() {
 		console.log("manager root onInit");
@@ -31,9 +31,20 @@ export class ManagerRootComponent implements OnInit {
 		this.pageInfo.PageLogo.subscribe(newLogoURL => {
 			this.pageLogo = newLogoURL;
 		});
+		this.menuItemClicked = this.menu.MenuItemClicked.subscribe(item => {
+			switch (item) {
+				case "newservice":
+					this.menu.SetMenuContext("newservice", "");
+					this.router.navigate(["new"], {relativeTo: this.route});
+					break;
+			}
+		});
 	}
 	goHome() {
 		this.router.navigate(["home"]);
+	}
+	ngOnDestroy(): void {
+		this.menuItemClicked.unsubscribe();
 	}
 	public getServiceIconURL(name: string): string {
 		return environment.APIBaseURL + "/frost/icon/"+name;

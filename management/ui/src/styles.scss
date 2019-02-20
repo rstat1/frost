@@ -35,13 +35,10 @@ components-list-item {
 	flex-direction: column;
 	width: 100%;
 }
-components-login, components-register, components-list, app-project-page, app-admin-root, app-new-project {
+components-login, components-register, components-list {
 	width: 100%;
 }
-app-project-page, app-new-project {
-	height: 100%;
-}
-app-edit, app-service-list, app-users-root, app-user-list, app-edit-user {
+app-edit, app-service-list, app-users-root, app-user-list, app-edit-user, app-new-service, app-new-user {
 	height: 100%;
 	width: 100%;
 }
