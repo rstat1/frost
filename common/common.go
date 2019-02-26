@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"strings"
 
 	// "github.com/evalphobia/logrus_sentry"
@@ -260,4 +262,70 @@ func Unzip(src, dest string) error {
 		}
 	}
 	return nil
+}
+
+//LogError ...
+func LogError(extra string, err error) error {
+	if err != nil {
+		pc, _, line, _ := runtime.Caller(1)
+		funcObj := runtime.FuncForPC(pc)
+		runtimeFunc := regexp.MustCompile(`^.*\.(.*)$`)
+		name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
+
+		if extra != "" {
+			Logger.WithFields(logrus.Fields{"func": name, "line": line, "extra": extra}).Errorln(err)
+		} else {
+			Logger.WithFields(logrus.Fields{"func": name, "line": line}).Errorln(err)
+		}
+		return err
+	}
+	return nil
+}
+
+//LogDebug ...
+func LogDebug(extraKey string, extraValue interface{}, entry interface{}) {
+	if extraKey != "" {
+		Logger.WithField(extraKey, extraValue).Debugln(entry)
+	} else {
+		Logger.Debugln(entry)
+	}
+}
+
+//LogInfo ...
+func LogInfo(extraKey string, extraValue interface{}, entry interface{}) {
+	if extraKey != "" {
+		Logger.WithField(extraKey, extraValue).Infoln(entry)
+	} else {
+		Logger.Infoln(entry)
+	}
+}
+
+//LogWarn ...
+func LogWarn(extraKey, extraValue string, entry interface{}) {
+	if extraKey != "" {
+		Logger.WithField(extraKey, extraValue).Warnln(entry)
+	} else {
+		Logger.Warnln(entry)
+	}
+}
+
+//HasServiceCreds ...
+func HasServiceCreds(r *http.Request) APIResponse {
+	var resp APIResponse
+
+	hasSid := hasRequiredParam("sid", r)
+	hasSKey := hasRequiredParam("skey", r)
+	if hasSid.Status == "success" && hasSKey.Status == "success" {
+		resp = hasSid
+	} else {
+		resp = CreateFailureResponse(errors.New("missing required parameter"), "HasServiceCreds", 400)
+	}
+	return resp
+}
+func hasRequiredParam(param string, r *http.Request) APIResponse {
+	value := r.Header.Get(param)
+	if value == "" {
+		return CreateFailureResponse(errors.New("missing required param"), "hasRequiredParam", 500)
+	}
+	return CreateAPIResponse(value, nil, 200)
 }

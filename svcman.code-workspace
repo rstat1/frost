@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "management/ui"
+		}
+	],
+	"settings": {
+		"go.useLanguageServer": false
+	}
+}

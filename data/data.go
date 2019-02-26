@@ -50,6 +50,9 @@ func NewDataStoreInstance(filename string) *DataStore {
 		if _, err := tx.CreateBucketIfNotExists([]byte("ExtraRoutes")); err != nil {
 			panic(err)
 		}
+		if _, err := tx.CreateBucketIfNotExists([]byte("Config")); err != nil {
+			panic(err)
+		}
 		return nil
 	})
 	ds.FrostInit()
@@ -232,7 +235,7 @@ func (data *DataStore) GetExtraRoutesForAPIName(name string) ([]ExtraRoute, erro
 	return extraRoutes, nil
 }
 
-//GetUserPermisionMap ...
+//GetUserPermissionMap ...
 func (data *DataStore) GetUserPermissionMap(username string) (map[string]map[string]bool, error) {
 	var serviceAccess map[string]map[string]bool
 	permMap := data.queryEngine.From("SitePermissionMappings")
@@ -243,10 +246,30 @@ func (data *DataStore) GetUserPermissionMap(username string) (map[string]map[str
 	}
 }
 
+//GetServiceConfigValue ...
+func (data *DataStore) GetServiceConfigValue(key, serviceName string) (value interface{}, e error) {
+	conf := data.queryEngine.From("Config")
+	e = conf.Get(serviceName, key, &value)
+	return value, common.LogError("", e)
+}
+
 //SetFirstRunState ...
 func (data *DataStore) SetFirstRunState() {
 	firstRun := data.queryEngine.From("System")
 	firstRun.Set("System", "firstrun", false)
+}
+
+//SetConfigValue ...
+func (data *DataStore) SetConfigValue(path, service string, value interface{}) error {
+	e := data.DB.Update(func(tx *bbolt.Tx) error {
+		_, err := tx.Bucket([]byte("Config")).CreateBucketIfNotExists([]byte(service))
+		return err
+	})
+	if e != nil {
+		return common.LogError("", e)
+	}
+	conf := data.queryEngine.From("Config")
+	return conf.Set(service, path, value)
 }
 
 //AddNewRoute ...

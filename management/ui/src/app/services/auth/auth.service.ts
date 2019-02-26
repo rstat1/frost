@@ -73,12 +73,12 @@ export class AuthService {
 		if (ConfigService.GetAccessToken() == "") {
 			window.location.replace(ConfigService.GetAuthorizeEndpoint());
 		} else {
-			this.router.navigate(["manage"]);
+			this.router.navigate(["home"]);
 		}
 	}
 	public GetToken(authCode: string) {
 		this.api.GetAuthToken(authCode).subscribe(resp => {
-			this.handleAPIResponse(false, "manage", resp);
+			this.handleAPIResponse(false, "home", resp);
 		});
 	}
 	private handleAPIResponse(isNewUser: boolean, redirectTo: string, resp: APIResponse) {

@@ -28,15 +28,15 @@ const routes: Routes = [
 		path: 'services',
 		loadChildren: "app/manager/manager.module#ManagerModule",
 		pathMatch: "full",
-		canLoad: [AuthGuard]
+		canActivate: [AuthGuard],
 	},
 	{
 		path: 'users',
 		loadChildren: "app/users/users.module#UsersModule",
 		pathMatch: "full",
-		canLoad: [AuthGuard],
+		canActivate: [AuthGuard],
 	},
-	{ path: 'home', component: HomeComponent, pathMatch: "full", canLoad: [AuthGuard] },
+	{ path: 'home', component: HomeComponent, pathMatch: "full", canActivate: [AuthGuard] },
 	{ path: '', redirectTo: "/home", pathMatch: "full" }
 ];
 const menuItems = { Items: [

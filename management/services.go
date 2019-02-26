@@ -35,6 +35,7 @@ func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool) *Ser
 	}
 }
 
+
 //DeleteService ...
 func (s *ServiceManager) DeleteService(name string) common.APIResponse {
 	route, _ := s.data.GetRoute(name)

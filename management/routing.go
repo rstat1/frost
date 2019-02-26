@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"git.m/svcman/auth"
@@ -96,7 +97,7 @@ func (api *APIRouter) NotFound(resp http.ResponseWriter, r *http.Request) {
 
 //SetupRoutes ...
 func (api *APIRouter) SetupRoutes() {
-	api.router.Handle("/ws/log", common.RequestWrapper(common.Nothing, "GET", api.ws))
+	api.router.Handle("/api/frost/ws/log", common.RequestWrapper(common.Nothing, "GET", api.ws))
 	api.router.Handle("/api/frost/wsauth", common.RequestWrapper(api.user.IsRoot, "POST", api.wsauth))
 
 	api.router.Handle("/api/frost/auth/token", common.RequestWrapper(common.Nothing, "GET", api.getToken))
@@ -107,6 +108,9 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
 	api.router.Handle("/api/frost/service/restart/:name", common.RequestWrapper(api.user.IsRoot, "GET", api.restartService))
+
+	api.router.Handle("/api/frost/config/*", common.RequestWrapper(common.HasServiceCreds, "GET", api.getconfig))
+	api.router.Handle("/api/frost/config/set", common.RequestWrapper(api.user.IsRoot, "POST", api.setconfig))
 
 	api.router.Handle("/api/frost/aliases/new", common.RequestWrapper(common.Nothing, "POST", api.newExtraRoute))
 	api.router.Handle("/api/frost/aliases/all", common.RequestWrapper(common.Nothing, "GET", api.getExtraRoutes))
@@ -121,8 +125,8 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/icon/:service", common.RequestWrapper(common.Nothing, "GET", api.geticon))
 	api.router.Handle("/api/frost/icon/new/:service", common.RequestWrapper(api.user.IsRoot, "POST", api.newicon))
 
-	api.router.Handle("/api/frost/status", common.RequestWrapper(common.Nothing, "GET", api.firstRunStatus))
 	api.router.Handle("/api/frost/init", common.RequestWrapper(common.Nothing, "GET", api.initFrost))
+	api.router.Handle("/api/frost/status", common.RequestWrapper(common.Nothing, "GET", api.firstRunStatus))
 	api.router.Handle("/api/frost/serviceid", common.RequestWrapper(common.Nothing, "GET", api.getServiceID))
 
 }
@@ -418,10 +422,17 @@ func (api *APIRouter) geticon(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) icons(resp http.ResponseWriter, r *http.Request) {
 	var icons []string
-	files, _ := ioutil.ReadDir("watchdog/sudoserviceicons/")
+	files, _ := ioutil.ReadDir("watchdog/serviceicons/")
 	for _, file := range files {
 		icons = append(icons, file.Name())
 	}
 	f, _ := json.Marshal(icons)
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(f), nil, 200))
+}
+func (api *APIRouter) getconfig(resp http.ResponseWriter, r *http.Request) {
+	configPath := strings.Replace(r.URL.Path, "/api/frost/config/get/", "", 1)
+	common.LogDebug("path", configPath, "get config")
+}
+func (api *APIRouter) setconfig(resp http.ResponseWriter, r *http.Request) {
+
 }
