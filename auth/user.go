@@ -107,10 +107,7 @@ func (u *User) ValidateLoginRequest(request data.AuthRequest) common.APIResponse
 
 //ValidateToken Checks that provided token was sent by this service, hasn't expired and was signed by the current instance. Also can check if a user is root or not.
 func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bool, string) {
-	var isValid bool
-	var reason string = ""
 	var user data.User
-
 	if token, err := jwt.ParseSigned(token); err == nil {
 		var defaultClaims jwt.Claims
 		customClaims := struct {
@@ -120,28 +117,37 @@ func (u *User) ValidateToken(token string, sudo bool, requireUserToken bool) (bo
 		}{}
 		token.Claims(u.hmacKey, &defaultClaims, &customClaims)
 
-		if customClaims.ForApp == "" && customClaims.UserID == "" && defaultClaims.Issuer == "" {
+		if customClaims.ForApp == "" && customClaims.UserID == "" && customClaims.Group == "" && defaultClaims.Issuer == "" {
 			return false, "token invalid"
 		}
 
 		user = u.datastore.GetUserByID(customClaims.UserID)
-		isValid = user.Id != ""
-		reason = "User ID doesn't belong to a valid user."
+		if user.Id == "" {
+			return false, "User ID doesn't belong to a valid user."
+		}
 
-		isValid = defaultClaims.Issuer == issuerName
-		reason = "Invalid Issuer."
+		if defaultClaims.Issuer != issuerName {
+			return false, "Invalid Issuer."
+		}
 
-		isValid = defaultClaims.Expiry.Time().Unix() > time.Now().Unix()
-		reason = "Token expired."
+		if defaultClaims.Expiry.Time().Unix() < time.Now().Unix() {
+			return false, "Token expired."
+		}
 
-		isValid = u.datastore.DoesUserHavePermission(user.Username, customClaims.ForApp, "hasAccess") == true
-		reason = "User doesn't have access to specified service"
-
+		if sudo {
+			if customClaims.Group != "root" {
+				return false, "user is not root"
+			}
+		}
+		if requireUserToken {
+			if customClaims.Group == "client" {
+				return false, "not a human"
+			}
+		}
 	} else {
-		isValid = false
-		reason = "Invalid Token"
+		return false, "Invalid Token"
 	}
-	return isValid, reason
+	return true, ""
 }
 
 //GetUserHeader Gets the Authorization header from the give request
