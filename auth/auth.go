@@ -95,7 +95,6 @@ func (auth *AuthService) initAPIRoutes() {
 	auth.route.Handle("/api/trinity/user", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.userinfo))
 	auth.route.Handle("/api/trinity/user/new", common.RequestWrapper(auth.user.AuthTokenProvided, "POST", auth.newuser))
 	auth.route.Handle("/api/trinity/user/list", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.getusers))
-
 	auth.route.Handle("/api/trinity/user/edit", common.RequestWrapper(auth.user.IsRoot, "POST", auth.edituser))
 	auth.route.Handle("/api/trinity/user/delete", common.RequestWrapper(auth.user.IsRoot, "DELETE", auth.deleteuser))
 
