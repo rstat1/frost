@@ -19,8 +19,7 @@ import (
 const (
 	requestIDTTL = 120
 
-	prodLoginURL = "https://trinity.m.rdro.us"
-	devLoginURL  = "http://trinity.dev-m.rdro.us" //"http://192.168.1.12:4200"
+	//"http://192.168.1.12:4200"
 )
 
 //AuthService ...
@@ -57,9 +56,9 @@ func NewAuthService(db *data.DataStore, user *User, devmode bool) *AuthService {
 //InitAuthService ...
 func (auth *AuthService) InitAuthService() {
 	if auth.inDevMode {
-		auth.loginURL = devLoginURL
+		auth.loginURL = "http://trinity" + common.BaseURL
 	} else {
-		auth.loginURL = prodLoginURL
+		auth.loginURL = "https://trinity" + common.BaseURL
 	}
 	auth.route = vestigo.NewRouter()
 	auth.route.SetGlobalCors(&vestigo.CorsAccessControl{
@@ -76,9 +75,9 @@ func (auth *AuthService) InitAuthService() {
 }
 func (auth *AuthService) initAPIRoutes() {
 	if auth.inDevMode {
-		auth.loginURL = devLoginURL
+		auth.loginURL = "http://trinity" + common.BaseURL
 	} else {
-		auth.loginURL = prodLoginURL
+		auth.loginURL = "https://trinity" + common.BaseURL
 	}
 	auth.route.Handle("/api/trinity/", common.RequestWrapper(auth.user.AuthTokenProvided, "GET", auth.echo))
 
@@ -240,7 +239,7 @@ func (auth *AuthService) validate(resp http.ResponseWriter, r *http.Request) {
 		if response := auth.user.ValidateLoginRequest(authRequest); response.Status == "success" {
 			if auth.db.DoesUserHavePermission(authRequest.Username, service.AppName, "hasAccess") {
 				authCode := common.RandomID(48)
-				redirect := service.RedirectURL + "?type=authcode&code=" + authCode
+				redirect := auth.fixURL(service.RedirectURL) + "?type=authcode&code=" + authCode
 				auth.cache.PutStringWithExpiration("auth-"+service.ServiceID, authCode, authRequest.Username, requestIDTTL*5)
 				common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(redirect, nil, 500))
 			} else {
@@ -373,4 +372,17 @@ func (auth *AuthService) wsticket(resp http.ResponseWriter, r *http.Request) {
 	user := auth.user.GetUserFromToken(r)
 	auth.cache.PutString(ticket, "userid", user.Id)
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(ticket, nil, 400))
+}
+func (auth *AuthService) fixURL(URL string) string {
+	var newURL string = URL
+	if strings.Contains(URL, ".m.rdro.us") {
+		newURL = strings.Replace(URL, ".m.rdro.us", common.BaseURL, 1)
+	}
+	if strings.Contains(URL, ".dev.rdro.us") {
+		newURL = strings.Replace(URL, ".dev.rdro.us", common.BaseURL, 1)
+	}
+	if strings.Contains(URL, ".dev-m.rdro.us") {
+		newURL = strings.Replace(URL, ".dev-m.rdro.us", common.BaseURL, 1)
+	}
+	return newURL
 }

@@ -2,10 +2,10 @@ package common
 
 import (
 	"archive/zip"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,9 +14,7 @@ import (
 
 	// "github.com/evalphobia/logrus_sentry"
 	"github.com/getsentry/raven-go"
-	"github.com/kavu/go_reuseport"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/acme/autocert"
 
 	"crypto/rand"
 	"net/http"
@@ -30,10 +28,17 @@ type APIResponse struct {
 	HttpStatusCode int    `json:"-"`
 }
 
+//LocalAppConfig ...
+type LocalAppConfig struct {
+	BaseURL string `json:"baseURL"`
+}
+
 var (
-	SentryClient *raven.Client
-	Logger       *logrus.Logger
-	httpServer   = &http.Server{
+	BaseURL       string
+	currentConfig LocalAppConfig
+
+	Logger     *logrus.Logger
+	httpServer = &http.Server{
 		ReadTimeout:  20 * time.Second,
 		WriteTimeout: 20 * time.Second,
 	}
@@ -127,69 +132,63 @@ func Nothing(r *http.Request) APIResponse {
 	return CreateAPIResponse("success", nil, 200)
 }
 
-//SetupHTTPSListener ...
-func SetupHTTPSListener(handler http.Handler, port int) {
-	m := autocert.Manager{
-		Prompt:      autocert.AcceptTOS,
-		Cache:       autocert.DirCache("certs"),
-		RenewBefore: 5 * time.Hour,
-		HostPolicy: autocert.HostWhitelist(
-			"localhost",
-			"gemini-svc.m.rdro.us",
-			"gemini.rdro.us",
-		),
-		Email: "rstat1@gmail.com",
-	}
-	httpServer.TLSConfig = &tls.Config{
-		GetCertificate: m.GetCertificate,
-	}
+// //SetupHTTPSListener ...
+// func SetupHTTPSListener(handler http.Handler, port int) {
+// 	m := autocert.Manager{
+// 		Prompt:      autocert.AcceptTOS,
+// 		Cache:       autocert.DirCache("certs"),
+// 		RenewBefore: 5 * time.Hour,
+// 		HostPolicy: autocert.HostWhitelist(
+// 			"localhost",
+// 			"gemini-svc.m.rdro.us",
+// 			"gemini.rdro.us",
+// 		),
+// 		Email: "rstat1@gmail.com",
+// 	}
+// 	httpServer.TLSConfig = &tls.Config{
+// 		GetCertificate: m.GetCertificate,
+// 	}
 
-	listener, err := reuseport.Listen("tcp", ":443")
-	if err != nil {
-		panic(err)
-	}
-	defer listener.Close()
+// 	listener, err := reuseport.Listen("tcp", ":443")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer listener.Close()
 
-	httpServer.Handler = handler
-	httpServer.Addr = ":443"
-	err = httpServer.ServeTLS(listener, "", "")
+// 	httpServer.Handler = handler
+// 	httpServer.Addr = ":443"
+// 	err = httpServer.ServeTLS(listener, "", "")
 
-	if err != nil {
-		Logger.WithField("func", "main").Errorln(err)
-	}
-}
+// 	if err != nil {
+// 		Logger.WithField("func", "main").Errorln(err)
+// 	}
+// }
 
 //InitLogrus ...
 func InitLogrus() {
 	Logger = logrus.New()
 	Logger.Out = os.Stdout
 	Logger.SetLevel(logrus.DebugLevel)
-
-	// client, err := raven.New("https://15fc5a91799b4492b243f13ff6eb1ea6:84b02369b6634846a82151083a3cc38a@sentry.io/220596") //"http://57ad78f1ed984ff2bcb5a6d40760431d:33389d1773c049c1abc69dd246b6ae2a@sentry.m/8")
-
-	// if err != nil {
-	// 	Logger.Error(err)
-	// } else {
-	// 	SentryClient = client
-	// }
-
-	// hook, err := logrus_sentry.NewWithClientSentryHook(client, []logrus.Level{
-	// 	logrus.PanicLevel,
-	// 	logrus.FatalLevel,
-	// 	logrus.ErrorLevel,
-	// })
-
-	// if err == nil {
-	// 	Logger.Hooks.Add(hook)
-	// }
 }
 
 //CommonProcessInit ...
-func CommonProcessInit() {
+func CommonProcessInit(dev, loadConfig bool) {
 	InitLogrus()
 	if os.Getenv("PWD") == "" {
 		Logger.Warnln("pwd not set")
 		os.Chdir("/webservices")
+	}
+	if loadConfig {
+		if file, err := ioutil.ReadFile("config.json"); err == nil {
+			err = json.Unmarshal([]byte(file), &currentConfig)
+			if err != nil {
+				panic(err)
+			}
+			BaseURL = "." + currentConfig.BaseURL
+		} else {
+			// common.Logger.Errorln()
+			panic(errors.New("Please create a config.json file"))
+		}
 	}
 }
 

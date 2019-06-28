@@ -14,10 +14,10 @@ import (
 )
 
 func main() {
-	common.CommonProcessInit()
-
 	devMode := flag.Bool("devmode", false, "switches ports/URLs to dev mode, and also disables TLS support")
 	flag.Parse()
+
+	common.CommonProcessInit(*devMode, true)
 
 	common.Logger.Debugln("starting svcman...")
 	common.Logger.Debugln(os.Getuid())

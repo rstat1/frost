@@ -46,16 +46,6 @@ const (
 	watchdogAPIName    = "frost"
 	authServiceAPIName = "trinity"
 
-	prodBaseURL          = ".m.rdro.us"
-	prodBaseAPIURL       = "api" + prodBaseURL
-	watchdogURL          = "watchdog" + prodBaseURL
-	baseAPIURLWithScheme = "https://" + prodBaseURL
-
-	devBaseURL              = ".dev-m.rdro.us"
-	devAPIBaseURL           = "api" + devBaseURL
-	devWatchdogURL          = "watchdog" + devBaseURL
-	devAPIBaseURLWithScheme = "http://" + devAPIBaseURL
-
 	devPort        = ":80"
 	productionPort = ":443"
 )
@@ -63,7 +53,7 @@ const (
 //NewProxy ...
 func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 	var fwd *forward.Forwarder
-	fwd, _ = forward.New() //forward.Logger(common.Logger))
+	fwd, _ = forward.New()
 	return &Proxy{
 		fwd:              fwd,
 		data:             dataStoreRef,
@@ -81,24 +71,19 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 	common.Logger.WithField("localmode", *localMode).Infoln("starting proxy listener.")
 
 	p.isInLocalMode = *localMode
+	p.baseURL = common.BaseURL
+	p.apiBaseURL = "api" + p.baseURL
+	p.baseAuthURL = "trinity" + p.baseURL
+	p.baseWDURL = "watchdog" + p.baseURL
 	if p.isInLocalMode == false {
-		p.baseURL = prodBaseURL
-		p.apiBaseURL = prodBaseAPIURL
 		p.listenerPort = productionPort
-		p.apiBaseURLWithScheme = baseAPIURLWithScheme
-		p.baseAuthURL = "trinity" + prodBaseURL
-		p.baseWDURL = watchdogURL
+		p.apiBaseURLWithScheme = "https://" + "." + p.baseURL
 		common.Logger.Infoln("running in production mode...")
-
 		p.setRoutes()
 		p.startTLSServer()
 	} else {
-		p.baseURL = devBaseURL
-		p.apiBaseURL = devAPIBaseURL
 		p.listenerPort = devPort
-		p.apiBaseURLWithScheme = devAPIBaseURLWithScheme
-		p.baseAuthURL = "trinity" + devBaseURL
-		p.baseWDURL = devWatchdogURL
+		p.apiBaseURLWithScheme = "http://" + "." + p.baseURL
 		common.Logger.Infoln("running in dev mode...")
 
 		p.setRoutes()
@@ -192,7 +177,11 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 	}
 }
 func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo string, path string, origin string) {
+	var userInfo *url.Userinfo
 	scheme := req.URL.Scheme
+	if req.URL.User != nil {
+		userInfo = req.URL.User
+	}
 	if forward.IsWebsocketRequest(req) == false {
 		scheme = "http"
 	} else {
@@ -202,6 +191,7 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo s
 		Host:     proxyTo,
 		Path:     path,
 		Scheme:   scheme,
+		User:     userInfo,
 		RawQuery: req.URL.Query().Encode(),
 	}
 	req.RequestURI = req.URL.String()
@@ -231,9 +221,11 @@ func (p *Proxy) setRoutes() {
 		for _, v := range routes {
 			p.apiRoutes[v.APIName] = v.ServiceAddress
 			p.knownRoutes[v.AppName+p.baseURL] = true
+			println(v.AppName + p.baseURL)
 			p.data.Cache.PutString("watchdog", v.APIName, v.AppName+p.baseURL)
 		}
 	}
+
 	if routes, e2 := p.data.GetAllExtraRoutes(); e2 == nil {
 		for _, r := range routes {
 			if strings.Contains(r.APIRoute, "*") {
@@ -252,21 +244,9 @@ func (p *Proxy) invalidRoute(w http.ResponseWriter, requestedURL string) {
 	common.WriteFailureResponse(errors.New("unknown route "+requestedURL), w, "ServeHTTP", 404)
 }
 func (p *Proxy) startTLSServer() {
-	m := autocert.Manager{
-		Prompt:      autocert.AcceptTOS,
-		Cache:       autocert.DirCache("certcache"),
-		RenewBefore: 5 * time.Hour,
-		HostPolicy:  p.urlWhiteList(),
-		Email:       "rstat1@gmail.com",
+	tlsConf := &tls.Config{
+		MinVersion: tls.VersionTLS11,
 	}
-
-	// s := &http.Server{
-	// 	Handler: m.HTTPHandler(nil),
-	// 	Addr:    ":80",
-	// }
-	// go s.ListenAndServe()
-	tlsConf := m.TLSConfig()
-	tlsConf.MinVersion = tls.VersionTLS10
 	httpServer := &http.Server{
 		Addr:         p.listenerPort,
 		ReadTimeout:  20 * time.Second,
@@ -281,7 +261,7 @@ func (p *Proxy) startTLSServer() {
 	}
 	defer listener.Close()
 
-	err = httpServer.ServeTLS(listener, "", "")
+	err = httpServer.ServeTLS(listener, "cert.pem", "cert.key")
 
 	if err != nil {
 		common.Logger.WithField("func", "main").Errorln(err)

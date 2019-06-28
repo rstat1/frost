@@ -17,12 +17,6 @@ import (
 	"github.com/husobee/vestigo"
 )
 
-const (
-	prodBaseURL = ".m.rdro.us"
-
-	devBaseURL = ".dev-m.rdro.us"
-)
-
 //InstanceInfo ...
 type InstanceInfo struct {
 	ServiceID, ServiceKey, Password string
@@ -66,20 +60,20 @@ func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *Service
 func (api *APIRouter) StartManagementAPIListener() {
 	api.serviceID, api.serviceKey = api.data.GetInstanceDetails()
 	if api.dev {
-		api.watchdog = "http://watchdog" + devBaseURL //"http://192.168.1.12:4200"
-		api.baseAPIURL = "http://api" + devBaseURL
-		api.authServiceURL = "http://trinity" + devBaseURL
+		api.watchdog = "http://watchdog" + common.BaseURL //"http://192.168.1.12:4200"
+		api.baseAPIURL = "http://api" + common.BaseURL
+		api.authServiceURL = "http://trinity" + common.BaseURL
 	} else {
-		api.watchdog = "https://watchdog" + prodBaseURL
-		api.baseAPIURL = "https://api" + prodBaseURL
-		api.authServiceURL = "https://trinity" + prodBaseURL
+		api.watchdog = "https://watchdog" + common.BaseURL
+		api.baseAPIURL = "https://api" + common.BaseURL
+		api.authServiceURL = "https://trinity" + common.BaseURL
 	}
 	api.router = vestigo.NewRouter()
 	api.router.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
 		AllowHeaders: []string{"Authorization", "Cache-Control", "X-Requested-With", "Content-Type"},
-		AllowOrigin: []string{"https://watchdog.m.rdro.us", "http://trinity.dev-m.rdro.us", "https://trinity.m.rdro.us",
-			"http://192.168.1.12:4200", "http://watchdog.dev-m.rdro.us"},
+		AllowOrigin: []string{"https://watchdog.rdro.us", "http://watchdog.test.rdro.us", "http://trinity.test.rdro.us",
+			"https://trinity.rdro.us", "http://192.168.1.12:4200"},
 	})
 	vestigo.CustomNotFoundHandlerFunc(api.NotFound)
 	api.SetupRoutes()
