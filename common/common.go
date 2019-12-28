@@ -328,3 +328,14 @@ func hasRequiredParam(param string, r *http.Request) APIResponse {
 	}
 	return CreateAPIResponse(value, nil, 200)
 }
+
+//TimeTrack ...
+//https://stackoverflow.com/questions/45766572
+func TimeTrack(start time.Time) {
+	elapsed := time.Since(start)
+	pc, _, _, _ := runtime.Caller(1)
+	funcObj := runtime.FuncForPC(pc)
+	runtimeFunc := regexp.MustCompile(`^.*\.(.*)$`)
+	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
+	Logger.WithFields(logrus.Fields{"elaspsed": elapsed, "func": name}).Debugln("done")
+}

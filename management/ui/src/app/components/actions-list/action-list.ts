@@ -5,6 +5,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { environment } from 'environments/environment';
 import { ActionListService } from 'app/services/action-list/action-list.service';
 import { SubItemDetails, IActionList, SubActionClickEvent, PrimaryActionState, PrimaryActionInfo } from 'app/services/action-list/action-list-common';
+import { ConfigService } from 'app/services/config.service';
 
 @Component({
 	selector: 'app-action-list',
@@ -60,6 +61,6 @@ export class ActionsListComponent implements OnInit, OnDestroy, IActionList {
 		this.actionService.OnSubActionClicked(name, ctx);
 	}
 	public getServiceIconURL(name: string): string {
-		return environment.APIBaseURL + "/frost/icon/"+name;
+		return ConfigService.GetAPIURLFor("icon/" + name);
 	}
 }

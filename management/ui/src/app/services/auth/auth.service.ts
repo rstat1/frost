@@ -99,7 +99,7 @@ export class AuthService {
 		else {
 			this.UserIsRoot = decoded.grp == "root";
 			this.CurrentUser = decoded.sub;
-			sessionStorage.setItem("auth", JSON.stringify({username: this.CurrentUser, token: resp.response}));
+			sessionStorage.setItem("auth", JSON.stringify({ username: this.CurrentUser, token: resp.response }));
 			this.authSuccess.next(true);
 			this.tokenValidate.next(true);
 			this.NoToken = false;

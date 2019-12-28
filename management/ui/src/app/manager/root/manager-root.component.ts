@@ -5,6 +5,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { environment } from 'environments/environment';
 import { MenuService } from 'app/services/menu.service';
 import { PageInfoService } from 'app/services/page-info.service';
+import { ConfigService } from 'app/services/config.service';
 
 @Component({
 	selector: 'app-manager-root',
@@ -18,7 +19,7 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 	public pageLogo: string = "watchdog";
 	private menuItemClicked: Subscription;
 
-	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService, private route: ActivatedRoute) {}
+	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService, private route: ActivatedRoute) { }
 
 	ngOnInit() {
 		console.log("manager root onInit");
@@ -35,7 +36,7 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 			switch (item) {
 				case "newservice":
 					this.menu.SetMenuContext("newservice", "");
-					this.router.navigate(["new"], {relativeTo: this.route});
+					this.router.navigate(["new"], { relativeTo: this.route });
 					break;
 			}
 		});
@@ -47,6 +48,6 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 		this.menuItemClicked.unsubscribe();
 	}
 	public getServiceIconURL(name: string): string {
-		return environment.APIBaseURL + "/frost/icon/"+name;
+		return ConfigService.GetAPIURLFor("icon/" + name);
 	}
 }

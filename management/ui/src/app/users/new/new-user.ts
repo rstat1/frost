@@ -6,8 +6,8 @@ import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { AuthRequest, NewUser, ServiceAccess } from 'app/services/api/api-common';
 import { ActionListService } from 'app/services/action-list/action-list.service';
-import { environment } from 'environments/environment';
 import { PrimaryActionInfo } from 'app/services/action-list/action-list-common';
+import { ConfigService } from 'app/services/config.service';
 
 @Component({
 	selector: 'app-new-user',
@@ -60,15 +60,15 @@ export class NewUserComponent implements OnInit, OnDestroy {
 		);
 	}
 	public getServiceIconURL(name: string): string {
-		return environment.APIBaseURL + "/frost/icon/"+name;
+		return ConfigService.GetAPIURLFor("icon/" + name);
 	}
 	private checkChanged(row: any, type: string, checkEvent: any) {
 		const service = this.permissions.find(s => s.service == row);
 		if (service == undefined) {
-			this.permissions.push({service: row, permissions: [{name: type, value: true}]});
+			this.permissions.push({ service: row, permissions: [{ name: type, value: true }] });
 		} else {
 			const permission = service.permissions.find(p => p.name == type);
-			if (permission == undefined) { service.permissions.push({name: type, value: true}); }
+			if (permission == undefined) { service.permissions.push({ name: type, value: true }); }
 			else { permission.value = !permission.value; }
 		}
 	}

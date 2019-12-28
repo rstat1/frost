@@ -7,7 +7,7 @@ import { APIResponse, NewUser, ServiceEdit, RouteAlias, AliasDeleteRequest, Perm
 
 @Injectable()
 export class APIService {
-	constructor(private http: HttpClient) {}
+	constructor(private http: HttpClient) { }
 	public GetServices(minimal: boolean): Observable<APIResponse> {
 		if (minimal) { return this.GetRequest("services?type=minimal"); }
 		else { return this.GetRequest("services"); }
@@ -28,13 +28,13 @@ export class APIService {
 		return this.TrinityGetRequest("user/list");
 	}
 	public GetUserInfo(username: string): Observable<APIResponse> {
-		return this.TrinityGetRequest("user?name=" +username);
+		return this.TrinityGetRequest("user?name=" + username);
 	}
 	public GetPermissionMap(username: string): Observable<APIResponse> {
 		return this.TrinityGetRequest("permissions?user=" + username);
 	}
 	public GetAPIAliases(api: string): Observable<APIResponse> {
-		return this.GetRequest("aliases/all?api="+api);
+		return this.GetRequest("aliases/all?api=" + api);
 	}
 	public ChangePermissionValue(change: PermissionChange): Observable<APIResponse> {
 		return this.TrinityPostRequest("permissions/change", JSON.stringify(change));
@@ -64,7 +64,7 @@ export class APIService {
 		return this.PostRequest("service/edit", JSON.stringify(propChange));
 	}
 	public UpdateService(details: FormData, name: string): Observable<APIResponse> {
-		return this.PostFormRequest("service/update?name="+name, details);
+		return this.PostFormRequest("service/update?name=" + name, details);
 	}
 	public NewRouteAlias(alias: RouteAlias): Observable<APIResponse> {
 		return this.PostRequest("aliases/new", JSON.stringify(alias));
@@ -73,10 +73,10 @@ export class APIService {
 		return this.PostFormRequest("service/new", details);
 	}
 	public UploadIcon(details: FormData, name: string): Observable<APIResponse> {
-		return this.PostFormRequest("icon/new/"+name, details);
+		return this.PostFormRequest("icon/new/" + name, details);
 	}
 	public RestartService(serviceName: string): Observable<APIResponse> {
-		return this.GetRequest("service/restart/"+serviceName);
+		return this.GetRequest("service/restart/" + serviceName);
 	}
 	private TrinityGetRequest(endpoint: string): Observable<APIResponse> {
 		const apiURL: string = ConfigService.GetAuthURLFor(endpoint);

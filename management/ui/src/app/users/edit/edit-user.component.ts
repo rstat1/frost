@@ -2,12 +2,12 @@ import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource, MatCheckboxChange } from '@angular/material';
 
-import { environment } from 'environments/environment';
 import { APIService } from 'app/services/api/api.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { PrimaryActionInfo } from 'app/services/action-list/action-list-common';
 import { ActionListService } from 'app/services/action-list/action-list.service';
 import { ServiceAccess, Permission, PermissionChange, PasswordChange } from 'app/services/api/api-common';
+import { ConfigService } from 'app/services/config.service';
 
 @Component({
 	selector: 'app-edit-user',
@@ -44,7 +44,7 @@ export class EditUserComponent implements OnInit {
 	}
 	public checkChanged(row: string, type: string, e: MatCheckboxChange) {
 		let pc: PermissionChange = { name: type, service: row, newValue: e.checked, user: this.currentUsername };
-		this.api.ChangePermissionValue(pc).subscribe(_ => {});
+		this.api.ChangePermissionValue(pc).subscribe(_ => { });
 	}
 	public getValue(service: string, permission: string): boolean {
 		let p: Permission[] = this.permissions[service];
@@ -53,10 +53,10 @@ export class EditUserComponent implements OnInit {
 		}
 	}
 	public changePW() {
-		let pc: PasswordChange = {user: this.currentUsername, pass: this.newPassword };
-		this.api.ChangePassword(pc).subscribe(_ => {});
+		let pc: PasswordChange = { user: this.currentUsername, pass: this.newPassword };
+		this.api.ChangePassword(pc).subscribe(_ => { });
 	}
 	public getServiceIconURL(name: string): string {
-		return environment.APIBaseURL + "/frost/icon/"+name;
+		return ConfigService.GetAPIURLFor("icon/" + name);
 	}
 }

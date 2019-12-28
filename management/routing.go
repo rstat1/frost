@@ -60,11 +60,11 @@ func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *Service
 func (api *APIRouter) StartManagementAPIListener() {
 	api.serviceID, api.serviceKey = api.data.GetInstanceDetails()
 	if api.dev {
-		api.watchdog = "http://watchdog" + common.BaseURL //"http://192.168.1.12:4200"
+		api.watchdog = "http://console" + common.BaseURL //"http://192.168.1.12:4200"
 		api.baseAPIURL = "http://api" + common.BaseURL
 		api.authServiceURL = "http://trinity" + common.BaseURL
 	} else {
-		api.watchdog = "https://watchdog" + common.BaseURL
+		api.watchdog = "https://console" + common.BaseURL
 		api.baseAPIURL = "https://api" + common.BaseURL
 		api.authServiceURL = "https://trinity" + common.BaseURL
 	}
@@ -72,11 +72,17 @@ func (api *APIRouter) StartManagementAPIListener() {
 	api.router.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
 		AllowHeaders: []string{"Authorization", "Cache-Control", "X-Requested-With", "Content-Type"},
-		AllowOrigin: []string{"https://watchdog.rdro.us", "http://watchdog.test.rdro.us", "http://trinity.test.rdro.us",
-			"https://trinity.rdro.us", "http://192.168.1.12:4200"},
+		AllowOrigin: []string{"https://console" + common.BaseURL, "http://console" + common.BaseURL, "http://trinity" + common.BaseURL,
+			"https://trinity" + common.BaseURL, "http://192.168.1.12:4200"},
 	})
 	vestigo.CustomNotFoundHandlerFunc(api.NotFound)
 	api.SetupRoutes()
+
+	if svcDetails, err := api.data.GetServiceByID(api.serviceID); err == nil {
+		svcDetails.RedirectURL = api.watchdog + "/auth"
+		common.LogError("", api.data.UpdateRoute(svcDetails, "watchdog"))
+	}
+
 	go func() {
 		if err := http.ListenAndServe("localhost:1000", api.router); err != nil {
 			common.CreateFailureResponse(err, "StartManagementAPIListener", 500)
@@ -399,11 +405,11 @@ func (api *APIRouter) newicon(resp http.ResponseWriter, r *http.Request) {
 func (api *APIRouter) geticon(resp http.ResponseWriter, r *http.Request) {
 	var iconPath string
 	var service = vestigo.Param(r, "service")
-	if _, e := os.Stat("watchdog/serviceicons/" + service + ".png"); e != nil {
-		iconPath = "watchdog/web/assets/services.png"
+	if _, e := os.Stat("console/serviceicons/" + service + ".png"); e != nil {
+		iconPath = "console/web/assets/services.png"
 		common.Logger.Errorln(e)
 	} else {
-		iconPath = "watchdog/serviceicons/" + service + ".png"
+		iconPath = "console/serviceicons/" + service + ".png"
 	}
 	if icon, e := os.Open(iconPath); e == nil {
 		if image, err := ioutil.ReadAll(icon); err == nil {
@@ -416,7 +422,7 @@ func (api *APIRouter) geticon(resp http.ResponseWriter, r *http.Request) {
 }
 func (api *APIRouter) icons(resp http.ResponseWriter, r *http.Request) {
 	var icons []string
-	files, _ := ioutil.ReadDir("watchdog/serviceicons/")
+	files, _ := ioutil.ReadDir("console/serviceicons/")
 	for _, file := range files {
 		icons = append(icons, file.Name())
 	}

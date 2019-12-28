@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	issuerName string = "https://trinity.m.rdro.us"
+	issuerName string = "https://trinity.alargerobot.dev"
 )
 
 //User ..

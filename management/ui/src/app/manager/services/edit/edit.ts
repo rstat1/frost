@@ -6,6 +6,7 @@ import { MatSnackBar, MatDialog } from '@angular/material';
 import { environment } from 'environments/environment';
 import { MenuService } from 'app/services/menu.service';
 import { APIService } from 'app/services/api/api.service';
+import { ConfigService } from 'app/services/config.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { NewAliasDialogComponent } from 'app/manager/services/edit/new-alias-dialog/new-alias';
 import { Service, ServiceEdit, RouteAlias, AliasDeleteRequest } from 'app/services/api/api-common';
@@ -46,8 +47,8 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 	private menuItemClickedSub: Subscription;
 
 	constructor(private header: PageInfoService, private route: ActivatedRoute, private menu: MenuService,
-				private api: APIService, private snackBar: MatSnackBar, private dialog: MatDialog,
-				private pageInfo: PageInfoService) { }
+		private api: APIService, private snackBar: MatSnackBar, private dialog: MatDialog,
+		private pageInfo: PageInfoService) { }
 
 	ngOnInit() {
 		this.serviceToEdit = this.route.snapshot.paramMap.get('name');
@@ -211,7 +212,7 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 					if (resp.response != "success") { this.currentServiceKey = resp.response; }
 					this.showResponse("Edit Successful");
 				}
-			}, e => this.showResponse("Edit failed: " + e.error.response) );
+			}, e => this.showResponse("Edit failed: " + e.error.response));
 		} else {
 			this.uploadIcon();
 		}
@@ -222,7 +223,7 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 			body.append("icon", this.icon, this.icon.name);
 			this.api.UploadIcon(body, this.currentServiceName).subscribe(resp => {
 				this.showResponse("Upload Successful");
-			}, e => this.showResponse("Failed: " + e.error.response) );
+			}, e => this.showResponse("Failed: " + e.error.response));
 		} else {
 			this.showResponse("Pick an icon first.");
 		}
@@ -254,7 +255,7 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 	public showNewAliasDialog() {
 		let dialogRef = this.dialog.open(NewAliasDialogComponent, {
 			width: "550px",
-			data: {apiName: this.currentServiceAPIName},
+			data: { apiName: this.currentServiceAPIName },
 		});
 		dialogRef.afterClosed().subscribe(resp => {
 			if (resp.status == "success") {
@@ -264,12 +265,12 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 		});
 	}
 	public getServiceIconURL(name: string): string {
-		return environment.APIBaseURL + "/frost/icon/"+name;
+		return ConfigService.GetAPIURLFor("icon/" + name);
 	}
 	private getAPIAliases() {
 		this.api.GetAPIAliases(this.currentServiceAPIName).subscribe(extras => {
 			if (extras.status == "success") {
-				 this.makeRouteList(JSON.parse(extras.response));
+				this.makeRouteList(JSON.parse(extras.response));
 			}
 		}, _ => {
 			this.routeList = new Map();
@@ -284,8 +285,8 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 	}
 	private deleteService() {
 		this.dialog.open(DeleteServiceDialogComponent, {
-			width:'500px',
-			data: {project: this.serviceToEdit},
+			width: '500px',
+			data: { project: this.serviceToEdit },
 		});
 	}
 }

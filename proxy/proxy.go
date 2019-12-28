@@ -36,6 +36,7 @@ type Proxy struct {
 	baseWDURL            string
 	apiBaseURLWithScheme string
 	listenerPort         string
+	apiNameToOrigin      map[string]string
 }
 
 var (
@@ -63,6 +64,7 @@ func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 		knownAliasHosts:  make(map[string]bool),
 		webuiserver:      services.NewWebServer(),
 		hostsToAPIServer: make(map[string]string),
+		apiNameToOrigin:  make(map[string]string),
 	}
 }
 
@@ -74,7 +76,7 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 	p.baseURL = common.BaseURL
 	p.apiBaseURL = "api" + p.baseURL
 	p.baseAuthURL = "trinity" + p.baseURL
-	p.baseWDURL = "watchdog" + p.baseURL
+	p.baseWDURL = "console" + p.baseURL
 	if p.isInLocalMode == false {
 		p.listenerPort = productionPort
 		p.apiBaseURLWithScheme = "https://" + "." + p.baseURL
@@ -85,10 +87,13 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 		p.listenerPort = devPort
 		p.apiBaseURLWithScheme = "http://" + "." + p.baseURL
 		common.Logger.Infoln("running in dev mode...")
-
 		p.setRoutes()
 		p.startNotTLSServer()
 	}
+	// } else {
+	// 	p.listenerPort = devPort
+
+	// }
 }
 
 //AddRoute ...
@@ -147,6 +152,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
+	defer common.TimeTrack(time.Now())
 	var proxiedRequest bool
 	routeAliases := p.aliasHosts[req.Host]
 	if routeAliases != nil {
@@ -167,11 +173,12 @@ func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request)
 	}
 }
 func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
+	defer common.TimeTrack(time.Now())
 	if req.Host == p.apiBaseURL {
 		var urlWithoutHost = strings.Replace(req.URL.String(), p.apiBaseURLWithScheme, "", -1)
 		var urlBits = strings.Split(urlWithoutHost, "/")
 		var apiName = urlBits[1]
-		p.proxyRequest(w, req, p.apiRoutes[apiName], "/api"+req.URL.Path, p.data.Cache.GetString("watchdog", apiName))
+		p.proxyRequest(w, req, p.apiRoutes[apiName], "/api"+req.URL.Path, p.apiNameToOrigin[apiName])
 	} else {
 		p.invalidRoute(w, req.URL.String())
 	}
@@ -222,7 +229,7 @@ func (p *Proxy) setRoutes() {
 			p.apiRoutes[v.APIName] = v.ServiceAddress
 			p.knownRoutes[v.AppName+p.baseURL] = true
 			println(v.AppName + p.baseURL)
-			p.data.Cache.PutString("watchdog", v.APIName, v.AppName+p.baseURL)
+			p.apiNameToOrigin[v.APIName] = v.AppName + p.baseURL
 		}
 	}
 
@@ -245,7 +252,7 @@ func (p *Proxy) invalidRoute(w http.ResponseWriter, requestedURL string) {
 }
 func (p *Proxy) startTLSServer() {
 	tlsConf := &tls.Config{
-		MinVersion: tls.VersionTLS11,
+		MinVersion: tls.VersionTLS12,
 	}
 	httpServer := &http.Server{
 		Addr:         p.listenerPort,
