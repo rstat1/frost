@@ -256,8 +256,8 @@ func (p *Proxy) startTLSServer() {
 	}
 	httpServer := &http.Server{
 		Addr:         p.listenerPort,
-		ReadTimeout:  20 * time.Second,
-		WriteTimeout: 20 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		TLSConfig:    tlsConf,
 		Handler:      p,
 	}
@@ -282,8 +282,8 @@ func (p *Proxy) startNotTLSServer() {
 	defer listener.Close()
 	httpServer := &http.Server{
 		Addr:         p.listenerPort,
-		ReadTimeout:  20 * time.Second,
-		WriteTimeout: 20 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		Handler:      p,
 	}
 	err = httpServer.Serve(listener)
