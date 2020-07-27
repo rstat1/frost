@@ -70,6 +70,7 @@ type ServiceDetails struct {
 	ServiceAddress     string `json:"address" graph:"serviceAddress"`
 	IsManagedService   bool   `json:"managed" graph:"isManaged"`
 	ServiceNameURLToUI bool   `json:"serviceNameToUI"`
+	AccessLevel        string `json:"accessLevel"`
 }
 
 //ServiceAccess ...
@@ -134,4 +135,10 @@ type BingDailyImage struct {
 		Walle    string `json:"walle"`
 		Walls    string `json:"walls"`
 	} `json:"tooltips"`
+}
+
+//ConfigChangeRequest ...
+type ConfigChangeRequest struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }

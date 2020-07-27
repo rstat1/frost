@@ -8,6 +8,7 @@ import (
 
 	"git.m/svcman/auth"
 	"git.m/svcman/common"
+	"git.m/svcman/crypto"
 	"git.m/svcman/data"
 	"git.m/svcman/management"
 	"git.m/svcman/proxy"
@@ -20,12 +21,13 @@ func main() {
 	common.CommonProcessInit(*devMode, true)
 
 	common.Logger.Debugln("starting svcman...")
-	common.Logger.Debugln(os.Getuid())
 
 	data := data.NewDataStoreInstance("routes")
 	userService := auth.NewUserService(data)
+	vault := crypto.NewVaultClient(*devMode)
 
 	proxy := proxy.NewProxy(data)
+	icapi := management.NewInternalConfigAPI(data, vault)
 	services := management.NewServiceManager(data, proxy, *devMode)
 	manager := management.NewAPIRouter(data, proxy, services, userService, *devMode)
 	authService := auth.NewAuthService(data, userService, *devMode)
@@ -39,6 +41,7 @@ func main() {
 		os.Exit(0)
 	}()
 
+	icapi.InitListener()
 	services.StartManagedServices()
 	authService.InitAuthService()
 	manager.StartManagementAPIListener()

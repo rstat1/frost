@@ -30,15 +30,20 @@ type APIResponse struct {
 
 //LocalAppConfig ...
 type LocalAppConfig struct {
-	BaseURL string `json:"baseURL"`
+	BaseURL     string `json:"baseURL"`
+	DBName      string `json:"dbName"`
+	DBAddr      string `json:"dbAddress"`
+	VaultToken  string `json:"-"`
+	VaultRoleID string `json:"roleID"`
+	VaultAddr   string `json:"vaultAddress"`
 }
 
 var (
 	BaseURL       string
-	currentConfig LocalAppConfig
-
-	Logger     *logrus.Logger
-	httpServer = &http.Server{
+	CurrentConfig LocalAppConfig
+	DevMode       bool
+	Logger        *logrus.Logger
+	httpServer    = &http.Server{
 		ReadTimeout:  20 * time.Second,
 		WriteTimeout: 20 * time.Second,
 	}
@@ -173,6 +178,7 @@ func InitLogrus() {
 
 //CommonProcessInit ...
 func CommonProcessInit(dev, loadConfig bool) {
+	DevMode = dev
 	InitLogrus()
 	if os.Getenv("PWD") == "" {
 		Logger.Warnln("pwd not set")
@@ -180,11 +186,11 @@ func CommonProcessInit(dev, loadConfig bool) {
 	}
 	if loadConfig {
 		if file, err := ioutil.ReadFile("config.json"); err == nil {
-			err = json.Unmarshal([]byte(file), &currentConfig)
+			err = json.Unmarshal([]byte(file), &CurrentConfig)
 			if err != nil {
 				panic(err)
 			}
-			BaseURL = "." + currentConfig.BaseURL
+			BaseURL = "." + CurrentConfig.BaseURL
 		} else {
 			// common.Logger.Errorln()
 			panic(errors.New("Please create a config.json file"))
