@@ -35,7 +35,6 @@ func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool) *Ser
 	}
 }
 
-
 //DeleteService ...
 func (s *ServiceManager) DeleteService(name string) common.APIResponse {
 	route, _ := s.data.GetRoute(name)
@@ -73,7 +72,7 @@ func (s *ServiceManager) GetServiceNames() []string {
 func (s *ServiceManager) StartManagedServices() {
 	for _, v := range s.GetAllServices() {
 		if v.IsManagedService {
-			s.processes.StartProcess(v.BinName, v.AppName, s.inDevMode)
+			s.StartManagedService(v.AppName)
 		}
 	}
 }
@@ -86,7 +85,7 @@ func (s *ServiceManager) StopManagedServices() {
 //StartManagedService ...
 func (s *ServiceManager) StartManagedService(name string) bool {
 	routeInfo, _ := s.data.GetRoute(name)
-	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, s.inDevMode)
+	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, routeInfo.ServiceID, routeInfo.ServiceKey, s.inDevMode)
 }
 
 //StopManagedService ...
@@ -180,7 +179,8 @@ func (s *ServiceManager) RenameServiceBin(oldName, newName, appName string) erro
 	}
 	s.processes.StopAProcess(oldName)
 	e := os.Rename(appName+"/"+oldName, appName+"/"+newName)
-	s.processes.StartProcess(newName, appName, s.inDevMode)
+	s.StartManagedService(newName)
+	// s.processes.StartProcess(newName, appName, s.inDevMode)
 	return e
 }
 

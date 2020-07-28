@@ -21,22 +21,25 @@ import (
 
 //Proxy ...
 type Proxy struct {
-	data                 *data.DataStore
-	fwd                  *forward.Forwarder
-	knownRoutes          map[string]bool
-	apiRoutes            map[string]string
-	aliasHosts           map[string][]string
-	knownAliasHosts      map[string]bool
-	hostsToAPIServer     map[string]string
-	webuiserver          *services.WebServer
-	isInLocalMode        bool
-	apiBaseURL           string
-	baseURL              string
-	baseAuthURL          string
-	baseWDURL            string
-	apiBaseURLWithScheme string
-	listenerPort         string
-	apiNameToOrigin      map[string]string
+	data                      *data.DataStore
+	fwd                       *forward.Forwarder
+	knownRoutes               map[string]bool
+	apiRoutes                 map[string]string
+	aliasHosts                map[string][]string
+	knownAliasHosts           map[string]bool
+	hostsToAPIServer          map[string]string
+	webuiserver               *services.WebServer
+	isInLocalMode             bool
+	icAPIURL                  string
+	apiBaseURL                string
+	internalAPIBase           string
+	baseURL                   string
+	baseAuthURL               string
+	baseWDURL                 string
+	apiBaseURLWithScheme      string
+	internalAPIBaseWithScheme string
+	listenerPort              string
+	apiNameToOrigin           map[string]string
 }
 
 var (
@@ -44,6 +47,7 @@ var (
 )
 
 const (
+	icapiAPIName       = "icapi"
 	watchdogAPIName    = "frost"
 	authServiceAPIName = "trinity"
 
@@ -80,12 +84,16 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 	if p.isInLocalMode == false {
 		p.listenerPort = productionPort
 		p.apiBaseURLWithScheme = "https://" + "." + p.baseURL
+		p.internalAPIBaseWithScheme = "https://" + ".m." + p.baseURL
+		p.internalAPIBase = "api.m" + p.baseURL
 		common.Logger.Infoln("running in production mode...")
 		p.setRoutes()
 		p.startTLSServer()
 	} else {
 		p.listenerPort = devPort
 		p.apiBaseURLWithScheme = "http://" + "." + p.baseURL
+		p.internalAPIBaseWithScheme = "http://" + ".m." + p.baseURL
+		p.internalAPIBase = "api.frostdev.m"
 		common.Logger.Infoln("running in dev mode...")
 		p.setRoutes()
 		p.startNotTLSServer()
@@ -222,6 +230,7 @@ func (p *Proxy) setRoutes() {
 	p.knownRoutes[p.apiBaseURL] = true
 	p.knownRoutes[p.baseWDURL] = true
 	p.knownRoutes[p.baseAuthURL] = true
+	p.apiRoutes[icapiAPIName] = "localhost:5000"
 	p.apiRoutes[watchdogAPIName] = "localhost:1000"
 	p.apiRoutes[authServiceAPIName] = "localhost:1003"
 	if routes, err := p.data.GetServiceDetailss(); err == nil {
@@ -262,7 +271,7 @@ func (p *Proxy) startTLSServer() {
 		Handler:      p,
 	}
 
-	listener, err := net.Listen("tcp", p.listenerPort)
+	listener, err := net.Listen("tcp", ":443")
 	if err != nil {
 		panic(err)
 	}
@@ -275,7 +284,7 @@ func (p *Proxy) startTLSServer() {
 	}
 }
 func (p *Proxy) startNotTLSServer() {
-	listener, err := net.Listen("tcp", p.listenerPort)
+	listener, err := net.Listen("tcp", ":80")
 	if err != nil {
 		panic(err)
 	}
