@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	// "github.com/evalphobia/logrus_sentry"
-	"github.com/getsentry/raven-go"
+
 	"github.com/sirupsen/logrus"
 
 	"crypto/rand"
@@ -82,9 +82,9 @@ func WriteAPIResponseStruct(writer http.ResponseWriter, resp APIResponse) {
 	writer.Write([]byte(apiResp))
 }
 
-//ValidateRequest ...
-func ValidateRequest(validator func(*http.Request) APIResponse, handler func(http.ResponseWriter, *http.Request)) http.Handler {
-	return http.HandlerFunc(raven.RecoveryHandler(func(writer http.ResponseWriter, request *http.Request) {
+//ValidatePOSTRequest ...
+func ValidatePOSTRequest(validator func(*http.Request) APIResponse, handler func(http.ResponseWriter, *http.Request)) http.Handler {
+	return http.HandlerFunc(httpErrorHandler(func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" && request.Header.Get("Content-Length") == "" {
 			WriteAPIResponseStruct(writer, CreateAPIResponse("", errors.New("request body empty"), 400))
 		} else {
@@ -289,10 +289,15 @@ func LogError(extra string, err error) error {
 
 //LogDebug ...
 func LogDebug(extraKey string, extraValue interface{}, entry interface{}) {
+	pc, _, line, _ := runtime.Caller(1)
+	funcObj := runtime.FuncForPC(pc)
+	runtimeFunc := regexp.MustCompile(`^.*\.(.*)$`)
+	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
+
 	if extraKey != "" {
-		Logger.WithField(extraKey, extraValue).Debugln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line, "extra": extraValue}).Debugln(entry)
 	} else {
-		Logger.Debugln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line}).Debugln(entry)
 	}
 }
 

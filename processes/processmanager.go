@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"git.m/svcman/common"
+	"go.alargerobot.dev/frost/common"
 )
 
 //ProcessManager ...

@@ -10,9 +10,9 @@ import (
 	"net/url"
 	"strings"
 
-	"git.m/svcman/common"
-	"git.m/svcman/data"
-	"git.m/svcman/services"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/data"
+	"go.alargerobot.dev/frost/services"
 
 	"github.com/pkg/errors"
 	"github.com/vulcand/oxy/forward"

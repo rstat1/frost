@@ -6,12 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.m/svcman/auth"
-	"git.m/svcman/common"
-	"git.m/svcman/crypto"
-	"git.m/svcman/data"
-	"git.m/svcman/management"
-	"git.m/svcman/proxy"
+	"go.alargerobot.dev/frost/auth"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/crypto"
+	"go.alargerobot.dev/frost/data"
+	"go.alargerobot.dev/frost/management"
+	"go.alargerobot.dev/frost/proxy"
 )
 
 func main() {

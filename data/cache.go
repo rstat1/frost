@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"git.m/svcman/common"
+	"go.alargerobot.dev/frost/common"
 	"github.com/mediocregopher/radix.v2/pool"
 )
 

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"git.m/svcman/common"
-	"git.m/svcman/data"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/data"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )

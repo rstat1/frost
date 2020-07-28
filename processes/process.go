@@ -4,7 +4,7 @@ import (
 	"os"
 	"syscall"
 
-	"git.m/svcman/common"
+	"go.alargerobot.dev/frost/common"
 )
 
 type ManagedProcess struct {

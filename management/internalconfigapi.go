@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"git.m/svcman/common"
-	"git.m/svcman/crypto"
-	"git.m/svcman/data"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/crypto"
+	"go.alargerobot.dev/frost/data"
 	"github.com/husobee/vestigo"
 	"github.com/minio/sio"
 )

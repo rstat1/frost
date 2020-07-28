@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"git.m/svcman/auth"
-	"git.m/svcman/common"
-	"git.m/svcman/data"
-	"git.m/svcman/proxy"
-	"git.m/svcman/services"
+	"go.alargerobot.dev/frost/auth"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/data"
+	"go.alargerobot.dev/frost/proxy"
+	"go.alargerobot.dev/frost/services"
 	"github.com/husobee/vestigo"
 )
 

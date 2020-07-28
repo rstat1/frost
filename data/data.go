@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"git.m/svcman/common"
+	"go.alargerobot.dev/frost/common"
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/q"
 	"github.com/hashicorp/go-uuid"

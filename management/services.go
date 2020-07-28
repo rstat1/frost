@@ -10,11 +10,11 @@ import (
 	"os"
 	"strings"
 
-	"git.m/svcman/processes"
-	"git.m/svcman/proxy"
+	"go.alargerobot.dev/frost/processes"
+	"go.alargerobot.dev/frost/proxy"
 
-	"git.m/svcman/common"
-	"git.m/svcman/data"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/data"
 )
 
 //ServiceManager ...

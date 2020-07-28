@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"git.m/svcman/common"
-	"git.m/svcman/data"
+	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/data"
 )
 
 const (

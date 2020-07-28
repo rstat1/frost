@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"git.m/svcman/data"
+	"go.alargerobot.dev/frost/data"
 )
 
 //WebServer ...
