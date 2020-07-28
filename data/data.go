@@ -176,10 +176,7 @@ func (data *DataStore) GetRoute(name string) (ServiceDetails, error) {
 	if err := routes.One("AppName", name, &foundRoute); err == nil {
 		return foundRoute, nil
 	} else {
-		common.CreateFailureResponseWithFields(err, 500, logrus.Fields{
-			"func":  "GetRoute",
-			"route": name,
-		})
+		common.CreateFailureResponseWithFields(err, 500, logrus.Fields{"func": "GetRoute", "route": name})
 		return ServiceDetails{}, err
 	}
 }
@@ -247,7 +244,7 @@ func (data *DataStore) GetUserPermissionMap(username string) (map[string]map[str
 }
 
 //GetServiceConfigValue ...
-func (data *DataStore) GetServiceConfigValue(key, serviceName string) (value interface{}, e error) {
+func (data *DataStore) GetServiceConfigValue(key, serviceName string) (value string, e error) {
 	conf := data.queryEngine.From("Config")
 	e = conf.Get(serviceName, key, &value)
 	return value, common.LogError("", e)
@@ -260,7 +257,7 @@ func (data *DataStore) SetFirstRunState() {
 }
 
 //SetConfigValue ...
-func (data *DataStore) SetConfigValue(path, service string, value interface{}) error {
+func (data *DataStore) SetConfigValue(key, service string, value interface{}) error {
 	e := data.DB.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.Bucket([]byte("Config")).CreateBucketIfNotExists([]byte(service))
 		return err
@@ -269,7 +266,7 @@ func (data *DataStore) SetConfigValue(path, service string, value interface{}) e
 		return common.LogError("", e)
 	}
 	conf := data.queryEngine.From("Config")
-	return conf.Set(service, path, value)
+	return conf.Set(service, key, value)
 }
 
 //AddNewRoute ...
