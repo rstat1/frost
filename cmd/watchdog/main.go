@@ -28,7 +28,7 @@ func main() {
 
 	proxy := proxy.NewProxy(data)
 	icapi := management.NewInternalConfigAPI(data, vault)
-	services := management.NewServiceManager(data, proxy, *devMode)
+	services := management.NewServiceManager(data, proxy, *devMode, vault)
 	manager := management.NewAPIRouter(data, proxy, services, userService, *devMode)
 	authService := auth.NewAuthService(data, userService, *devMode)
 

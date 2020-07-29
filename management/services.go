@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"go.alargerobot.dev/frost/crypto"
 	"go.alargerobot.dev/frost/processes"
 	"go.alargerobot.dev/frost/proxy"
 
@@ -22,16 +23,18 @@ type ServiceManager struct {
 	data      *data.DataStore
 	proxy     *proxy.Proxy
 	inDevMode bool
+	vault     *crypto.VaultClient
 	processes *processes.ProcessManager
 }
 
 //NewServiceManager ...
-func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool) *ServiceManager {
+func NewServiceManager(store *data.DataStore, p *proxy.Proxy, devmode bool, vault *crypto.VaultClient) *ServiceManager {
 	return &ServiceManager{
 		proxy:     p,
 		data:      store,
+		vault:     vault,
 		inDevMode: devmode,
-		processes: processes.NewProcessManager(),
+		processes: processes.NewProcessManager(vault),
 	}
 }
 
@@ -70,11 +73,18 @@ func (s *ServiceManager) GetServiceNames() []string {
 
 //StartManagedServices ...
 func (s *ServiceManager) StartManagedServices() {
-	for _, v := range s.GetAllServices() {
-		if v.IsManagedService {
-			s.StartManagedService(v.AppName)
+	go func() {
+		if s.vault.TokenSet == false {
+			common.LogInfo("", "", "waiting for Vault token to be set before continuning...")
+			<-s.vault.TokenSetWatch
+			common.LogInfo("", "", "Vault token set. Continuning with service start...")
 		}
-	}
+		for _, v := range s.GetAllServices() {
+			if v.IsManagedService {
+				s.StartManagedService(v.AppName)
+			}
+		}
+	}()
 }
 
 //StopManagedServices ...

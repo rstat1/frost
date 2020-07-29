@@ -8,11 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/husobee/vestigo"
+	"github.com/minio/sio"
 	"go.alargerobot.dev/frost/common"
 	"go.alargerobot.dev/frost/crypto"
 	"go.alargerobot.dev/frost/data"
-	"github.com/husobee/vestigo"
-	"github.com/minio/sio"
 )
 
 //InternalConfigAPI ...
@@ -76,36 +76,31 @@ func (icapi *InternalConfigAPI) getConfigValue(resp http.ResponseWriter, r *http
 		return
 	}
 
-	if key == "dbcreds" {
-		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", errors.New("not implemented"), 501))
-	} else if key == "vaulttoken" {
-		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", errors.New("not implemented"), 501))
-	} else {
-		if v, e := icapi.data.GetServiceConfigValue(key, serviceName); e == nil {
-			valueStr, _ := base64.StdEncoding.DecodeString(v)
-			value := bytes.NewBuffer([]byte(valueStr))
-			if encipheredValue, err := icapi.vault.ReadKeyFromKV("service-config/" + serviceName + "/" + key); err == nil {
-				data, _ := base64.StdEncoding.DecodeString(string(encipheredValue))
-				common.LogError("", json.Unmarshal(data, &entryCryptoKey))
-				if masterKey, err := icapi.vault.UnsealKey(crypto.FrostKeyID, entryCryptoKey.SealedMasterKey, crypto.Context{"key": key}); err == nil {
-					entryKey.Unseal(masterKey[:], entryCryptoKey.EntryKey)
-					decipheredRead, err := sio.DecryptReader(value, sio.Config{Key: entryKey[:], MinVersion: sio.Version20})
-					if err != nil {
-						common.WriteFailureResponse(err, resp, "setConfigValue", 500)
-						return
-					}
-					encipheredValue, err := ioutil.ReadAll(decipheredRead)
-					common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(encipheredValue), nil, 200))
-				} else {
+	if v, e := icapi.data.GetServiceConfigValue(key, serviceName); e == nil {
+		valueStr, _ := base64.StdEncoding.DecodeString(v)
+		value := bytes.NewBuffer([]byte(valueStr))
+		if encipheredValue, err := icapi.vault.ReadKeyFromKV("service-config/" + serviceName + "/" + key); err == nil {
+			data, _ := base64.StdEncoding.DecodeString(string(encipheredValue))
+			common.LogError("", json.Unmarshal(data, &entryCryptoKey))
+			if masterKey, err := icapi.vault.UnsealKey(crypto.FrostKeyID, entryCryptoKey.SealedMasterKey, crypto.Context{"key": key}); err == nil {
+				entryKey.Unseal(masterKey[:], entryCryptoKey.EntryKey)
+				decipheredRead, err := sio.DecryptReader(value, sio.Config{Key: entryKey[:], MinVersion: sio.Version20})
+				if err != nil {
 					common.WriteFailureResponse(err, resp, "setConfigValue", 500)
+					return
 				}
+				encipheredValue, err := ioutil.ReadAll(decipheredRead)
+				common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(encipheredValue), nil, 200))
 			} else {
 				common.WriteFailureResponse(err, resp, "setConfigValue", 500)
 			}
 		} else {
-			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", errors.New("invalid key specified"), 400))
+			common.WriteFailureResponse(err, resp, "setConfigValue", 500)
 		}
+	} else {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", errors.New("invalid key specified"), 400))
 	}
+
 }
 
 func (icapi *InternalConfigAPI) setConfigValue(resp http.ResponseWriter, r *http.Request) {

@@ -6,16 +6,19 @@ import (
 	"syscall"
 
 	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/crypto"
 )
 
 //ProcessManager ...
 type ProcessManager struct {
+	vault            *crypto.VaultClient
 	managedProcesses map[string]*ManagedProcess
 }
 
 //NewProcessManager ...
-func NewProcessManager() *ProcessManager {
+func NewProcessManager(vc *crypto.VaultClient) *ProcessManager {
 	return &ProcessManager{
+		vault:            vc,
 		managedProcesses: make(map[string]*ManagedProcess),
 	}
 }
@@ -33,7 +36,21 @@ func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode 
 				name, "-ppid", strconv.Itoa(os.Getpid()), "-devmode=" + strconv.FormatBool(devmode),
 			})
 			pm.managedProcesses[name] = process
-			process.Run(sid, skey)
+
+			id, err := pm.vault.GetRoleID(name)
+			if err != nil {
+				common.LogError("", err)
+				return false
+			}
+
+			arsid, err := pm.vault.GetSecretIDAccessor()
+			if err != nil {
+				common.LogError("", err)
+				return false
+			}
+
+			envVars := []string{"SKEY=" + skey, "SID=" + sid, "ARRID=" + id, "ARSID=" + arsid, "VAULTADDR=" + common.CurrentConfig.VaultAddr}
+			process.Run(envVars)
 			return true
 		}
 	} else {
@@ -44,7 +61,9 @@ func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode 
 //StopAllProcesses ...
 func (pm *ProcessManager) StopAllProcesses() {
 	for _, v := range pm.managedProcesses {
-		v.process.Signal(syscall.SIGTERM)
+		if v.process != nil {
+			v.process.Signal(syscall.SIGTERM)
+		}
 	}
 }
 

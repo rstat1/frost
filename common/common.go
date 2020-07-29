@@ -350,3 +350,10 @@ func TimeTrack(start time.Time) {
 	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
 	Logger.WithFields(logrus.Fields{"elaspsed": elapsed, "func": name}).Debugln("done")
 }
+
+
+//NewFalse This only exists because the Vault client API is stupid.
+func NewFalse() *bool {
+	b := false
+	return &b
+}

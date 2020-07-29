@@ -29,13 +29,13 @@ func NewManagedProcess(name, workDir string, args []string) *ManagedProcess {
 }
 
 //Run ...
-func (mp *ManagedProcess) Run(sid, skey string) {
+func (mp *ManagedProcess) Run(envVars []string) {
 	var err error
 	mp.restart = true
 	procAttr := new(os.ProcAttr)
 	procAttr.Dir = mp.WorkDir
 	procAttr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
-	procAttr.Env = []string{"PWD=" + mp.WorkDir, "SERVICE_KEY=" + skey, "SERVICE_ID=" + sid}
+	procAttr.Env = envVars
 	go func() {
 	procloop:
 		mp.Stop = make(chan bool)
