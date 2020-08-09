@@ -88,23 +88,23 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 
 	p.isInLocalMode = *localMode
 	p.baseURL = common.BaseURL
-	p.internalBaseURL = "m." + p.baseURL
+	p.internalBaseURL = "frost.m"
 	p.apiBaseURL = "api" + p.baseURL
 	p.baseAuthURL = "trinity" + p.baseURL
 	p.baseWDURL = "console" + p.baseURL
 	if p.isInLocalMode == false {
 		p.listenerPort = productionPort
-		p.internalAPIBase = "api.m." + p.baseURL
 		p.apiBaseURLWithScheme = "https://" + "." + p.baseURL
-		p.internalAPIBaseWithScheme = "https://" + ".m." + p.baseURL
+		p.internalAPIBase = "api.frost.m"
+		p.internalAPIBaseWithScheme = "https//" + ".frost.m"
 		common.Logger.Infoln("running in production mode...")
 		p.setRoutes()
 		p.startTLSServer()
 	} else {
 		p.listenerPort = devPort
 		p.apiBaseURLWithScheme = "http://" + "." + p.baseURL
-		p.internalAPIBaseWithScheme = "http://" + p.baseURL
 		p.internalAPIBase = "api.frost-int.m"
+		p.internalAPIBaseWithScheme = "http://" + p.baseURL
 		common.Logger.Infoln("running in dev mode...")
 		p.setRoutes()
 		p.startNotTLSServer()
