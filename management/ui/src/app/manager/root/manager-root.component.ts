@@ -2,10 +2,10 @@ import { Subscription } from 'rxjs';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { environment } from 'environments/environment';
 import { MenuService } from 'app/services/menu.service';
 import { PageInfoService } from 'app/services/page-info.service';
 import { ConfigService } from 'app/services/config.service';
+import { APIService } from 'app/services/api/api.service';
 
 @Component({
 	selector: 'app-manager-root',
@@ -17,9 +17,10 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 	public menuCategory: string = "App";
 	public pageTitle: string = "frostcloud";
 	public pageLogo: string = "watchdog";
+	public showNeedsVT: boolean = false;
 	private menuItemClicked: Subscription;
 
-	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService, private route: ActivatedRoute) { }
+	constructor(private menu: MenuService, private router: Router, private pageInfo: PageInfoService, private route: ActivatedRoute, private api: APIService) { }
 
 	ngOnInit() {
 		console.log("manager root onInit");
@@ -40,6 +41,12 @@ export class ManagerRootComponent implements OnInit, OnDestroy {
 					break;
 			}
 		});
+
+		this.api.GetAppState().subscribe(resp => {
+			if (resp.response == "initialized-need-vt") {
+				this.showNeedsVT = true;
+			}
+		})
 	}
 	goHome() {
 		this.router.navigate(["home"]);

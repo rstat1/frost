@@ -2,7 +2,7 @@
 	<!-- <div id="mem-usage-chart"></div> -->
 	<mat-tab-group dynamicHeight="true" animationDuration="0ms" mat-align-tabs="center">
 		<mat-tab label="Service Information">
-			<div class="top-stat-card-container">
+			<!-- <div class="top-stat-card-container">
 				<mat-card class="stat-card">
 					<mat-card-header>
 						<mat-card-title>Memory Use</mat-card-title>
@@ -19,16 +19,36 @@
 						<p class="stat">projects</p>
 					</mat-card-content>
 				</mat-card>
-				<!-- <mat-card class="stat-card">
+				<mat-card class="stat-card">
 					<mat-card-header>
 						<mat-card-title>Projects</mat-card-title>
 					</mat-card-header>
 					<mat-card-content>
 						<p class="stat">projects</p>
 					</mat-card-content>
-				</mat-card> -->
-			</div>
+				</mat-card>
+			</div> -->
 			<mat-accordion class="align-descriptions">
+				<mat-expansion-panel class="detail-block">
+					<mat-expansion-panel-header>
+						<mat-panel-title>Service Icon:</mat-panel-title>
+						<mat-panel-description>
+							<img [src]="getServiceIconURL(currentServiceName)" width="24" height="24" />
+						</mat-panel-description>
+					</mat-expansion-panel-header>
+					<span class="upload-control">
+						<input hidden type="file" #icon required (change)="setFile('icon', $event)">
+						<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="icon.click()">
+							<mat-icon>cloud_upload</mat-icon>
+						</button>
+						<mat-form-field class="upload-box upload-box-width">
+							<input matInput placeholder="Icon filename" name="IconName" [value]="iconName" disabled required>
+						</mat-form-field>
+					</span>
+					<mat-action-row>
+						<button mat-button color="primary" (click)="save('icon')">Save</button>
+					</mat-action-row>
+				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
 					<mat-expansion-panel-header>
 						<mat-panel-title>Service Name:</mat-panel-title>
@@ -36,7 +56,7 @@
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
 						<input matInput placeholder="New service name" [(ngModel)]="currentServiceName">
-    				</mat-form-field>
+					</mat-form-field>
 					<mat-action-row>
 						<button mat-button color="primary" (click)="save('name')">Save</button>
 					</mat-action-row>
@@ -48,7 +68,7 @@
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
 						<input matInput placeholder="New service filename" [(ngModel)]="currentFileName">
-    				</mat-form-field>
+					</mat-form-field>
 					<mat-action-row>
 						<button mat-button color="primary" (click)="save('filename')">Save</button>
 					</mat-action-row>
@@ -60,7 +80,7 @@
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
 						<input matInput placeholder="New API name" [(ngModel)]="currentServiceAPIName">
-    				</mat-form-field>
+					</mat-form-field>
 					<mat-action-row>
 						<button mat-button color="primary" (click)="save('apiName')">Save</button>
 					</mat-action-row>
@@ -89,7 +109,7 @@
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
 						<input matInput placeholder="New Auth Redirect URL" [(ngModel)]="currentARURL">
-    				</mat-form-field>
+					</mat-form-field>
 					<mat-action-row>
 						<button mat-button color="primary" (click)="save('redirect')">Save</button>
 					</mat-action-row>
@@ -101,7 +121,7 @@
 					</mat-expansion-panel-header>
 					<mat-form-field style="width:400px;">
 						<input matInput placeholder="New Local Address" [(ngModel)]="currentLocalAddress">
-    				</mat-form-field>
+					</mat-form-field>
 					<mat-action-row>
 						<button mat-button color="primary" (click)="save('localaddr')">Save</button>
 					</mat-action-row>
@@ -124,24 +144,21 @@
 				</mat-expansion-panel>
 				<mat-expansion-panel class="detail-block">
 					<mat-expansion-panel-header>
-						<mat-panel-title>Service Icon:</mat-panel-title>
+						<mat-panel-title>Vault Integration</mat-panel-title>
 						<mat-panel-description>
-							<img [src]="getServiceIconURL(currentServiceName)" width="24" height="24" />
+							<span *ngIf="this.enableVaultIntegration">Enabled</span>
+							<span *ngIf="!this.enableVaultIntegration">Disabled</span>
 						</mat-panel-description>
 					</mat-expansion-panel-header>
-					<span class="upload-control">
-						<input hidden type="file" #icon required (change)="setFile('icon', $event)">
-						<button type="button" style="display:inline;" mat-mini-fab color="primary" (click)="icon.click()">
-							<mat-icon>cloud_upload</mat-icon>
-						</button>
-						<mat-form-field class="upload-box upload-box-width">
-							<input matInput placeholder="Icon filename" name="IconName" [value]="iconName" disabled required>
-						</mat-form-field>
-					</span>
+					<mat-checkbox [(ngModel)]="this.enableVaultIntegration">
+						<span *ngIf="!this.enableVaultIntegration">Enable</span>
+						<span *ngIf="this.enableVaultIntegration">Disable</span>
+					</mat-checkbox>
 					<mat-action-row>
-						<button mat-button color="primary" (click)="save('icon')">Save</button>
+						<button mat-button color="primary" (click)="save('vault')">Save</button>
 					</mat-action-row>
 				</mat-expansion-panel>
+
 			</mat-accordion>
 		</mat-tab>
 		<mat-tab label="Update Service">
@@ -185,7 +202,9 @@
 			<mat-accordion class="align-descriptions">
 				<mat-expansion-panel *ngFor="let r of this.apiRouteAliases" class="detail-block">
 					<mat-expansion-panel-header>
-						<mat-panel-title><p class="section-header-text">{{r}}</p></mat-panel-title>
+						<mat-panel-title>
+							<p class="section-header-text">{{r}}</p>
+						</mat-panel-title>
 					</mat-expansion-panel-header>
 					<mat-list>
 						<mat-list-item *ngFor="let er of getExtraRoutes(r)">

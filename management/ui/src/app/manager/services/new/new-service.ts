@@ -25,13 +25,13 @@ export class NewServiceComponent implements OnInit {
 	public managementDetails: FormGroup;
 
 	constructor(private actions: ActionListService, private header: PageInfoService,
-		private snackBar: MatSnackBar, private api: APIService, private formBuilder: FormBuilder) {}
+		private snackBar: MatSnackBar, private api: APIService, private formBuilder: FormBuilder) { }
 
 	ngOnInit() {
 		this.actions.OnHighlightPrimaryAction();
 		this.header.SetPagePath(window.location.pathname);
 		this.serviceDetails = this.formBuilder.group({
-			'ServiceName': new FormControl('', [ this.ValidateServiceName, ]),
+			'ServiceName': new FormControl('', [this.ValidateServiceName,]),
 			'ServiceFileName': new FormControl('', []),
 			'apiPrefix': new FormControl('', []),
 			'address': new FormControl('', []),
@@ -39,7 +39,8 @@ export class NewServiceComponent implements OnInit {
 		});
 		this.managementDetails = this.formBuilder.group({
 			'IsManaged': new FormControl(false, []),
-			'UpdatesManaged': new FormControl(false, [])
+			'InternalUse': new FormControl(false, []),
+			'VaultIntegration': new FormControl(false, [])
 		});
 	}
 	public setFile(name: string, event: any) {
@@ -73,6 +74,8 @@ export class NewServiceComponent implements OnInit {
 		serviceDetails.api_prefix = (<any>this.serviceDetails.value).apiPrefix;
 		serviceDetails.managed = (<any>this.managementDetails.value).IsManaged;
 		serviceDetails.RedirectURL = (<any>this.serviceDetails.value).authCallback;
+		serviceDetails.needsVault = (<any>this.serviceDetails.value).VaultIntegration;
+		serviceDetails.internal = (<any>this.serviceDetails.value).InternalUse;
 
 		body.append("details", JSON.stringify(serviceDetails));
 
@@ -103,7 +106,7 @@ export class NewServiceComponent implements OnInit {
 		form.resetForm();
 	}
 	public ValidateServiceName(control: AbstractControl): ValidationErrors | null {
-		if (control.value != "" && control.value != undefined) {}
+		if (control.value != "" && control.value != undefined) { }
 		return null;
 	}
 }

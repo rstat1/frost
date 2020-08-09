@@ -28,6 +28,7 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 	public currentLocalAddress: string = "";
 	public currentServiceAPIName: string = "";
 	public currentServiceAddress: string = "";
+	public enableVaultIntegration: boolean;
 	public isCurrentServiceManaged: boolean;
 	public isCurrentServiceUpdatesHosted: boolean;
 
@@ -64,6 +65,7 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 				this.isCurrentServiceManaged = service.managed;
 				this.currentServiceAPIName = service.api_prefix;
 				this.isCurrentServiceUpdatesHosted = service.managedUpdates;
+				this.enableVaultIntegration = service.needsVault;
 
 				this.getAPIAliases();
 			}
@@ -204,6 +206,14 @@ export class EditServiceComponent implements OnInit, OnDestroy {
 				break;
 			case "icon":
 				propChange.new = "icon";
+				break;
+			case "vault":
+				if (this.enableVaultIntegration) {
+					propChange.new = "Enabled";
+				} else {
+					propChange.new = "Disabled";
+				}
+				console.log(propChange)
 				break;
 		}
 		if (propChange.new != "icon") {

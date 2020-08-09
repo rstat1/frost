@@ -24,7 +24,8 @@ func NewProcessManager(vc *crypto.VaultClient) *ProcessManager {
 }
 
 //StartProcess ...
-func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode bool) bool {
+func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode, useVault bool) bool {
+	var envVars []string
 	dir, _ := os.Getwd()
 	path := dir + "/" + dirName + "/" + name
 	if pm.managedProcesses[name] == nil {
@@ -37,19 +38,23 @@ func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode 
 			})
 			pm.managedProcesses[name] = process
 
-			id, err := pm.vault.GetRoleID(name)
-			if err != nil {
-				common.LogError("", err)
-				return false
+			if useVault {
+				id, err := pm.vault.GetRoleID(name)
+				if err != nil {
+					common.LogError("", err)
+					return false
+				}
+
+				arsid, err := pm.vault.GetSecretIDAccessor()
+				if err != nil {
+					common.LogError("", err)
+					return false
+				}
+				envVars = []string{"SKEY=" + skey, "SID=" + sid, "APPROLE_ID=" + id, "ARSID_ACCESS_KEY=" + arsid, "VAULTADDR=" + common.CurrentConfig.VaultAddr}
+			} else {
+				envVars = []string{"SKEY=" + skey, "SID=" + sid}
 			}
 
-			arsid, err := pm.vault.GetSecretIDAccessor()
-			if err != nil {
-				common.LogError("", err)
-				return false
-			}
-
-			envVars := []string{"SKEY=" + skey, "SID=" + sid, "ARRID=" + id, "ARSID=" + arsid, "VAULTADDR=" + common.CurrentConfig.VaultAddr}
 			process.Run(envVars)
 			return true
 		}

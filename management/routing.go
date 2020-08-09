@@ -6,15 +6,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/husobee/vestigo"
 	"go.alargerobot.dev/frost/auth"
 	"go.alargerobot.dev/frost/common"
+	"go.alargerobot.dev/frost/crypto"
 	"go.alargerobot.dev/frost/data"
 	"go.alargerobot.dev/frost/proxy"
 	"go.alargerobot.dev/frost/services"
-	"github.com/husobee/vestigo"
 )
 
 //InstanceInfo ...
@@ -37,10 +37,11 @@ type APIRouter struct {
 	serviceID      string
 	watchdog       string
 	httpClient     *http.Client
+	vault          *crypto.VaultClient
 }
 
 //NewAPIRouter ...
-func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *ServiceManager, user *auth.User, devMode bool) *APIRouter {
+func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *ServiceManager, user *auth.User, vc *crypto.VaultClient, devMode bool) *APIRouter {
 	var http = &http.Client{
 		Timeout: time.Second * 2,
 	}
@@ -52,6 +53,7 @@ func NewAPIRouter(store *data.DataStore, proxy *proxy.Proxy, serviceMan *Service
 		proxy:         proxy,
 		servMan:       serviceMan,
 		httpClient:    http,
+		vault:         vc,
 		bingBGService: services.NewBingBGFetcher(store),
 	}
 }
@@ -108,9 +110,6 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/service/delete", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteService))
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
 	api.router.Handle("/api/frost/service/restart/:name", common.RequestWrapper(api.user.IsRoot, "GET", api.restartService))
-
-	api.router.Handle("/api/frost/config/*", common.RequestWrapper(common.HasServiceCreds, "GET", api.getconfig))
-	api.router.Handle("/api/frost/config/set", common.RequestWrapper(api.user.IsRoot, "POST", api.setconfig))
 
 	api.router.Handle("/api/frost/aliases/new", common.RequestWrapper(common.Nothing, "POST", api.newExtraRoute))
 	api.router.Handle("/api/frost/aliases/all", common.RequestWrapper(common.Nothing, "GET", api.getExtraRoutes))
@@ -233,6 +232,13 @@ func (api *APIRouter) editService(resp http.ResponseWriter, r *http.Request) {
 					oldBinName = service.BinName
 					service.BinName = propChange.NewValue
 					break
+				case "vault":
+					if propChange.NewValue == "Enabled" {
+						service.VaultIntegrated = true
+					} else {
+						service.VaultIntegrated = false
+					}
+					break
 				}
 				if propChange.ServiceName == "watchdog" {
 					e = api.data.UpdateSysConfig(propChange)
@@ -335,7 +341,11 @@ func (api *APIRouter) restartService(resp http.ResponseWriter, r *http.Request) 
 }
 func (api *APIRouter) firstRunStatus(resp http.ResponseWriter, r *http.Request) {
 	if !api.data.GetFirstRunState() {
-		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("initialized", nil, 200))
+		if api.vault.TokenSet {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("initialized", nil, 200))
+		} else {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("initialized-need-vt", nil, 200))
+		}
 	} else {
 		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(api.watchdog+"/first-run", nil, 200))
 	}
@@ -428,11 +438,4 @@ func (api *APIRouter) icons(resp http.ResponseWriter, r *http.Request) {
 	}
 	f, _ := json.Marshal(icons)
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(f), nil, 200))
-}
-func (api *APIRouter) getconfig(resp http.ResponseWriter, r *http.Request) {
-	configPath := strings.Replace(r.URL.Path, "/api/frost/config/get/", "", 1)
-	common.LogDebug("path", configPath, "get config")
-}
-func (api *APIRouter) setconfig(resp http.ResponseWriter, r *http.Request) {
-
 }

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"context"
 	"net/url"
 	"strings"
 
@@ -16,30 +15,32 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/vulcand/oxy/forward"
-	"golang.org/x/crypto/acme/autocert"
 )
 
 //Proxy ...
 type Proxy struct {
-	data                      *data.DataStore
-	fwd                       *forward.Forwarder
-	knownRoutes               map[string]bool
-	apiRoutes                 map[string]string
-	aliasHosts                map[string][]string
-	knownAliasHosts           map[string]bool
-	hostsToAPIServer          map[string]string
-	webuiserver               *services.WebServer
-	isInLocalMode             bool
-	icAPIURL                  string
-	apiBaseURL                string
+	data                 *data.DataStore
+	fwd                  *forward.Forwarder
+	knownRoutes          map[string]bool
+	apiRoutes            map[string]string
+	aliasHosts           map[string][]string
+	knownAliasHosts      map[string]bool
+	hostsToAPIServer     map[string]string
+	webuiserver          *services.WebServer
+	isInLocalMode        bool
+	icAPIURL             string
+	apiBaseURL           string
+	baseURL              string
+	baseAuthURL          string
+	baseWDURL            string
+	apiBaseURLWithScheme string
+	listenerPort         string
+	apiNameToOrigin      map[string]string
+
+	internalBaseURL           string
 	internalAPIBase           string
-	baseURL                   string
-	baseAuthURL               string
-	baseWDURL                 string
-	apiBaseURLWithScheme      string
 	internalAPIBaseWithScheme string
-	listenerPort              string
-	apiNameToOrigin           map[string]string
+	internalRoutes            map[string]string
 }
 
 var (
@@ -55,10 +56,18 @@ const (
 	productionPort = ":443"
 )
 
+//HTTPErrorHandler This only exists because vulcand/oxy doesn't implment handling request errors in a way that any reasonable person would consider sane.
+type HTTPErrorHandler struct{}
+
+func (sieh *HTTPErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, err error) {
+	common.WriteFailureResponse(err, w, "whoKnows", 500)
+}
+
 //NewProxy ...
 func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 	var fwd *forward.Forwarder
-	fwd, _ = forward.New()
+	sieh := &HTTPErrorHandler{}
+	fwd, _ = forward.New(forward.ErrorHandler(sieh))
 	return &Proxy{
 		fwd:              fwd,
 		data:             dataStoreRef,
@@ -69,6 +78,7 @@ func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 		webuiserver:      services.NewWebServer(),
 		hostsToAPIServer: make(map[string]string),
 		apiNameToOrigin:  make(map[string]string),
+		internalRoutes:   make(map[string]string),
 	}
 }
 
@@ -78,36 +88,38 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 
 	p.isInLocalMode = *localMode
 	p.baseURL = common.BaseURL
+	p.internalBaseURL = "m." + p.baseURL
 	p.apiBaseURL = "api" + p.baseURL
 	p.baseAuthURL = "trinity" + p.baseURL
 	p.baseWDURL = "console" + p.baseURL
 	if p.isInLocalMode == false {
 		p.listenerPort = productionPort
+		p.internalAPIBase = "api.m." + p.baseURL
 		p.apiBaseURLWithScheme = "https://" + "." + p.baseURL
 		p.internalAPIBaseWithScheme = "https://" + ".m." + p.baseURL
-		p.internalAPIBase = "api.m" + p.baseURL
 		common.Logger.Infoln("running in production mode...")
 		p.setRoutes()
 		p.startTLSServer()
 	} else {
 		p.listenerPort = devPort
 		p.apiBaseURLWithScheme = "http://" + "." + p.baseURL
-		p.internalAPIBaseWithScheme = "http://" + ".m." + p.baseURL
-		p.internalAPIBase = "api.frostdev.m"
+		p.internalAPIBaseWithScheme = "http://" + p.baseURL
+		p.internalAPIBase = "api.frost-int.m"
 		common.Logger.Infoln("running in dev mode...")
 		p.setRoutes()
 		p.startNotTLSServer()
 	}
-	// } else {
-	// 	p.listenerPort = devPort
-
-	// }
 }
 
 //AddRoute ...
 func (p *Proxy) AddRoute(newRoute data.ServiceDetails) {
-	p.apiRoutes[newRoute.APIName] = newRoute.ServiceAddress
-	p.knownRoutes[newRoute.AppName+p.baseURL] = true
+	if newRoute.Internal {
+		p.internalRoutes[newRoute.APIName] = newRoute.ServiceAddress
+		p.knownRoutes[newRoute.AppName+p.internalBaseURL] = true
+	} else {
+		p.apiRoutes[newRoute.APIName] = newRoute.ServiceAddress
+		p.knownRoutes[newRoute.AppName+p.baseURL] = true
+	}
 }
 
 //AddExtraRoute ...
@@ -144,7 +156,7 @@ func (p *Proxy) RenameRoute(oldname, newname string) {
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.URL.String() == "/favicon.ico" {
 		w.WriteHeader(200)
-	} else if req.Host == p.apiBaseURL {
+	} else if req.Host == p.apiBaseURL || req.Host == p.internalAPIBase {
 		p.serveAPIRequest(w, req)
 	} else if strings.HasSuffix(req.Host, p.baseURL) && p.knownAliasHosts[req.Host] == false {
 		if p.knownRoutes[req.Host] {
@@ -159,6 +171,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		common.WriteFailureResponse(errors.New("unknown route "+req.Host+req.URL.String()), w, "ServeHTTP", 404)
 	}
 }
+
 func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
 	defer common.TimeTrack(time.Now())
 	var proxiedRequest bool
@@ -182,14 +195,35 @@ func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request)
 }
 func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 	defer common.TimeTrack(time.Now())
+	var apiName string
+	var serviceAddr string
+	var hostToReplace string
+
 	if req.Host == p.apiBaseURL {
-		var urlWithoutHost = strings.Replace(req.URL.String(), p.apiBaseURLWithScheme, "", -1)
-		var urlBits = strings.Split(urlWithoutHost, "/")
-		var apiName = urlBits[1]
-		p.proxyRequest(w, req, p.apiRoutes[apiName], "/api"+req.URL.Path, p.apiNameToOrigin[apiName])
+		hostToReplace = p.apiBaseURLWithScheme
+		serviceAddr = p.apiRoutes[p.getAPIName(req.URL.String(), hostToReplace)]
+		apiName = p.getAPIName(req.URL.String(), hostToReplace)
+	} else if req.Host == p.internalAPIBase {
+		hostToReplace = p.internalAPIBaseWithScheme
+		if strings.HasPrefix(req.RemoteAddr, "192") == false {
+			common.LogWarn("remoteAddr", req.RemoteAddr, "attempt by remote host to access internal service")
+			p.invalidRoute(w, req.URL.String())
+			return
+		}
+		apiName = p.getAPIName(req.URL.String(), hostToReplace)
+		common.LogDebug("apiName", apiName, "got apiName (maybe?)")
+		serviceAddr = p.internalRoutes[apiName]
 	} else {
 		p.invalidRoute(w, req.URL.String())
+		return
 	}
+
+	p.proxyRequest(w, req, serviceAddr, "/api"+req.URL.Path, p.apiNameToOrigin[apiName])
+}
+func (p *Proxy) getAPIName(url, hostname string) string {
+	var urlWithoutHost = strings.Replace(url, hostname, "", -1)
+	var urlBits = strings.Split(urlWithoutHost, "/")
+	return urlBits[1]
 }
 func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo string, path string, origin string) {
 	var userInfo *url.Userinfo
@@ -215,30 +249,26 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo s
 	}
 	p.fwd.ServeHTTP(w, req)
 }
-func (p *Proxy) urlWhiteList() autocert.HostPolicy {
-	return func(_ context.Context, host string) error {
-		if !p.knownRoutes[host] && !p.knownAliasHosts[host] {
-			err := errors.New("host not on whitelist: " + host)
-			common.CreateFailureResponse(err, "urlWhiteList", 400)
-			return err
-		}
-		return nil
-	}
-}
 func (p *Proxy) setRoutes() {
 	var route string
 	p.knownRoutes[p.apiBaseURL] = true
 	p.knownRoutes[p.baseWDURL] = true
 	p.knownRoutes[p.baseAuthURL] = true
-	p.apiRoutes[icapiAPIName] = "localhost:5000"
+	p.internalRoutes[icapiAPIName] = "localhost:5000"
 	p.apiRoutes[watchdogAPIName] = "localhost:1000"
 	p.apiRoutes[authServiceAPIName] = "localhost:1003"
 	if routes, err := p.data.GetServiceDetailss(); err == nil {
 		for _, v := range routes {
-			p.apiRoutes[v.APIName] = v.ServiceAddress
-			p.knownRoutes[v.AppName+p.baseURL] = true
-			println(v.AppName + p.baseURL)
-			p.apiNameToOrigin[v.APIName] = v.AppName + p.baseURL
+			if v.Internal {
+				p.internalRoutes[v.APIName] = v.ServiceAddress
+				p.knownRoutes[v.AppName+p.internalAPIBase] = true
+				p.apiNameToOrigin[v.APIName] = v.AppName + p.internalBaseURL
+			} else {
+				p.apiRoutes[v.APIName] = v.ServiceAddress
+				p.knownRoutes[v.AppName+p.baseURL] = true
+				println(v.AppName + p.baseURL)
+				p.apiNameToOrigin[v.APIName] = v.AppName + p.baseURL
+			}
 		}
 	}
 

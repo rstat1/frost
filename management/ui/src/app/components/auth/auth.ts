@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
 
 import { APIService } from 'app/services/api/api.service';
 import { AuthService } from 'app/services/auth/auth.service';
-import { ActivatedRoute } from '@angular/router';
+import { PageInfoService } from 'app/services/page-info.service';
 
 @Component({
 	selector: 'app-login',
@@ -18,23 +19,17 @@ export class AuthComponent implements OnInit {
 	private thisIsReallyDumb: Subscription;
 	private superDuperDumb: Subscription;
 
-	constructor(private api: APIService, private auth: AuthService, private route: ActivatedRoute) {
+	constructor(private api: APIService, private auth: AuthService, private route: ActivatedRoute, private pageInfo: PageInfoService) {
 		let hasAuthCode: boolean = window.location.toString().includes("authcode");
 		if (hasAuthCode == false) {
 			this.getServicesSub = this.api.GetAppState().subscribe(resp => {
-				if (resp.response == "initialized") {
-					// this.auth.setSavedToken().then(r => {
-					// 	console.log("token not valid");
-					// 	if (auth.NoToken == false) {
-						// 	console.log("do auth...")
-							this.auth.doAuthRequest("", "", "", false);
-					// 	}
-					// });
+				if (resp.response == "initialized" || resp.response == "initialized-need-vt") {
+					this.auth.doAuthRequest("", "", "", false);/*  */
 				} else {
 					window.location.replace(resp.response);
 				}
 				console.log(resp);
-			}, e => {console.log(e);});
+			}, e => { console.log(e); });
 		} else if (hasAuthCode) {
 			this.thisIsReallyDumb = this.route.url.subscribe(whyIsThisSoDumb => {
 				if (whyIsThisSoDumb.length > 0) {

@@ -295,7 +295,7 @@ func LogDebug(extraKey string, extraValue interface{}, entry interface{}) {
 	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
 
 	if extraKey != "" {
-		Logger.WithFields(logrus.Fields{"func": name, "line": line, "extra": extraValue}).Debugln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line, extraKey: extraValue}).Debugln(entry)
 	} else {
 		Logger.WithFields(logrus.Fields{"func": name, "line": line}).Debugln(entry)
 	}

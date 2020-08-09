@@ -60,7 +60,7 @@ export class ConfigService {
 			var domain: string = s.substr(s.indexOf("."));
 			ConfigService.API_ENDPOINT = window.location.protocol + "//" + "api" + domain;
 		} else {
-			ConfigService.API_ENDPOINT = "http://api-test.alargerobot.dev";
+			ConfigService.API_ENDPOINT = "http://api.frostdev.m";
 		}
 		ConfigService.AUTH_ENDPOINT = ConfigService.API_ENDPOINT + "/trinity/";
 	}

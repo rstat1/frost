@@ -95,7 +95,7 @@ func (s *ServiceManager) StopManagedServices() {
 //StartManagedService ...
 func (s *ServiceManager) StartManagedService(name string) bool {
 	routeInfo, _ := s.data.GetRoute(name)
-	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, routeInfo.ServiceID, routeInfo.ServiceKey, s.inDevMode)
+	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, routeInfo.ServiceID, routeInfo.ServiceKey, s.inDevMode, routeInfo.VaultIntegrated)
 }
 
 //StopManagedService ...

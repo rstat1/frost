@@ -61,7 +61,7 @@ func (icapi *InternalConfigAPI) ValidateServicesCreds(r *http.Request) common.AP
 }
 
 func (icapi *InternalConfigAPI) setAPIRoutes() {
-	icapi.router.Handle("/api/icapi/config/:service/set", common.ValidatePOSTRequest(icapi.ValidateServicesCreds, icapi.setConfigValue))
+	icapi.router.Handle("/api/icapi/config/:service/set/:key", common.ValidatePOSTRequest(icapi.ValidateServicesCreds, icapi.setConfigValue))
 	icapi.router.Handle("/api/icapi/config/:service/get/:key", common.RequestWrapper(icapi.ValidateServicesCreds, "GET", icapi.getConfigValue))
 }
 
@@ -104,22 +104,26 @@ func (icapi *InternalConfigAPI) getConfigValue(resp http.ResponseWriter, r *http
 }
 
 func (icapi *InternalConfigAPI) setConfigValue(resp http.ResponseWriter, r *http.Request) {
-	var change data.ConfigChangeRequest
+	var value string
+
+	key := vestigo.Param(r, "key")
+
 	serviceName := vestigo.Param(r, "service")
+
 	if body, err := ioutil.ReadAll(r.Body); err == nil {
-		json.Unmarshal(body, &change)
+		value = string(body)
 	} else {
 		common.WriteFailureResponse(err, resp, "setConfigValue", 500)
 		return
 	}
 	if serviceName == "watchdog" {
-		common.WriteAPIResponseStruct(resp, icapi.setFrostConfigValue(change))
+		common.WriteAPIResponseStruct(resp, icapi.setFrostConfigValue(key, value))
 	} else {
-		if vKey, vSealed, err := icapi.vault.GenerateKey(crypto.FrostKeyID, crypto.Context{"key": change.Key}); err == nil {
-			key := GenerateKey(vKey[:], "service-config/"+serviceName+"/"+change.Key)
-			sealed, _ := key.Seal(vKey[:], "service-config/"+serviceName+"/"+change.Key)
-			value := bytes.NewBuffer([]byte(change.Value))
-			if encipheredRead, err := sio.EncryptReader(value, sio.Config{Key: key[:], MinVersion: sio.Version20}); err == nil {
+		if vKey, vSealed, err := icapi.vault.GenerateKey(crypto.FrostKeyID, crypto.Context{"key": key}); err == nil {
+			cryptoKey := GenerateKey(vKey[:], "service-config/"+serviceName+"/"+key)
+			sealed, _ := cryptoKey.Seal(vKey[:], "service-config/"+serviceName+"/"+key)
+			value := bytes.NewBuffer([]byte(value))
+			if encipheredRead, err := sio.EncryptReader(value, sio.Config{Key: cryptoKey[:], MinVersion: sio.Version20}); err == nil {
 				encipheredValue, err := ioutil.ReadAll(encipheredRead)
 				if err != nil {
 					common.WriteFailureResponse(err, resp, "setConfigValue", 500)
@@ -127,11 +131,11 @@ func (icapi *InternalConfigAPI) setConfigValue(resp http.ResponseWriter, r *http
 				}
 				entryCryptoKey := ConfigEncryptionKey{EntryKey: sealed, SealedMasterKey: vSealed}
 				ecKey, _ := json.Marshal(entryCryptoKey)
-				if e := icapi.vault.WriteKeyToKVStorage(ecKey, "service-config/"+serviceName+"/"+change.Key); e != nil {
+				if e := icapi.vault.WriteKeyToKVStorage(ecKey, "service-config/"+serviceName+"/"+key); e != nil {
 					common.WriteFailureResponse(e, resp, "setConfigValue", 500)
 					return
 				}
-				common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", icapi.data.SetConfigValue(change.Key, serviceName, encipheredValue), 200))
+				common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("success", icapi.data.SetConfigValue(key, serviceName, encipheredValue), 200))
 			}
 		} else {
 			common.WriteFailureResponse(err, resp, "setConfigValue", 500)
@@ -139,29 +143,29 @@ func (icapi *InternalConfigAPI) setConfigValue(resp http.ResponseWriter, r *http
 	}
 }
 
-func (icapi *InternalConfigAPI) setFrostConfigValue(change data.ConfigChangeRequest) (resp common.APIResponse) {
+func (icapi *InternalConfigAPI) setFrostConfigValue(key, value string) (resp common.APIResponse) {
 	var changeMade bool
 
-	switch change.Key {
+	switch key {
 	case "dbAddr":
-		common.CurrentConfig.DBAddr = change.Value
+		common.CurrentConfig.DBAddr = value
 		changeMade = true
 		break
 	case "dbName":
-		common.CurrentConfig.DBName = change.Value
+		common.CurrentConfig.DBName = value
 		changeMade = true
 		break
 	case "vaultToken":
-		common.CurrentConfig.VaultToken = change.Value
+		common.CurrentConfig.VaultToken = value
 		icapi.vault.SetAccessToken()
 		changeMade = true
 		break
 	case "vaultAddr":
-		common.CurrentConfig.VaultAddr = change.Value
+		common.CurrentConfig.VaultAddr = value
 		changeMade = true
 		break
 	case "vaultARID":
-		common.CurrentConfig.VaultRoleID = change.Value
+		common.CurrentConfig.VaultRoleID = value
 		break
 	default:
 		resp = common.CreateAPIResponse("success", errors.New("invalid config key specified"), 400)

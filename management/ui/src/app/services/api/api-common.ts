@@ -27,6 +27,8 @@ export class Service {
 	public ServiceKey: string;
 	public ServiceID: string;
 	public managedUpdates: boolean;
+	public needsVault: boolean;
+	public internal: boolean;
 	constructor() {
 		this.name = "";
 		this.filename = "";

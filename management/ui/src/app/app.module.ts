@@ -3,6 +3,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from 'app/app.component';
 import { MenuService } from 'app/services/menu.service';
@@ -11,18 +12,18 @@ import { APIService } from 'app/services/api/api.service';
 import { ConfigService } from 'app/services/config.service';
 import { MalihuScrollbarModule } from 'ngx-malihu-scrollbar';
 import { AuthService } from 'app/services/auth/auth.service';
+import { HomeComponent } from 'app/components/home/home.component';
 import { FirstRunComponent } from 'app/manager/first-run/first-run';
 import { AuthGuard, RootGuard } from 'app/services/auth/auth.guard';
 import { AuthTokenInjector } from 'app/services/api/AuthTokenInjector';
 
 import { MenuModule } from 'app/menu/menu.module';
+import { UsersModule } from 'app/users/users.module';
 import { ManagerModule } from 'app/manager/manager.module';
-import { HomeComponent } from 'app/components/home/home.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { UsersModule } from './users/users.module';
 
 
 const routes: Routes = [
+	{ path: "first-run", component: FirstRunComponent, pathMatch: "full"},
 	{ path: 'auth', component: AuthComponent, pathMatch: "full" },
 	{
 		path: 'services',
@@ -43,8 +44,8 @@ const menuItems = { Items: [
 	//App Menu
 	{ ItemTitle: "Users", ItemSubText: "Edit user accounts", Icon:"user", Category:"App",
 		ActionName: "users", RequiresRoot: false, MenuType: "app", Context: "!users" },
-	{ ItemTitle: "Default VM Config", ItemSubText: "Set default config for service VMs", Icon:"cloud", Category:"App",
-		ActionName: "vmconfig", RequiresRoot: false, MenuType: "app" },
+	// { ItemTitle: "Default VM Config", ItemSubText: "Set default config for service VMs", Icon:"cloud", Category:"App",
+	// 	ActionName: "vmconfig", RequiresRoot: false, MenuType: "app" },
 	{ ItemTitle: "Services", ItemSubText: "Edit or view service configuration and logs", Icon: "services", Category:"App",
 		ActionName: "services", RequiresRoot: false, MenuType: "app", Context: "!services"},
 
@@ -57,10 +58,10 @@ const menuItems = { Items: [
 	//Service menu
 	{ ItemTitle: "Delete service", ItemSubText: "Delete this service", Icon: "delete", Category: "Service",
 		MenuType: "app", ActionName: "deleteservice", RequiresRoot: false, Context: "service" },
-	{ ItemTitle: "Service Logs", ItemSubText: "View service specific log data", Icon: "logs",
-		MenuType: "app", ActionName: "logs", RequiresRoot: false, Category: "Service", Context: "service"  },
-	{ ItemTitle: "VM Configuration", ItemSubText: "Edit configuration of the VM hosting this service", Icon: "cloud",
-		MenuType: "app", ActionName: "editvmconfig", RequiresRoot: false, Category: "Service", Context: "service" },
+	// { ItemTitle: "Service Logs", ItemSubText: "View service specific log data", Icon: "logs",
+	// 	MenuType: "app", ActionName: "logs", RequiresRoot: false, Category: "Service", Context: "service"  },
+	// { ItemTitle: "VM Configuration", ItemSubText: "Edit configuration of the VM hosting this service", Icon: "cloud",
+	// 	MenuType: "app", ActionName: "editvmconfig", RequiresRoot: false, Category: "Service", Context: "service" },
 	{ ItemTitle: "Restart Service", ItemSubText: "Stops and restarts this service", Icon: "restart",
 		MenuType: "app", ActionName: "reboot", RequiresRoot: false, Category: "Service", Context: "service" },
 	{ ItemTitle: "Configure Service", ItemSubText: "Allows specifying any service specifc configuration", Icon: "config",

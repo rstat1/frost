@@ -29,11 +29,11 @@
 						<mat-checkbox color="primary" formControlName="IsManaged">Managed Service</mat-checkbox>
 					</span>
 					<span style="margin-bottom: 20px;" class="login-register-text-box">
-						<mat-checkbox color="primary" formControlName="UpdatesManaged">Managed Updates</mat-checkbox>
+						<mat-checkbox color="primary" formControlName="InternalUse">Internal Use Only</mat-checkbox>
 					</span>
-					<!-- <span style="margin-bottom: 20px;" class="login-register-text-box">
-						<mat-checkbox color="primary" formControlName="UpdatesManaged">Service has no UI</mat-checkbox>
-					</span> -->
+					<span style="margin-bottom: 20px;" class="login-register-text-box">
+						<mat-checkbox color="primary" formControlName="VaultIntegration">Enable Vault Integration</mat-checkbox>
+					</span>
 					<div>
 						<button color="primary" mat-button color="primary" matStepperNext type="button">Next</button>
 					</div>
@@ -68,7 +68,7 @@
 					</mat-form-field>
 				</span>
 				<div>
-					<button color="primary" mat-button color="primary" type="submit" >Save</button>
+					<button color="primary" mat-button color="primary" type="submit">Save</button>
 				</div>
 			</mat-step>
 		</mat-vertical-stepper>

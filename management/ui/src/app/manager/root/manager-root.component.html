@@ -1,13 +1,16 @@
 <div class="block-container">
+	<div *ngIf="showNeedsVT" style="width: 100%; background-color:red;height:22px;color:white;text-align: center;font-size: 12pt;">
+		System start paused. Missing Vault token.
+	</div>
 	<div style="display: inline-flex;height:64px;">
 		<div class="logo">
 			<a (click)="goHome()" matTooltipPosition="below" matTooltip="Home">
-				<img [src]="getServiceIconURL(this.pageLogo)" width="50" height="50"/>
+				<img [src]="getServiceIconURL(this.pageLogo)" width="50" height="50" />
 			</a>
 		</div>
 		<p class="service-title">{{pageTitle}}</p>
 		<!-- <app-menu navType="quick"></app-menu> -->
-		<app-menu navType="quick" [menuType]="this.menuType" [category]="this.menuCategory" ></app-menu>
+		<app-menu navType="quick" [menuType]="this.menuType" [category]="this.menuCategory"></app-menu>
 	</div>
 	<div style="display: flex;">
 		<router-outlet></router-outlet>

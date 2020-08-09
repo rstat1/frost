@@ -71,6 +71,8 @@ type ServiceDetails struct {
 	IsManagedService   bool   `json:"managed" graph:"isManaged"`
 	ServiceNameURLToUI bool   `json:"serviceNameToUI"`
 	AccessLevel        string `json:"accessLevel"`
+	VaultIntegrated    bool   `json:"needsVault"`
+	Internal           bool   `json:"internal"`
 }
 
 //ServiceAccess ...
