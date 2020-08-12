@@ -72,10 +72,10 @@ export class NewServiceComponent implements OnInit {
 		serviceDetails.filename = (<any>this.serviceDetails.value).ServiceFileName;
 		serviceDetails.address = (<any>this.serviceDetails.value).address;
 		serviceDetails.api_prefix = (<any>this.serviceDetails.value).apiPrefix;
-		serviceDetails.managed = (<any>this.managementDetails.value).IsManaged;
 		serviceDetails.RedirectURL = (<any>this.serviceDetails.value).authCallback;
-		serviceDetails.needsVault = (<any>this.serviceDetails.value).VaultIntegration;
-		serviceDetails.internal = (<any>this.serviceDetails.value).InternalUse;
+		serviceDetails.managed = (<any>this.managementDetails.value).IsManaged;
+		serviceDetails.needsVault = (<any>this.managementDetails.value).VaultIntegration;
+		serviceDetails.internal = (<any>this.managementDetails.value).InternalUse;
 
 		body.append("details", JSON.stringify(serviceDetails));
 
