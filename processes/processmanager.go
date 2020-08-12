@@ -24,8 +24,7 @@ func NewProcessManager(vc *crypto.VaultClient) *ProcessManager {
 }
 
 //StartProcess ...
-func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode, useVault bool) bool {
-	var envVars []string
+func (pm *ProcessManager) StartProcess(name, dirName string, envVars []string, devmode bool) bool {
 	dir, _ := os.Getwd()
 	path := dir + "/" + dirName + "/" + name
 	if pm.managedProcesses[name] == nil {
@@ -37,23 +36,6 @@ func (pm *ProcessManager) StartProcess(name, dirName, sid, skey string, devmode,
 				name, "-ppid", strconv.Itoa(os.Getpid()), "-devmode=" + strconv.FormatBool(devmode),
 			})
 			pm.managedProcesses[name] = process
-
-			if useVault {
-				id, err := pm.vault.GetRoleID(name)
-				if err != nil {
-					common.LogError("", err)
-					return false
-				}
-
-				arsid, err := pm.vault.GetSecretIDAccessor()
-				if err != nil {
-					common.LogError("", err)
-					return false
-				}
-				envVars = []string{"SKEY=" + skey, "SID=" + sid, "APPROLE_ID=" + id, "ARSID_ACCESS_KEY=" + arsid, "VAULTADDR=" + common.CurrentConfig.VaultAddr}
-			} else {
-				envVars = []string{"SKEY=" + skey, "SID=" + sid}
-			}
 
 			process.Run(envVars)
 			return true

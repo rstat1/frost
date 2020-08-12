@@ -303,19 +303,29 @@ func LogDebug(extraKey string, extraValue interface{}, entry interface{}) {
 
 //LogInfo ...
 func LogInfo(extraKey string, extraValue interface{}, entry interface{}) {
+	pc, _, line, _ := runtime.Caller(1)
+	funcObj := runtime.FuncForPC(pc)
+	runtimeFunc := regexp.MustCompile(`^.*\.(.*)$`)
+	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
+
 	if extraKey != "" {
-		Logger.WithField(extraKey, extraValue).Infoln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line, extraKey: extraValue}).Infoln(entry)
 	} else {
-		Logger.Infoln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line}).Infoln(entry)
 	}
 }
 
 //LogWarn ...
 func LogWarn(extraKey, extraValue string, entry interface{}) {
+	pc, _, line, _ := runtime.Caller(1)
+	funcObj := runtime.FuncForPC(pc)
+	runtimeFunc := regexp.MustCompile(`^.*\.(.*)$`)
+	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
+
 	if extraKey != "" {
-		Logger.WithField(extraKey, extraValue).Warnln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line, extraKey: extraValue}).Warnln(entry)
 	} else {
-		Logger.Warnln(entry)
+		Logger.WithFields(logrus.Fields{"func": name, "line": line}).Warnln(entry)
 	}
 }
 
@@ -350,7 +360,6 @@ func TimeTrack(start time.Time) {
 	name := runtimeFunc.ReplaceAllString(funcObj.Name(), "$1")
 	Logger.WithFields(logrus.Fields{"elaspsed": elapsed, "func": name}).Debugln("done")
 }
-
 
 //NewFalse This only exists because the Vault client API is stupid.
 func NewFalse() *bool {
