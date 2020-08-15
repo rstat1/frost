@@ -83,6 +83,31 @@ func (u *User) GetUserFromToken(r *http.Request) data.User {
 	return user
 }
 
+//GetUserFromProvidedToken ...
+func (u *User) GetUserFromProvidedToken(token, serviceName string) data.User {
+	var user data.User
+	if token, err := jwt.ParseSigned(token); err == nil {
+		var defaultClaims jwt.Claims
+		tokenClaims := struct {
+			Name        string `json:"sub"`
+			AccessLevel string `json:"lvl"`
+			AppName     string `json:"app"`
+		}{}
+		token.Claims(u.hmacKey, &defaultClaims, &tokenClaims)
+		user = u.datastore.GetUser(tokenClaims.Name)
+		user.Group = tokenClaims.AccessLevel
+		// if tokenClaims.AppName != serviceName {
+		// 	common.LogError("", errors.New("invalid token"))
+		// 	user = data.User{}
+		// }
+	} else {
+		common.LogError("", errors.New("invalid token"))
+		user = data.User{}
+	}
+	user.PassHash = ""
+	return user
+}
+
 //GetUserByID ...
 func (u *User) GetUserByID(id string) data.User {
 	return u.datastore.GetUserByID(id)

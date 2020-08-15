@@ -27,7 +27,7 @@ func main() {
 	vault := crypto.NewVaultClient(*devMode)
 
 	proxy := proxy.NewProxy(data)
-	icapi := management.NewInternalConfigAPI(data, vault)
+	icapi := management.NewInternalPlatformAPI(data, vault, userService)
 	services := management.NewServiceManager(data, proxy, *devMode, vault)
 	manager := management.NewAPIRouter(data, proxy, services, userService, vault, *devMode)
 	authService := auth.NewAuthService(data, userService, *devMode)

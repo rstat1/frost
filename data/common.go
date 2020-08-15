@@ -144,3 +144,9 @@ type ConfigChangeRequest struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
+
+//TokenValidateRequest ...
+type TokenValidateRequest struct {
+	Token string `json:"token"`
+	Sudo  bool   `json:"sudo"`
+}

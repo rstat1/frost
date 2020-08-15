@@ -96,6 +96,12 @@ func (s *ServiceManager) StopManagedServices() {
 func (s *ServiceManager) StartManagedService(name string) bool {
 	var envVars []string
 	routeInfo, _ := s.data.GetRoute(name)
+	envVars = []string{
+		"SKEY=" + routeInfo.ServiceKey,
+		"SID=" + routeInfo.ServiceID,
+		"BASE_URL=" + common.CurrentConfig.BaseURL,
+		"INTERNAL_BASE" + "",
+	}
 	if routeInfo.VaultIntegrated {
 		id, err := s.vault.GetRoleID(routeInfo.AppName)
 		if err != nil {
@@ -107,14 +113,7 @@ func (s *ServiceManager) StartManagedService(name string) bool {
 			common.LogError("", err)
 			return false
 		}
-		envVars = []string{
-			"SKEY=" + routeInfo.ServiceKey,
-			"SID=" + routeInfo.ServiceID,
-			"APPROLE_ID=" + id,
-			"ARSID_ACCESS_KEY=" + arsid,
-			"VAULTADDR=" + common.CurrentConfig.VaultAddr}
-	} else {
-		envVars = []string{"SKEY=" + routeInfo.ServiceKey, "SID=" + routeInfo.ServiceID}
+		envVars = append(envVars, "APPROLE_ID="+id, "ARSID_ACCESS_KEY="+arsid, "VAULTADDR="+common.CurrentConfig.VaultAddr)
 	}
 	return s.processes.StartProcess(routeInfo.BinName, routeInfo.AppName, envVars, s.inDevMode)
 }

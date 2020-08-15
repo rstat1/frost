@@ -10,29 +10,32 @@ import (
 
 	"github.com/husobee/vestigo"
 	"github.com/minio/sio"
+	"go.alargerobot.dev/frost/auth"
 	"go.alargerobot.dev/frost/common"
 	"go.alargerobot.dev/frost/crypto"
 	"go.alargerobot.dev/frost/data"
 )
 
-//InternalConfigAPI ...
-type InternalConfigAPI struct {
+//InternalPlatformAPI ...
+type InternalPlatformAPI struct {
+	user   *auth.User
 	router *vestigo.Router
 	data   *data.DataStore
 	vault  *crypto.VaultClient
 }
 
-//NewInternalConfigAPI ...
-func NewInternalConfigAPI(ds *data.DataStore, vc *crypto.VaultClient) *InternalConfigAPI {
-	return &InternalConfigAPI{
+//NewInternalPlatformAPI...
+func NewInternalPlatformAPI(ds *data.DataStore, vc *crypto.VaultClient, user *auth.User) *InternalPlatformAPI {
+	return &InternalPlatformAPI{
 		vault:  vc,
 		data:   ds,
+		user:   user,
 		router: vestigo.NewRouter(),
 	}
 }
 
 //InitListener ...
-func (icapi *InternalConfigAPI) InitListener() {
+func (icapi *InternalPlatformAPI) InitListener() {
 	go func() {
 		icapi.setAPIRoutes()
 		if err := http.ListenAndServe("localhost:5000", icapi.router); err != nil {
@@ -42,7 +45,7 @@ func (icapi *InternalConfigAPI) InitListener() {
 }
 
 //ValidateServicesCreds ...
-func (icapi *InternalConfigAPI) ValidateServicesCreds(r *http.Request) common.APIResponse {
+func (icapi *InternalPlatformAPI) ValidateServicesCreds(r *http.Request) common.APIResponse {
 	serviceName := vestigo.Param(r, "service")
 	sid := r.Header.Get("X-Frost-ServiceID")
 	skey := r.Header.Get("X-Frost-ServiceKey")
@@ -60,12 +63,13 @@ func (icapi *InternalConfigAPI) ValidateServicesCreds(r *http.Request) common.AP
 	return common.CreateAPIResponse("failed", errors.New("missing required header(s)"), 400)
 }
 
-func (icapi *InternalConfigAPI) setAPIRoutes() {
-	icapi.router.Handle("/api/icapi/config/:service/set/:key", common.ValidatePOSTRequest(icapi.ValidateServicesCreds, icapi.setConfigValue))
-	icapi.router.Handle("/api/icapi/config/:service/get/:key", common.RequestWrapper(icapi.ValidateServicesCreds, "GET", icapi.getConfigValue))
+func (icapi *InternalPlatformAPI) setAPIRoutes() {
+	icapi.router.Handle("/api/icapi/:service/auth/verifytoken", common.ValidatePOSTRequest(icapi.ValidateServicesCreds, icapi.verifyToken))
+	icapi.router.Handle("/api/icapi/:service/config/set/:key", common.ValidatePOSTRequest(icapi.ValidateServicesCreds, icapi.setConfigValue))
+	icapi.router.Handle("/api/icapi/:service/config/get/:key", common.RequestWrapper(icapi.ValidateServicesCreds, "GET", icapi.getConfigValue))
 }
 
-func (icapi *InternalConfigAPI) getConfigValue(resp http.ResponseWriter, r *http.Request) {
+func (icapi *InternalPlatformAPI) getConfigValue(resp http.ResponseWriter, r *http.Request) {
 	var entryKey Key
 	var entryCryptoKey ConfigEncryptionKey
 	var key string = vestigo.Param(r, "key")
@@ -102,14 +106,10 @@ func (icapi *InternalConfigAPI) getConfigValue(resp http.ResponseWriter, r *http
 	}
 
 }
-
-func (icapi *InternalConfigAPI) setConfigValue(resp http.ResponseWriter, r *http.Request) {
+func (icapi *InternalPlatformAPI) setConfigValue(resp http.ResponseWriter, r *http.Request) {
 	var value string
-
 	key := vestigo.Param(r, "key")
-
 	serviceName := vestigo.Param(r, "service")
-
 	if body, err := ioutil.ReadAll(r.Body); err == nil {
 		value = string(body)
 	} else {
@@ -142,8 +142,24 @@ func (icapi *InternalConfigAPI) setConfigValue(resp http.ResponseWriter, r *http
 		}
 	}
 }
+func (icapi *InternalPlatformAPI) verifyToken(resp http.ResponseWriter, r *http.Request) {
+	serviceName := vestigo.Param(r, "service")
+	var requestDetails data.TokenValidateRequest
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		json.Unmarshal(body, &requestDetails)
+	} else {
+		common.WriteFailureResponse(err, resp, "setConfigValue", 500)
+		return
+	}
 
-func (icapi *InternalConfigAPI) setFrostConfigValue(key, value string) (resp common.APIResponse) {
+	if valid, err := icapi.user.ValidateToken(requestDetails.Token, requestDetails.Sudo, false); valid {
+		user, _ := json.Marshal(icapi.user.GetUserFromProvidedToken(requestDetails.Token, serviceName))
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(user), nil, 200))
+	} else {
+		common.WriteFailureResponse(common.LogError("", errors.New(err)), resp, "verifyToken", 400)
+	}
+}
+func (icapi *InternalPlatformAPI) setFrostConfigValue(key, value string) (resp common.APIResponse) {
 	var changeMade bool
 
 	switch key {
