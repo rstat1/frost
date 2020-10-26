@@ -162,9 +162,6 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 	} else if req.Host == p.apiBaseURL {
 		p.serveAPIRequest(w, req)
-	} else if req.Host == p.internalAPIBase {
-		common.LogDebug("", "", req.URL.Scheme)
-		p.serveAPIRequest(w, req)
 	} else if strings.HasSuffix(req.Host, p.baseURL) && p.knownAliasHosts[req.Host] == false {
 		if p.knownRoutes[req.Host] {
 			var name = strings.Replace(req.Host, p.baseURL, "", -1)
@@ -207,10 +204,9 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 	var hostToReplace string
 	if req.Host == p.apiBaseURL {
 		apiName = p.getAPIName(req.URL.String(), hostToReplace)
-		if p.knownRoutes[apiName] == true {
-			hostToReplace = p.apiBaseURLWithScheme
-			serviceAddr = p.apiRoutes[apiName]
-		} else {
+		hostToReplace = p.apiBaseURLWithScheme
+		serviceAddr = p.apiRoutes[apiName]
+		if serviceAddr == "" {
 			p.invalidRoute(w, req.URL.String())
 			return
 		}
