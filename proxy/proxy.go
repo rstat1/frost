@@ -21,6 +21,7 @@ import (
 type Proxy struct {
 	data                 *data.DataStore
 	fwd                  *forward.Forwarder
+	internal             *InternalProxy
 	knownRoutes          map[string]bool
 	apiRoutes            map[string]string
 	aliasHosts           map[string][]string
@@ -48,7 +49,6 @@ var (
 )
 
 const (
-	icapiAPIName       = "icapi"
 	watchdogAPIName    = "frost"
 	authServiceAPIName = "trinity"
 
@@ -60,6 +60,7 @@ const (
 type HTTPErrorHandler struct{}
 
 func (sieh *HTTPErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, err error) {
+	common.LogError(req.URL.String(), err)
 	common.WriteFailureResponse(err, w, "whoKnows", 500)
 }
 
@@ -71,6 +72,7 @@ func NewProxy(dataStoreRef *data.DataStore) *Proxy {
 	return &Proxy{
 		fwd:              fwd,
 		data:             dataStoreRef,
+		internal:         NewInternalProxy(),
 		apiRoutes:        make(map[string]string),
 		aliasHosts:       make(map[string][]string),
 		knownRoutes:      make(map[string]bool),
@@ -99,6 +101,7 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 		p.internalAPIBaseWithScheme = "https//" + ".frost.m"
 		common.Logger.Infoln("running in production mode...")
 		p.setRoutes()
+		go p.internal.StartProxyListener(localMode)
 		p.startTLSServer()
 	} else {
 		p.listenerPort = devPort
@@ -107,6 +110,7 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 		p.internalAPIBaseWithScheme = "http://" + p.baseURL
 		common.Logger.Infoln("running in dev mode...")
 		p.setRoutes()
+		go p.internal.StartProxyListener(localMode)
 		p.startNotTLSServer()
 	}
 }
@@ -156,7 +160,10 @@ func (p *Proxy) RenameRoute(oldname, newname string) {
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.URL.String() == "/favicon.ico" {
 		w.WriteHeader(200)
-	} else if req.Host == p.apiBaseURL || req.Host == p.internalAPIBase {
+	} else if req.Host == p.apiBaseURL {
+		p.serveAPIRequest(w, req)
+	} else if req.Host == p.internalAPIBase {
+		common.LogDebug("", "", req.URL.Scheme)
 		p.serveAPIRequest(w, req)
 	} else if strings.HasSuffix(req.Host, p.baseURL) && p.knownAliasHosts[req.Host] == false {
 		if p.knownRoutes[req.Host] {
@@ -198,26 +205,19 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 	var apiName string
 	var serviceAddr string
 	var hostToReplace string
-
 	if req.Host == p.apiBaseURL {
-		hostToReplace = p.apiBaseURLWithScheme
-		serviceAddr = p.apiRoutes[p.getAPIName(req.URL.String(), hostToReplace)]
 		apiName = p.getAPIName(req.URL.String(), hostToReplace)
-	} else if req.Host == p.internalAPIBase {
-		hostToReplace = p.internalAPIBaseWithScheme
-		if strings.HasPrefix(req.RemoteAddr, "192") == false {
-			common.LogWarn("remoteAddr", req.RemoteAddr, "attempt by remote host to access internal service")
+		if p.knownRoutes[apiName] == true {
+			hostToReplace = p.apiBaseURLWithScheme
+			serviceAddr = p.apiRoutes[apiName]
+		} else {
 			p.invalidRoute(w, req.URL.String())
 			return
 		}
-		apiName = p.getAPIName(req.URL.String(), hostToReplace)
-		common.LogDebug("apiName", apiName, "got apiName (maybe?)")
-		serviceAddr = p.internalRoutes[apiName]
 	} else {
 		p.invalidRoute(w, req.URL.String())
 		return
 	}
-
 	p.proxyRequest(w, req, serviceAddr, "/api"+req.URL.Path, p.apiNameToOrigin[apiName])
 }
 func (p *Proxy) getAPIName(url, hostname string) string {
@@ -254,15 +254,12 @@ func (p *Proxy) setRoutes() {
 	p.knownRoutes[p.apiBaseURL] = true
 	p.knownRoutes[p.baseWDURL] = true
 	p.knownRoutes[p.baseAuthURL] = true
-	p.internalRoutes[icapiAPIName] = "localhost:5000"
 	p.apiRoutes[watchdogAPIName] = "localhost:1000"
 	p.apiRoutes[authServiceAPIName] = "localhost:1003"
 	if routes, err := p.data.GetServiceDetailss(); err == nil {
 		for _, v := range routes {
 			if v.Internal {
-				p.internalRoutes[v.APIName] = v.ServiceAddress
-				p.knownRoutes[v.AppName+p.internalAPIBase] = true
-				p.apiNameToOrigin[v.APIName] = v.AppName + p.internalBaseURL
+				p.internal.SetInternalRoute(v.APIName, v.ServiceAddress)
 			} else {
 				p.apiRoutes[v.APIName] = v.ServiceAddress
 				p.knownRoutes[v.AppName+p.baseURL] = true
