@@ -90,19 +90,20 @@ func (icapi *InternalPlatformAPI) getConfigValue(resp http.ResponseWriter, r *ht
 				entryKey.Unseal(masterKey[:], entryCryptoKey.EntryKey)
 				decipheredRead, err := sio.DecryptReader(value, sio.Config{Key: entryKey[:], MinVersion: sio.Version20})
 				if err != nil {
-					common.WriteFailureResponse(err, resp, "setConfigValue", 500)
+					icapi.writeError(resp, err, 500)
 					return
 				}
 				encipheredValue, err := ioutil.ReadAll(decipheredRead)
-				common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(encipheredValue), nil, 200))
+				common.WritePlainStringResponse(resp, string(encipheredValue), 200)
 			} else {
-				common.WriteFailureResponse(err, resp, "setConfigValue", 500)
+				icapi.writeError(resp, err, 500)
 			}
 		} else {
-			common.WriteFailureResponse(err, resp, "setConfigValue", 500)
+			icapi.writeError(resp, err, 500)
 		}
 	} else {
-		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", errors.New("invalid key specified"), 400))
+		err := errors.New("invalid key specified")
+		icapi.writeError(resp, err, 400)
 	}
 
 }
@@ -193,4 +194,9 @@ func (icapi *InternalPlatformAPI) setFrostConfigValue(key, value string) (resp c
 	}
 	resp = common.CreateAPIResponse("success", nil, 400)
 	return resp
+}
+
+func (icapi *InternalPlatformAPI) writeError(resp http.ResponseWriter, err error, statusCode int) {
+	common.WritePlainStringResponse(resp, err.Error(), statusCode)
+	common.LogError("", err)
 }

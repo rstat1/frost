@@ -69,9 +69,8 @@ func CreateAPIResponse(response string, err error, failureCode int) APIResponse 
 //WritePlainStringResponse ...
 func WritePlainStringResponse(writer http.ResponseWriter, resp string, failCode int) {
 	writeCommonHeaders(writer)
-	writer.WriteHeader(failCode)
-	apiResp, _ := json.Marshal(resp)
-	writer.Write([]byte(apiResp))
+	writer.WriteHeader(failCode)	
+	writer.Write([]byte(resp))
 }
 
 //WriteAPIResponseStruct ...
