@@ -27,6 +27,7 @@ type Proxy struct {
 	aliasHosts           map[string][]string
 	knownAliasHosts      map[string]bool
 	hostsToAPIServer     map[string]string
+	reverseProxyRoutes   map[string]string
 	webuiserver          *services.WebServer
 	isInLocalMode        bool
 	icAPIURL             string
@@ -65,35 +66,37 @@ func (sieh *HTTPErrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 }
 
 //NewProxy ...
-func NewProxy(dataStoreRef *data.DataStore) *Proxy {
+func NewProxy(dataStoreRef *data.DataStore, devMode *bool) *Proxy {
 	var fwd *forward.Forwarder
 	sieh := &HTTPErrorHandler{}
 	fwd, _ = forward.New(forward.ErrorHandler(sieh))
 	return &Proxy{
-		fwd:              fwd,
-		data:             dataStoreRef,
-		internal:         NewInternalProxy(),
-		apiRoutes:        make(map[string]string),
-		aliasHosts:       make(map[string][]string),
-		knownRoutes:      make(map[string]bool),
-		knownAliasHosts:  make(map[string]bool),
-		webuiserver:      services.NewWebServer(),
-		hostsToAPIServer: make(map[string]string),
-		apiNameToOrigin:  make(map[string]string),
-		internalRoutes:   make(map[string]string),
+		fwd:                fwd,
+		data:               dataStoreRef,
+		internal:           NewInternalProxy(devMode),
+		apiRoutes:          make(map[string]string),
+		aliasHosts:         make(map[string][]string),
+		knownRoutes:        make(map[string]bool),
+		isInLocalMode:      *devMode,
+		knownAliasHosts:    make(map[string]bool),
+		webuiserver:        services.NewWebServer(),
+		hostsToAPIServer:   make(map[string]string),
+		apiNameToOrigin:    make(map[string]string),
+		internalRoutes:     make(map[string]string),
+		reverseProxyRoutes: make(map[string]string),
 	}
 }
 
 //StartProxyListener ...
-func (p *Proxy) StartProxyListener(localMode *bool) {
-	common.Logger.WithField("localmode", *localMode).Infoln("starting proxy listener.")
+func (p *Proxy) StartProxyListener() {
+	common.Logger.WithField("localmode", p.isInLocalMode).Infoln("starting proxy listener.")
 
-	p.isInLocalMode = *localMode
 	p.baseURL = common.BaseURL
 	p.internalBaseURL = "frost.m"
 	p.apiBaseURL = "api" + p.baseURL
 	p.baseAuthURL = "trinity" + p.baseURL
 	p.baseWDURL = "console" + p.baseURL
+
 	if p.isInLocalMode == false {
 		p.listenerPort = productionPort
 		p.apiBaseURLWithScheme = "https://" + "." + p.baseURL
@@ -101,16 +104,16 @@ func (p *Proxy) StartProxyListener(localMode *bool) {
 		p.internalAPIBaseWithScheme = "https//" + ".frost.m"
 		common.Logger.Infoln("running in production mode...")
 		p.setRoutes()
-		go p.internal.StartProxyListener(localMode)
+		go p.internal.StartProxyListener()
 		p.startTLSServer()
 	} else {
 		p.listenerPort = devPort
 		p.apiBaseURLWithScheme = "http://" + "." + p.baseURL
 		p.internalAPIBase = "api.frost-int.m"
-		p.internalAPIBaseWithScheme = "http://" + p.baseURL
+		p.internalAPIBaseWithScheme = "http://" + ".frost-int.m"
 		common.Logger.Infoln("running in dev mode...")
 		p.setRoutes()
-		go p.internal.StartProxyListener(localMode)
+		go p.internal.StartProxyListener()
 		p.startNotTLSServer()
 	}
 }
@@ -158,6 +161,9 @@ func (p *Proxy) RenameRoute(oldname, newname string) {
 
 //ServeHTTP ...
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// if val, ok := p.reverseProxyRoutes[req.Host]; ok {
+	// 	p.proxyRequest(w, req, val, req.URL.Path, "", true)
+	// } else {
 	if req.URL.String() == "/favicon.ico" {
 		w.WriteHeader(200)
 	} else if req.Host == p.apiBaseURL {
@@ -174,6 +180,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	} else {
 		common.WriteFailureResponse(errors.New("unknown route "+req.Host+req.URL.String()), w, "ServeHTTP", 404)
 	}
+	// }
 }
 
 func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request) {
@@ -183,9 +190,8 @@ func (p *Proxy) serveExtraRouteRequest(w http.ResponseWriter, req *http.Request)
 	if routeAliases != nil {
 		apiServerName := p.hostsToAPIServer[req.Host]
 		for _, v := range routeAliases {
-			// common.Logger.WithFields(logrus.Fields{"routeAlias": v, "reqPath": req.URL.Path}).Debugln("routeAliases")
 			if strings.Contains(req.URL.Path, v) {
-				p.proxyRequest(w, req, p.apiRoutes[apiServerName], req.URL.Path, req.Host)
+				p.proxyRequest(w, req, p.apiRoutes[apiServerName], req.URL.Path, req.Host, false)
 				proxiedRequest = true
 				break
 			}
@@ -214,21 +220,25 @@ func (p *Proxy) serveAPIRequest(w http.ResponseWriter, req *http.Request) {
 		p.invalidRoute(w, req.URL.String())
 		return
 	}
-	p.proxyRequest(w, req, serviceAddr, "/api"+req.URL.Path, p.apiNameToOrigin[apiName])
+	p.proxyRequest(w, req, serviceAddr, "/api"+req.URL.Path, p.apiNameToOrigin[apiName], false)
 }
 func (p *Proxy) getAPIName(url, hostname string) string {
 	var urlWithoutHost = strings.Replace(url, hostname, "", -1)
 	var urlBits = strings.Split(urlWithoutHost, "/")
 	return urlBits[1]
 }
-func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo string, path string, origin string) {
+func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo string, path string, origin string, isRevProxReq bool) {
 	var userInfo *url.Userinfo
 	scheme := req.URL.Scheme
 	if req.URL.User != nil {
 		userInfo = req.URL.User
 	}
 	if forward.IsWebsocketRequest(req) == false {
-		scheme = "http"
+		if isRevProxReq {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
 	} else {
 		scheme = "ws"
 	}
@@ -241,6 +251,7 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, req *http.Request, proxyTo s
 	}
 	req.RequestURI = req.URL.String()
 	if origin != "" {
+		common.LogDebug("", "", origin)
 		req.Header.Add("Access-Control-Allow-Origin", origin)
 	}
 	p.fwd.ServeHTTP(w, req)
@@ -277,6 +288,13 @@ func (p *Proxy) setRoutes() {
 			p.aliasHosts[r.FullURL] = append(p.aliasHosts[r.FullURL], route)
 		}
 	}
+
+	// if revProxRoutes, e3 := p.data.GetProxyRoutes(); e3 == nil {
+	// 	for _, r := range revProxRoutes {
+
+	// 		p.reverseProxyRoutes[r.Hostname] = r.IPAddress
+	// 	}
+	// }
 }
 func (p *Proxy) invalidRoute(w http.ResponseWriter, requestedURL string) {
 	//TOOD: Proper 404 page.

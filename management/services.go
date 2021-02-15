@@ -94,13 +94,21 @@ func (s *ServiceManager) StopManagedServices() {
 
 //StartManagedService ...
 func (s *ServiceManager) StartManagedService(name string) bool {
+	var pwd string
 	var envVars []string
 	routeInfo, _ := s.data.GetRoute(name)
+	if common.DevMode {
+		dir, _ := os.Getwd()
+		pwd = dir
+	} else {
+		pwd = "/webservices"
+	}
 	envVars = []string{
 		"SKEY=" + routeInfo.ServiceKey,
 		"SID=" + routeInfo.ServiceID,
 		"BASE_URL=" + common.CurrentConfig.BaseURL,
 		"INTERNAL_BASE" + "",
+		"PWD=" + pwd,
 	}
 	if routeInfo.VaultIntegrated {
 		id, err := s.vault.GetRoleID(routeInfo.AppName)

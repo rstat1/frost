@@ -111,9 +111,12 @@ func (api *APIRouter) SetupRoutes() {
 	api.router.Handle("/api/frost/service/update", common.RequestWrapper(api.user.IsRoot, "POST", api.updateService))
 	api.router.Handle("/api/frost/service/restart/:name", common.RequestWrapper(api.user.IsRoot, "GET", api.restartService))
 
-	api.router.Handle("/api/frost/aliases/new", common.RequestWrapper(common.Nothing, "POST", api.newExtraRoute))
-	api.router.Handle("/api/frost/aliases/all", common.RequestWrapper(common.Nothing, "GET", api.getExtraRoutes))
-	api.router.Handle("/api/frost/aliases/delete", common.RequestWrapper(common.Nothing, "POST", api.deleteExtraRoute))
+	api.router.Handle("/api/frost/aliases/new", common.RequestWrapper(api.user.IsRoot, "POST", api.newExtraRoute))
+	api.router.Handle("/api/frost/aliases/all", common.RequestWrapper(api.user.IsRoot, "GET", api.getExtraRoutes))
+	api.router.Handle("/api/frost/aliases/delete", common.RequestWrapper(api.user.IsRoot, "POST", api.deleteExtraRoute))
+
+	// api.router.Handle("/api/frost/reverseproxy/addroute", common.RequestWrapper(api.user.IsRoot, "POST", api.newproxyroute))
+	// api.router.Handle("/api/frost/reverseproxy/delteroute", common.RequestWrapper(api.user.IsRoot, "DELETE", api.deleteproxyroute))
 
 	api.router.Handle("/api/frost/services", common.RequestWrapper(api.user.IsRoot, "GET", api.services))
 
@@ -438,4 +441,20 @@ func (api *APIRouter) icons(resp http.ResponseWriter, r *http.Request) {
 	}
 	f, _ := json.Marshal(icons)
 	common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(string(f), nil, 200))
+}
+func (api *APIRouter) newproxyroute(resp http.ResponseWriter, r *http.Request) {
+	var proxiedRoute data.ProxyRoute
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		if err := json.Unmarshal(body, &proxiedRoute); err != nil {
+			common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", err, 500))
+		} else {
+			apiResp := common.CreateAPIResponse("success", api.data.AddProxyRoute(proxiedRoute.Hostname, proxiedRoute.IPAddress), 500)
+			common.WriteAPIResponseStruct(resp, apiResp)
+		}
+	} else {
+		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse("failed", err, 500))
+	}
+}
+func (api *APIRouter) deleteproxyroute(resp http.ResponseWriter, r *http.Request) {
+	
 }

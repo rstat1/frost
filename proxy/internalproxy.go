@@ -28,35 +28,41 @@ const (
 )
 
 //NewInternalProxy ...
-func NewInternalProxy() *InternalProxy {
+func NewInternalProxy(localMode *bool) *InternalProxy {
 	var fwd *forward.Forwarder
 	sieh := &HTTPErrorHandler{}
 	fwd, _ = forward.New(forward.ErrorHandler(sieh))
-	return &InternalProxy{
-		fwd: fwd,
+	p := &InternalProxy{
+		fwd:            fwd,
 		internalRoutes: make(map[string]string),
 	}
-}
-
-//StartProxyListener ...
-func (p *InternalProxy) StartProxyListener(localMode *bool) {
-	common.LogInfo("", "", "starting internal service listener")
-	p.internalRoutes[icapiAPIName] = "localhost:5000"
-	p.internalBaseURL = "frost.m"
 	if *localMode {
 		common.Logger.Infoln("running in dev mode...")
 		p.listenerPort = "8080"
 		p.internalAPIBase = "api.frost-int.m"
+		p.internalBaseURL = "frost-int.m"
 	} else {
 		p.listenerPort = "80"
 		p.internalAPIBase = "api.frost.m"
+		p.internalBaseURL = "frost.m"
 	}
+	return p
+}
+
+//StartProxyListener ...
+func (p *InternalProxy) StartProxyListener() {
+	common.LogInfo("port", p.listenerPort, "starting internal service listener")
+	p.internalRoutes[icapiAPIName] = "localhost:5000"
+
+	common.LogDebug("knownRoutes", p.internalRoutes, "")
+
 	p.startListener()
 }
 
 //SetInternalRoute ...
 func (p *InternalProxy) SetInternalRoute(api, address string) {
 	p.internalRoutes[api] = address
+	common.LogDebug("route", p.internalAPIBase+"/"+api, "setting internal route...")
 }
 
 //ServeHTTP ...
@@ -76,6 +82,7 @@ func (p *InternalProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	proxyTo = p.internalRoutes[p.getAPIName(req.URL.String(), p.internalAPIBase)]
+	common.LogDebug("proxyTo", proxyTo, "serve")
 
 	req.URL = &url.URL{
 		Host:     proxyTo,

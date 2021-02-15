@@ -106,6 +106,13 @@ type ExtraRoute struct {
 	APIRoute string `json:"apiRoute" storm:"index"`
 }
 
+//ProxyRoute ...
+type ProxyRoute struct {
+	ID        int    `storm:"id,increment"`
+	Hostname  string `json:"hostname"`
+	IPAddress string `json:"ipaddr"`
+}
+
 //AliasDeleteRequest ...
 type AliasDeleteRequest struct {
 	BaseURL string `json:"baseURL"`

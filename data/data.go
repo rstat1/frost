@@ -53,6 +53,9 @@ func NewDataStoreInstance(filename string) *DataStore {
 		if _, err := tx.CreateBucketIfNotExists([]byte("Config")); err != nil {
 			panic(err)
 		}
+		if _, err := tx.CreateBucketIfNotExists([]byte("ProxyRoutes")); err != nil {
+			panic(err)
+		}
 		return nil
 	})
 	ds.FrostInit()
@@ -250,6 +253,14 @@ func (data *DataStore) GetServiceConfigValue(key, serviceName string) (value str
 	return value, common.LogError("", e)
 }
 
+//GetProxyRoutes ...
+func (data *DataStore) GetProxyRoutes() ([]ProxyRoute, error) {
+	var extraRoutes []ProxyRoute
+	proxyRoutes := data.queryEngine.From("ProxyRoutes")
+	err := proxyRoutes.All(&extraRoutes)
+	return extraRoutes, common.LogError("", err)
+}
+
 //SetFirstRunState ...
 func (data *DataStore) SetFirstRunState() {
 	firstRun := data.queryEngine.From("System")
@@ -295,6 +306,32 @@ func (data *DataStore) AddExtraRoute(newRoute ExtraRoute) error {
 	if err := extras.Save(&newRoute); err != nil {
 		common.Logger.WithField("func", "AddExtraRoute").Errorln(err)
 		return err
+	}
+	return nil
+}
+
+//AddProxyRoute ...
+func (data *DataStore) AddProxyRoute(hostname, ipaddr string) error {
+	if hostname == "" || ipaddr == "" {
+		return errors.New("missing some important info")
+	}
+
+	proxyRoutes := data.queryEngine.From("ProxyRoutes")
+	if err := proxyRoutes.Save(&ProxyRoute{Hostname: hostname, IPAddress: ipaddr}); err != nil {
+		return common.LogError("", err)
+	}
+	return nil
+}
+
+//DeleteProxyRoute ...
+func (data *DataStore) DeleteProxyRoute(hostname string) error {
+	var foundRoute ProxyRoute
+	proxyRoutes := data.queryEngine.From("ProxyRoutes")
+	if e := proxyRoutes.One("hostname", hostname, &foundRoute); e != nil {
+		return common.LogError("", e)
+	}
+	if err := proxyRoutes.DeleteStruct(&foundRoute); err != nil {
+		return common.LogError("", err)
 	}
 	return nil
 }

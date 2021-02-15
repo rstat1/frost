@@ -26,7 +26,7 @@ func main() {
 	userService := auth.NewUserService(data)
 	vault := crypto.NewVaultClient(*devMode)
 
-	proxy := proxy.NewProxy(data)
+	proxy := proxy.NewProxy(data, devMode)
 	icapi := management.NewInternalPlatformAPI(data, vault, userService)
 	services := management.NewServiceManager(data, proxy, *devMode, vault)
 	manager := management.NewAPIRouter(data, proxy, services, userService, vault, *devMode)
@@ -45,7 +45,7 @@ func main() {
 	services.StartManagedServices()
 	authService.InitAuthService()
 	manager.StartManagementAPIListener()
-	proxy.StartProxyListener(devMode)
+	proxy.StartProxyListener()
 }
 
 func interruptHandler() {
