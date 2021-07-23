@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"crypto/tls"
+	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -38,6 +39,7 @@ type Proxy struct {
 	apiBaseURLWithScheme string
 	listenerPort         string
 	apiNameToOrigin      map[string]string
+	botFun               [20]string
 
 	internalBaseURL           string
 	internalAPIBase           string
@@ -70,7 +72,7 @@ func NewProxy(dataStoreRef *data.DataStore, devMode *bool) *Proxy {
 	var fwd *forward.Forwarder
 	sieh := &HTTPErrorHandler{}
 	fwd, _ = forward.New(forward.ErrorHandler(sieh))
-	return &Proxy{
+	p := &Proxy{
 		fwd:                fwd,
 		data:               dataStoreRef,
 		internal:           NewInternalProxy(devMode),
@@ -85,6 +87,31 @@ func NewProxy(dataStoreRef *data.DataStore, devMode *bool) *Proxy {
 		internalRoutes:     make(map[string]string),
 		reverseProxyRoutes: make(map[string]string),
 	}
+
+	p.botFun = [20]string{
+		"https://www.youtube.com/watch?v=wbby9coDRCk",
+		"https://www.youtube.com/watch?v=nb2evY0kmpQ",
+		"https://www.youtube.com/watch?v=eh7lp9umG2I",
+		"https://www.youtube.com/watch?v=z9Uz1icjwrM",
+		"https://www.youtube.com/watch?v=Sagg08DrO5U",
+		"https://www.youtube.com/watch?v=5XmjJvJTyx0",
+		"https://www.youtube.com/watch?v=IkdmOVejUlI",
+		"https://www.youtube.com/watch?v=jScuYd3_xdQ",
+		"https://www.youtube.com/watch?v=S5PvBzDlZGs",
+		"https://www.youtube.com/watch?v=9UZbGgXvCCA",
+		"https://www.youtube.com/watch?v=O-dNDXUt1fg",
+		"https://www.youtube.com/watch?v=MJ5JEhDy8nE",
+		"https://www.youtube.com/watch?v=VnnWp_akOrE",
+		"https://www.youtube.com/watch?v=jwGfwbsF4c4",
+		"https://www.youtube.com/watch?v=8ZcmTl_1ER8",
+		"https://www.youtube.com/watch?v=gLmcGkvJ-e0",
+		"https://www.youtube.com/watch?v=hGlyFc79BUE",
+		"https://www.youtube.com/watch?v=xA8-6X8aR3o",
+		"https://www.youtube.com/watch?v=7R1nRxcICeE",
+		"https://www.youtube.com/watch?v=sCNrK-n68CM",
+	}
+
+	return p
 }
 
 //StartProxyListener ...
@@ -164,6 +191,12 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// if val, ok := p.reverseProxyRoutes[req.Host]; ok {
 	// 	p.proxyRequest(w, req, val, req.URL.Path, "", true)
 	// } else {
+
+	if strings.HasSuffix(req.URL.String(), ".php") {
+		http.Redirect(w, req, p.botFun[rand.Intn(len(p.botFun))], 301)
+		return
+	}
+
 	if req.URL.String() == "/favicon.ico" {
 		w.WriteHeader(200)
 	} else if req.Host == p.apiBaseURL {
