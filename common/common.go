@@ -31,6 +31,7 @@ type APIResponse struct {
 //LocalAppConfig ...
 type LocalAppConfig struct {
 	BaseURL               string `json:"baseURL"`
+	RedisServerAddr       string `json:"redisAddr"`
 	VaultToken            string `json:"-"`
 	VaultKeyID            string `json:"vaultKeyID"`
 	VaultAddr             string `json:"vaultAddress"`

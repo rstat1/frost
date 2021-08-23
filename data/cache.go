@@ -14,7 +14,7 @@ type CacheService struct {
 }
 
 func NewCacheService() *CacheService {
-	client, err := pool.New("tcp", "127.0.0.1:6379", 3)
+	client, err := pool.New("tcp", common.CurrentConfig.RedisServerAddr, 3)
 	if err != nil {
 		common.CreateFailureResponse(err, "NewCacheService", 500)
 	}
