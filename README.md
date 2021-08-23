@@ -13,7 +13,8 @@ Requires a local instance of Redis, and a copy of config.json (as shown below) t
    "vaultKeyID":"",
    "vaultAddress": "<hostname or ip address and port of an instance of Hashicorp Vault>", 
    "vaultAppRoleName": "<the name of a Vault approle for Frost itself to use>", 
-   "vaultServicesAppRole": "<the name of a Vault approle for Frost services to use>"
+   "vaultServicesAppRole": "<the name of a Vault approle for Frost services to use>",
+   "redisAddr": "<ip address and port to a usable redis instance>"
 }
 ```
 
