@@ -8,7 +8,7 @@ import (
 	"time"
 
 	vault "github.com/hashicorp/vault/api"
-	"go.alargerobot.dev/frost/common"
+	"github.com/rstat1/frost/common"
 )
 
 const (

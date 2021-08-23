@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"syscall"
 
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/crypto"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/crypto"
 )
 
 //ProcessManager ...

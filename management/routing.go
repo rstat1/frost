@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/husobee/vestigo"
-	"go.alargerobot.dev/frost/auth"
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/crypto"
-	"go.alargerobot.dev/frost/data"
-	"go.alargerobot.dev/frost/proxy"
-	"go.alargerobot.dev/frost/services"
+	"github.com/rstat1/frost/auth"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/crypto"
+	"github.com/rstat1/frost/data"
+	"github.com/rstat1/frost/proxy"
+	"github.com/rstat1/frost/services"
 )
 
 //InstanceInfo ...

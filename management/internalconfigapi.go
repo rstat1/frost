@@ -10,10 +10,10 @@ import (
 
 	"github.com/husobee/vestigo"
 	"github.com/minio/sio"
-	"go.alargerobot.dev/frost/auth"
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/crypto"
-	"go.alargerobot.dev/frost/data"
+	"github.com/rstat1/frost/auth"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/crypto"
+	"github.com/rstat1/frost/data"
 )
 
 //InternalPlatformAPI ...

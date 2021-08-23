@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"go.alargerobot.dev/frost/common"
+	"github.com/rstat1/frost/common"
 	"github.com/mediocregopher/radix.v2/pool"
 )
 

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/vulcand/oxy/forward"
-	"go.alargerobot.dev/frost/common"
+	"github.com/rstat1/frost/common"
 )
 
 //InternalProxy ...

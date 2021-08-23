@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/data"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/data"
 )
 
 const (

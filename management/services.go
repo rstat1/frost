@@ -10,12 +10,12 @@ import (
 	"os"
 	"strings"
 
-	"go.alargerobot.dev/frost/crypto"
-	"go.alargerobot.dev/frost/processes"
-	"go.alargerobot.dev/frost/proxy"
+	"github.com/rstat1/frost/crypto"
+	"github.com/rstat1/frost/processes"
+	"github.com/rstat1/frost/proxy"
 
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/data"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/data"
 )
 
 //ServiceManager ...

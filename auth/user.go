@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/data"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/data"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )

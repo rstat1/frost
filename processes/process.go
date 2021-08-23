@@ -4,7 +4,7 @@ import (
 	"os"
 	"syscall"
 
-	"go.alargerobot.dev/frost/common"
+	"github.com/rstat1/frost/common"
 )
 
 type ManagedProcess struct {

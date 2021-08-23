@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"go.alargerobot.dev/frost/data"
+	"github.com/rstat1/frost/data"
 )
 
 //WebServer ...

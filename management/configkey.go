@@ -13,7 +13,7 @@ import (
 	"io"
 
 	"github.com/minio/sio"
-	"go.alargerobot.dev/frost/common"
+	"github.com/rstat1/frost/common"
 )
 
 //KeyInfo ...

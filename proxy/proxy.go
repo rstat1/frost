@@ -10,9 +10,9 @@ import (
 	"net/url"
 	"strings"
 
-	"go.alargerobot.dev/frost/common"
-	"go.alargerobot.dev/frost/data"
-	"go.alargerobot.dev/frost/services"
+	"github.com/rstat1/frost/common"
+	"github.com/rstat1/frost/data"
+	"github.com/rstat1/frost/services"
 
 	"github.com/pkg/errors"
 	"github.com/vulcand/oxy/forward"

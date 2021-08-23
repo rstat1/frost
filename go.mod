@@ -1,4 +1,4 @@
-module go.alargerobot.dev/frost
+module github.com/rstat1/frost
 
 go 1.14
 
