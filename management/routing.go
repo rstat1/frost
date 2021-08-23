@@ -385,7 +385,8 @@ func (api *APIRouter) initFrost(resp http.ResponseWriter, r *http.Request) {
 		}
 		api.user.NewUser(newUser, perms)
 		api.data.SetFirstRunState()
-		common.WriteAPIResponseStruct(resp, common.CreateAPIResponse(password, nil, 200))
+		common.LogInfo("password", password, "First run init complete. Restart Frost, and login with the username 'root' and the provided password, to continue.")
+		os.Exit(0)
 	} else {
 		common.WriteFailureResponse(errors.New("already initialized"), resp, "initFrost", 400)
 	}
@@ -456,5 +457,5 @@ func (api *APIRouter) newproxyroute(resp http.ResponseWriter, r *http.Request) {
 	}
 }
 func (api *APIRouter) deleteproxyroute(resp http.ResponseWriter, r *http.Request) {
-	
+
 }

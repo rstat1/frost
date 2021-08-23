@@ -23,7 +23,7 @@ func main() {
 	common.Logger.Debugln("starting svcman...")
 
 	data := data.NewDataStoreInstance("routes")
-	userService := auth.NewUserService(data)
+	userService := auth.NewUserService(data)	
 	vault := crypto.NewVaultClient(*devMode)
 
 	proxy := proxy.NewProxy(data, devMode)

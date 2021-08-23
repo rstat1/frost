@@ -86,7 +86,7 @@ func (icapi *InternalPlatformAPI) getConfigValue(resp http.ResponseWriter, r *ht
 		if encipheredValue, err := icapi.vault.ReadKeyFromKV("service-config/" + serviceName + "/" + key); err == nil {
 			data, _ := base64.StdEncoding.DecodeString(string(encipheredValue))
 			common.LogError("", json.Unmarshal(data, &entryCryptoKey))
-			if masterKey, err := icapi.vault.UnsealKey(crypto.FrostKeyID, entryCryptoKey.SealedMasterKey, crypto.Context{"key": key}); err == nil {
+			if masterKey, err := icapi.vault.UnsealKey(common.CurrentConfig.VaultKeyID, entryCryptoKey.SealedMasterKey, crypto.Context{"key": key}); err == nil {
 				entryKey.Unseal(masterKey[:], entryCryptoKey.EntryKey)
 				decipheredRead, err := sio.DecryptReader(value, sio.Config{Key: entryKey[:], MinVersion: sio.Version20})
 				if err != nil {
@@ -120,7 +120,7 @@ func (icapi *InternalPlatformAPI) setConfigValue(resp http.ResponseWriter, r *ht
 	if serviceName == "watchdog" {
 		common.WriteAPIResponseStruct(resp, icapi.setFrostConfigValue(key, value))
 	} else {
-		if vKey, vSealed, err := icapi.vault.GenerateKey(crypto.FrostKeyID, crypto.Context{"key": key}); err == nil {
+		if vKey, vSealed, err := icapi.vault.GenerateKey(common.CurrentConfig.VaultKeyID, crypto.Context{"key": key}); err == nil {
 			cryptoKey := GenerateKey(vKey[:], "service-config/"+serviceName+"/"+key)
 			sealed, _ := cryptoKey.Seal(vKey[:], "service-config/"+serviceName+"/"+key)
 			value := bytes.NewBuffer([]byte(value))
@@ -164,14 +164,6 @@ func (icapi *InternalPlatformAPI) setFrostConfigValue(key, value string) (resp c
 	var changeMade bool
 
 	switch key {
-	case "dbAddr":
-		common.CurrentConfig.DBAddr = value
-		changeMade = true
-		break
-	case "dbName":
-		common.CurrentConfig.DBName = value
-		changeMade = true
-		break
 	case "vaultToken":
 		common.CurrentConfig.VaultToken = value
 		icapi.vault.SetAccessToken()
@@ -180,9 +172,6 @@ func (icapi *InternalPlatformAPI) setFrostConfigValue(key, value string) (resp c
 	case "vaultAddr":
 		common.CurrentConfig.VaultAddr = value
 		changeMade = true
-		break
-	case "vaultARID":
-		common.CurrentConfig.VaultRoleID = value
 		break
 	default:
 		resp = common.CreateAPIResponse("success", errors.New("invalid config key specified"), 400)

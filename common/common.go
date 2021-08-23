@@ -30,12 +30,12 @@ type APIResponse struct {
 
 //LocalAppConfig ...
 type LocalAppConfig struct {
-	BaseURL     string `json:"baseURL"`
-	DBName      string `json:"dbName"`
-	DBAddr      string `json:"dbAddress"`
-	VaultToken  string `json:"-"`
-	VaultRoleID string `json:"roleID"`
-	VaultAddr   string `json:"vaultAddress"`
+	BaseURL               string `json:"baseURL"`
+	VaultToken            string `json:"-"`
+	VaultKeyID            string `json:"vaultKeyID"`
+	VaultAddr             string `json:"vaultAddress"`
+	VaultFrostAppRoleName string `json:"vaultAppRoleName"`
+	VaultServiceAppRole   string `json:"vaultServicesAppRole"`
 }
 
 var (
@@ -69,7 +69,7 @@ func CreateAPIResponse(response string, err error, failureCode int) APIResponse 
 //WritePlainStringResponse ...
 func WritePlainStringResponse(writer http.ResponseWriter, resp string, failCode int) {
 	writeCommonHeaders(writer)
-	writer.WriteHeader(failCode)	
+	writer.WriteHeader(failCode)
 	writer.Write([]byte(resp))
 }
 
