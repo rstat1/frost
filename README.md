@@ -17,4 +17,6 @@ Requires a local instance of Redis, and a copy of config.json (as shown below) t
 }
 ```
 
+The UI app (in management/ui) is an Angular 7.3 app and thus requires a NodeJS install.
+
 Vault is an optional requirement, that can be used to provide hosted services with easier access to encryption capabilities. Its use and configuration is best described at https://vaultproject.io
